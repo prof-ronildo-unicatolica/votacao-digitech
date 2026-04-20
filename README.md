@@ -213,7 +213,7 @@ votacao-digitech/
 | Camada         | Tecnologia                          |
 | -------------- | ----------------------------------- |
 | Linguagem      | PHP 8.2 (estrutural, sem framework) |
-| Front-end      | HTML5, CSS3, Bootstrap 5.3          |
+| Front-end      | HTML5, Bootstrap, CSS3 customizado  |
 | Banco de Dados | MySQL (charset utf8mb4)             |
 | Ambiente Local | XAMPP                               |
 | Hospedagem     | Hostinger                           |
