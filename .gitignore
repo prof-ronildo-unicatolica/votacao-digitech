@@ -1,0 +1,28 @@
+# Variáveis de ambiente
+.env
+
+# XAMPP / Sistema
+*.log
+error_log
+
+# Sistema operacional
+Thumbs.db
+thumbs.db
+Desktop.ini
+desktop.ini
+.DS_Store
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependências
+vendor/
+node_modules/
+
+# Arquivos temporários do PHP
+*.cache
+sessions/
