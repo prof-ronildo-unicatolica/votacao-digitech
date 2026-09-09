@@ -1,53 +1,84 @@
 # Roadmap
 
-Sprints de 2 semanas. Cada sprint fecha com PR `develop → main` e demo. Ajuste as datas ao calendário da disciplina.
+Cinco sprints de duas semanas. Cada sprint fecha com demo e PR `develop → main`. Datas: ajustar ao calendário da disciplina.
 
-| Sprint | Objetivo                                   | Histórias           | Entrega visível                                             |
-| ------ | ------------------------------------------ | ------------------- | ----------------------------------------------------------- |
-| **0**  | Ambiente e alinhamento                     | —                   | Todos rodando o scaffold local com testes verdes; Trello montado; wireframes das 3 telas no Figma |
-| **1**  | Admin consegue montar uma eleição          | H1, H2, H3, H5      | Login funcionando; eleição, chapas e terminais cadastrados pela interface |
-| **2**  | Dia da votação funciona de ponta a ponta   | H4, H6, H7, H8      | Demo: mesário libera, urna acorda, eleitor vota, não vota duas vezes |
-| **3**  | Resultado, controle e polimento            | H9, H10, H11        | Painel da mesa ao vivo; resultado com gráfico; auditoria    |
-| **4**  | Produção                                   | H12 + correções     | Sistema na Hostinger com HTTPS; simulação de eleição com a turma |
+## Os cinco perfis
 
-## Sprint 0 em detalhe (semana 1)
+| Perfil     | Responsável por                                                                  | Onde mexe                                   |
+| ---------- | -------------------------------------------------------------------------------- | ------------------------------------------- |
+| **Back**   | Rotas, controllers, regras de negócio, autenticação                              | `routes/`, `app/Http/`, `app/Models/`       |
+| **Dados**  | Migrations, seeds, factories, integridade do banco                               | `database/`, `docs/MODELO_DADOS.md`         |
+| **Front**  | Protótipos no Figma, telas Blade, Bootstrap, responsividade                      | `resources/views/`, Figma                   |
+| **Testes** | Testes automatizados (unitários e de integração), CI                             | `tests/`, `.github/workflows/`              |
+| **QA**     | Histórias e critérios de aceite, Trello, revisão de PR, testes manuais, demo     | `docs/HISTORIAS_USUARIO.md`, Trello, PRs    |
 
-| Tarefa                                                       | Responsável   | Doc                    |
-| ------------------------------------------------------------ | ------------- | ---------------------- |
-| Instalar XAMPP/LAMP, Composer, Git; rodar `php artisan test` | todos         | `INSTALACAO_*.md`      |
-| Ler `GIT_FLOW.md` e abrir um PR de treino (ex.: adicionar o próprio nome no README) | todos | `GIT_FLOW.md` |
-| Criar quadro no Trello e importar as 12 histórias            | líder         | `HISTORIAS_USUARIO.md` |
-| Wireframes: urna, painel do mesário, admin (lista + formulário) | design      | `FIGMA.md`             |
-| Assistir as playlists de PHP/Laravel básico                  | todos         | `PLAYLISTS.md`         |
+Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; Testes revisa se tem teste.
 
-## Ordem de dependência das histórias
+## Sprint 0 — Ambiente e alinhamento
+
+| Perfil | Entrega                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------- |
+| Todos  | Scaffold rodando local (`INSTALACAO_*.md`), `php artisan test` verde, um PR de treino    |
+| Back   | Ler `DECISOES.md`; mapear o que o Laravel já resolve (`Auth`, CSRF, validação)           |
+| Dados  | Propor os atributos de cada tabela (tabela de perguntas em `MODELO_DADOS.md`)            |
+| Front  | Wireframes de login, admin, mesário e urna (`FIGMA.md`)                                  |
+| Testes | Entender `tests/` e o CI; definir o que cada história precisa cobrir (`TESTES.md`)       |
+| QA     | Montar o Trello com as 12 histórias; combinar a definição de pronto                      |
+
+## Sprint 1 — Admin monta uma eleição (H1, H2, H3, H5)
+
+| Perfil | Entrega                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------- |
+| Back   | Login com perfis admin/mesário; CRUD de eleição, chapas e terminais                      |
+| Dados  | Migrations dos atributos de `users`, `eleicoes`, `chapas`, `terminais`; seeds e factories |
+| Front  | Layout do admin (menu + lista + formulário) em Blade/Bootstrap, a partir do Figma        |
+| Testes | Testes de login (sucesso, senha errada, mesário barrado do admin) e dos CRUDs            |
+| QA     | Critérios de aceite fechados antes de codar; teste manual de cada CRUD; demo             |
+
+## Sprint 2 — Dia da votação de ponta a ponta (H4, H6, H7, H8)
+
+| Perfil | Entrega                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------- |
+| Back   | Importar eleitores por CSV; liberar sessão; API de status da urna; registrar voto em transação |
+| Dados  | Atributos de `eleitores`, `sessoes_votacao` (situação, horários) e `votos` (branco/nulo) |
+| Front  | Painel do mesário; urna em modo quiosque com polling e tela de confirmação               |
+| Testes | Voto único, sessão expirada, duplo clique, CSV com linha inválida                        |
+| QA     | Simulação com 3 pessoas: mesário, eleitor, observador; registrar falhas no Trello        |
+
+## Sprint 3 — Resultado, painel da mesa e auditoria (H9, H10, H11)
+
+| Perfil | Entrega                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------- |
+| Back   | Apuração (`App\Support\Apuracao`), bloqueio do resultado antes do fim, log de auditoria  |
+| Dados  | Tabela de auditoria; consulta de apuração; revisão de índices                            |
+| Front  | Painel da mesa ao vivo; página de resultado com gráfico (Chart.js); exportação           |
+| Testes | Apuração (unitários), resultado bloqueado/liberado, auditoria sem dado de voto           |
+| QA     | Conferir resultado do sistema contra contagem manual de uma simulação                    |
+
+## Sprint 4 — Produção (H12)
+
+| Perfil | Entrega                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------- |
+| Back   | Deploy na Hostinger (`DEPLOY_HOSTINGER.md`), `.env` de produção, script de deploy         |
+| Dados  | Migrations em produção; backup do banco antes e depois da eleição                        |
+| Front  | Ajustes de responsividade e acessibilidade (contraste, teclado na urna)                  |
+| Testes | Smoke test em produção; CI bloqueando merge sem teste                                    |
+| QA     | Simulação de eleição com a turma; checklist do dia; apresentação final                   |
+
+## Ordem de dependência
 
 ```
 H1 login ─┬─▶ H2 eleição ─▶ H3 chapas ─┐
-          ├─▶ H5 terminais ────────────┼─▶ H6 liberar ─▶ H7 urna aguarda ─▶ H8 votar ─▶ H10 resultado
-          └─▶ H4 eleitores ────────────┘                                   └─▶ H9 painel da mesa
-H11 auditoria: pode começar após H1 e crescer junto com as demais
-H12 deploy: após H8 (dá para publicar antes, como teste)
+          ├─▶ H5 terminais ────────────┼─▶ H6 liberar ─▶ H7 urna ─▶ H8 votar ─▶ H10 resultado
+          └─▶ H4 eleitores ────────────┘                              └─▶ H9 painel da mesa
+H11 auditoria: começa após H1 e cresce junto
+H12 deploy: após H8 (publicar antes, como teste, é bem-vindo)
 ```
 
-## O que o Laravel já resolve (não criar cartão para isso)
+## Riscos
 
-| Necessidade do plano antigo        | Solução pronta no Laravel                                   |
-| ---------------------------------- | ----------------------------------------------------------- |
-| Parser de `.env`                   | nativo                                                      |
-| Classe `Csrf`                      | middleware `VerifyCsrfToken` + `@csrf` no formulário        |
-| Classe `Validador`                 | `$request->validate([...])` ou Form Request                 |
-| `AutenticacaoMesario`              | `Auth` + middleware `auth` + Gate/Policy por `perfil`       |
-| `RateLimiter`                      | middleware `throttle:5,1`                                   |
-| Paginação                          | `Model::paginate(20)` + `{{ $itens->links() }}`             |
-| Conexão PDO manual                 | Eloquent / `DB`                                             |
-| `schema.sql` / `seed.sql`          | migrations / seeders / factories                            |
-
-## Riscos e mitigação
-
-| Risco                                              | Mitigação                                                        |
-| -------------------------------------------------- | ---------------------------------------------------------------- |
-| Equipe travar na instalação                        | Sprint 0 inteira dedicada; par com quem já conseguiu             |
-| PHP 8.2 do XAMPP ficar defasado                    | Laravel 12 segue com segurança até 02/2027; migrar para Herd se preciso |
-| Hostinger sem SSH no plano contratado              | Confirmar plano na Sprint 0; alternativa é upload via FTP/Git do hPanel |
-| Quebra de sigilo por descuido em nova migration    | `ConstraintsTest` roda no CI                                    |
+| Risco                                     | Resposta                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------- |
+| Equipe travar na instalação               | Sprint 0 inteira para isso; par com quem já conseguiu               |
+| Hostinger sem SSH no plano                | Confirmar na Sprint 0; alternativa por FTP em `DEPLOY_HOSTINGER.md` |
+| Migration nova quebrar o sigilo do voto   | `ConstraintsTest` roda no CI                                        |
