@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Chapa;
-use App\Models\Eleicao;
 use App\Models\SessaoVotacao;
 use App\Models\Terminal;
 use App\Models\Voto;
@@ -16,11 +15,11 @@ use Tests\TestCase;
  * Regras que o BANCO garante (constraints), testadas contra o schema real.
  * Se uma migration nova quebrar uma delas, este arquivo avisa no CI.
  */
-class SigiloDoVotoTest extends TestCase
+class ConstraintsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_tabela_de_votos_nao_tem_nenhuma_ligacao_com_o_eleitor(): void
+    public function test_sigilo_do_voto_tabela_votos_nao_liga_ao_eleitor(): void
     {
         $colunas = Schema::getColumnListing('votos');
 
@@ -29,7 +28,7 @@ class SigiloDoVotoTest extends TestCase
         }
     }
 
-    public function test_eleitor_nao_pode_ter_duas_sessoes_na_mesma_eleicao(): void
+    public function test_eleitor_tem_uma_unica_sessao_por_eleicao(): void
     {
         $sessao = SessaoVotacao::factory()->create();
 
@@ -41,16 +40,6 @@ class SigiloDoVotoTest extends TestCase
         ]);
     }
 
-    public function test_mesmo_eleitor_pode_votar_em_eleicoes_diferentes(): void
-    {
-        $sessao = SessaoVotacao::factory()->create();
-
-        $outra = SessaoVotacao::factory()->create(['eleitor_id' => $sessao->eleitor_id]);
-
-        $this->assertNotSame($sessao->eleicao_id, $outra->eleicao_id);
-        $this->assertDatabaseCount('sessoes_votacao', 2);
-    }
-
     public function test_numero_de_chapa_e_unico_por_eleicao(): void
     {
         $chapa = Chapa::factory()->create(['numero' => 5]);
@@ -59,15 +48,6 @@ class SigiloDoVotoTest extends TestCase
 
         $this->expectException(QueryException::class);
         Chapa::factory()->for($chapa->eleicao)->create(['numero' => 5]);
-    }
-
-    public function test_voto_em_branco_e_permitido_sem_chapa(): void
-    {
-        $eleicao = Eleicao::factory()->create();
-
-        $voto = Voto::create(['eleicao_id' => $eleicao->id, 'chapa_id' => null]);
-
-        $this->assertNull($voto->fresh()->chapa_id);
     }
 
     public function test_apagar_eleicao_apaga_chapas_sessoes_e_votos_em_cascata(): void

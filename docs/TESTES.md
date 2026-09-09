@@ -4,8 +4,9 @@
 
 | Tipo                  | Exemplo                            | O que testa                                        | Precisa de banco? |
 | --------------------- | ---------------------------------- | -------------------------------------------------- | ----------------- |
-| **Unitário**          | `tests/Unit/ApuracaoTest.php`      | Uma classe isolada (`App\Support\Apuracao`)        | Não               |
-| **Integração** (Feature) | `tests/Feature/*Test.php`       | Rotas HTTP, controllers, models e o schema real     | Sim (SQLite em memória) |
+| **Unitário**          | `tests/Unit/ApuracaoTest.php`      | Uma classe isolada (`App\Support\Apuracao`), exemplo | Não             |
+| **Integração** (Feature) | `tests/Feature/PaginaInicialTest.php` | Rotas HTTP e banco (exemplo)                   | Sim (SQLite em memória) |
+| **Constraints**       | `tests/Feature/ConstraintsTest.php` | O que o schema garante (unique, cascade, sigilo)  | Sim               |
 
 Regra prática: **regra de negócio que dá para expressar como função pura vai para `app/Support` e ganha teste unitário**. Tudo que passa por rota, banco ou sessão ganha teste de integração.
 
@@ -50,7 +51,7 @@ class LiberarVotacaoTest extends TestCase
 
 - **Caminho feliz**: o usuário faz o que a história descreve e dá certo.
 - **Um caminho triste**: dado inválido, sem permissão, ou regra violada (ex.: eleitor já votou).
-- **Regra que o banco garante** (quando houver): `SigiloDoVotoTest` mostra como testar constraints (unique, cascade, restrict).
+- **Regra que o banco garante** (quando houver): `ConstraintsTest` mostra como testar constraints (unique, cascade, restrict).
 
 ## Convenções
 

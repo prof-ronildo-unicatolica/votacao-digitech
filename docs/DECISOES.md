@@ -26,7 +26,7 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Decisão:** a tabela `votos` **não** tem `eleitor_id`, `terminal_id` nem `sessao_id`. "Quem votou" fica em `sessoes_votacao` (com UNIQUE por eleitor e eleição); "em quem votou" fica em `votos`, sem ligação.
 
-**Por quê:** o modelo antigo tinha `votos.eleitor_id`, o que permitia a qualquer pessoa com acesso ao banco saber o voto de cada aluno. Em eleição isso é inaceitável, mesmo em projeto acadêmico. O teste `SigiloDoVotoTest` falha se alguém adicionar essas colunas.
+**Por quê:** o modelo antigo tinha `votos.eleitor_id`, o que permitia a qualquer pessoa com acesso ao banco saber o voto de cada aluno. Em eleição isso é inaceitável, mesmo em projeto acadêmico. O teste `ConstraintsTest` falha se alguém adicionar essas colunas.
 
 **Atenção ao adicionar atributos:** um horário exato de voto em `votos` pode ser correlacionado com o horário da sessão se houver poucos votantes. Mitigação: gravar truncado ao minuto, ou só a data.
 
@@ -40,7 +40,7 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Decisão:** as tabelas do domínio nascem com PK, FKs, chaves naturais únicas (`matricula`, `numero`) e as constraints que codificam regras de negócio. Nenhum outro atributo.
 
-**Por quê:** modelar os atributos é parte do aprendizado da equipe. O que não pode ficar a critério de cada um é a integridade: sigilo do voto, voto único, cascatas. Isso o scaffold fixa e testa (`SigiloDoVotoTest`). A lista de decisões pendentes por tabela está em `MODELO_DADOS.md`.
+**Por quê:** modelar os atributos é parte do aprendizado da equipe. O que não pode ficar a critério de cada um é a integridade: sigilo do voto, voto único, cascatas. Isso o scaffold fixa e testa (`ConstraintsTest`). A lista de decisões pendentes por tabela está em `MODELO_DADOS.md`.
 
 ## D5 — Uma eleição por vez, mas várias no histórico
 

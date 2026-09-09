@@ -56,14 +56,14 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 
 | Constraint                                        | Regra de negócio garantida pelo banco                                   | Teste            |
 | ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- |
-| `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)` | Um eleitor tem **uma** sessão por eleição: sem voto duplo               | `SigiloDoVotoTest` |
-| `chapas UNIQUE (eleicao_id, numero)`              | Número de chapa único dentro da eleição; pode repetir em outra eleição  | `SigiloDoVotoTest` |
+| `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)` | Um eleitor tem **uma** sessão por eleição: sem voto duplo               | `ConstraintsTest` |
+| `chapas UNIQUE (eleicao_id, numero)`              | Número de chapa único dentro da eleição; pode repetir em outra eleição  | `ConstraintsTest` |
 | `eleitores.matricula UNIQUE`                      | Um cadastro por matrícula                                               | —                |
 | `terminais.numero UNIQUE`                         | Um terminal por número (a URL da urna usa o número)                     | —                |
-| `votos` sem FK para eleitor/terminal/sessão       | Sigilo do voto                                                          | `SigiloDoVotoTest` |
-| `votos.chapa_id` nullable                         | Voto em branco/nulo possível sem chapa                                  | `SigiloDoVotoTest` |
-| `ON DELETE CASCADE` a partir de `eleicoes`        | Apagar eleição apaga chapas, sessões e votos dela                       | `SigiloDoVotoTest` |
-| `sessoes_votacao.terminal_id ON DELETE RESTRICT`  | Terminal com histórico de sessão não pode ser apagado                   | `SigiloDoVotoTest` |
+| `votos` sem FK para eleitor/terminal/sessão       | Sigilo do voto                                                          | `ConstraintsTest` |
+| `votos.chapa_id` nullable                         | Voto em branco/nulo possível sem chapa                                  | `ConstraintsTest` |
+| `ON DELETE CASCADE` a partir de `eleicoes`        | Apagar eleição apaga chapas, sessões e votos dela                       | `ConstraintsTest` |
+| `sessoes_votacao.terminal_id ON DELETE RESTRICT`  | Terminal com histórico de sessão não pode ser apagado                   | `ConstraintsTest` |
 | `sessoes_votacao.mesario_id ON DELETE SET NULL`   | Remover um usuário mesário não apaga a ata                              | —                |
 | `votos.chapa_id ON DELETE SET NULL`               | Remover chapa não apaga votos (vira "sem chapa"); decidir se deve ser RESTRICT | —          |
 

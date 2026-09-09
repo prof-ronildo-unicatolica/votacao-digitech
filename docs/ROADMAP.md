@@ -50,4 +50,4 @@ H12 deploy: após H8 (dá para publicar antes, como teste)
 | Equipe travar na instalação                        | Sprint 0 inteira dedicada; par com quem já conseguiu             |
 | PHP 8.2 do XAMPP ficar defasado                    | Laravel 12 segue com segurança até 02/2027; migrar para Herd se preciso |
 | Hostinger sem SSH no plano contratado              | Confirmar plano na Sprint 0; alternativa é upload via FTP/Git do hPanel |
-| Quebra de sigilo por descuido em nova migration    | `SigiloDoVotoTest` roda no CI                                    |
+| Quebra de sigilo por descuido em nova migration    | `ConstraintsTest` roda no CI                                    |

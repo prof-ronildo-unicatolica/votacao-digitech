@@ -67,7 +67,7 @@ Abra <http://localhost:8000> e <http://localhost:8000/api/health>.
 php artisan test
 ```
 
-Esperado: `Tests: 19 passed`. Usa SQLite em memória (pacote `php-sqlite3`).
+Esperado: `Tests: 9 passed`. Usa SQLite em memória (pacote `php-sqlite3`).
 
 ## Problemas comuns
 

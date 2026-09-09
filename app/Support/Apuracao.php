@@ -3,14 +3,14 @@
 namespace App\Support;
 
 /**
- * Regras de apuração puras (sem banco): recebem números, devolvem números.
- * Por não depender do Laravel nem do banco, é o alvo ideal de TESTE UNITÁRIO.
+ * EXEMPLO de classe pura (sem banco, sem Laravel): alvo ideal de teste unitário.
+ * A apuração completa (vencedora, participação, brancos/nulos) é a história H10.
  */
 final class Apuracao
 {
     /**
      * @param  array<int|string, int>  $votosPorChapa  ex.: [1 => 40, 2 => 35, 3 => 25]
-     * @return array<int|string, float> percentual de cada chapa sobre os votos válidos (0–100, 1 casa decimal)
+     * @return array<int|string, float> percentual de cada chapa (0–100, 1 casa decimal)
      */
     public static function percentuais(array $votosPorChapa): array
     {
@@ -20,32 +20,5 @@ final class Apuracao
         }
 
         return array_map(fn (int $v) => round($v * 100 / $total, 1), $votosPorChapa);
-    }
-
-    /**
-     * Chapa vencedora (chave do array) ou null em caso de empate ou sem votos.
-     *
-     * @param  array<int|string, int>  $votosPorChapa
-     */
-    public static function vencedora(array $votosPorChapa): int|string|null
-    {
-        if ($votosPorChapa === [] || max($votosPorChapa) === 0) {
-            return null;
-        }
-
-        $maior = max($votosPorChapa);
-        $empatadas = array_keys($votosPorChapa, $maior, true);
-
-        return count($empatadas) === 1 ? $empatadas[0] : null;
-    }
-
-    /** Participação em % (0–100, 1 casa decimal). */
-    public static function participacao(int $votantes, int $aptos): float
-    {
-        if ($aptos <= 0) {
-            return 0.0;
-        }
-
-        return round(min($votantes, $aptos) * 100 / $aptos, 1);
     }
 }

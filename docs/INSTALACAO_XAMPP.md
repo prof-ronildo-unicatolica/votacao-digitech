@@ -104,7 +104,7 @@ Para parar: `Ctrl + C` no terminal.
 php artisan test
 ```
 
-Esperado: `Tests: 19 passed`. Os testes usam SQLite em memória, por isso a extensão `pdo_sqlite` precisa estar habilitada (passo 2).
+Esperado: `Tests: 9 passed`. Os testes usam SQLite em memória, por isso a extensão `pdo_sqlite` precisa estar habilitada (passo 2).
 
 ## Problemas comuns
 

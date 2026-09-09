@@ -81,7 +81,7 @@ Como mesário, quero ver no painel quais terminais estão livres, liberados ou v
 Como admin, quero ver o resultado por chapa, brancos, nulos e participação depois que a eleição encerrar.
 - [ ] Antes do `fim` da eleição, `/admin/resultado` mostra só o comparecimento.
 - [ ] Depois do `fim`: tabela + gráfico (Chart.js) + chapa vencedora + participação (%).
-- [ ] Cálculos usam `App\Support\Apuracao` (já testada).
+- [ ] Cálculos em `App\Support\Apuracao` (classe pura, com testes unitários).
 - [ ] Exportar CSV/PDF da ata.
 - [ ] Testes: resultado bloqueado antes do fim, correto depois.
 
