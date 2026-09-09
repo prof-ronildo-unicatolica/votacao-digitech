@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Schema;
  */
 return new class extends Migration
 {
+    /** Aplica a migration. */
     public function up(): void
     {
         Schema::create('sessoes_votacao', function (Blueprint $table) {
@@ -27,6 +28,7 @@ return new class extends Migration
         });
     }
 
+    /** Desfaz a migration. */
     public function down(): void
     {
         Schema::dropIfExists('sessoes_votacao');

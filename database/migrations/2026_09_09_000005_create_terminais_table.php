@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /** `numero` é a chave natural do terminal (aparece na URL da urna: /urna/{terminal}). */
 return new class extends Migration
 {
+    /** Aplica a migration. */
     public function up(): void
     {
         Schema::create('terminais', function (Blueprint $table) {
@@ -16,6 +17,7 @@ return new class extends Migration
         });
     }
 
+    /** Desfaz a migration. */
     public function down(): void
     {
         Schema::dropIfExists('terminais');
