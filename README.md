@@ -2,7 +2,7 @@
 
 > Sistema de votação digital para eleições de colegiado da UniCatólica, desenvolvido pelos alunos do laboratório DIGITECH.
 > Este repositório contém o **scaffold mínimo funcional** (Laravel 12 + MySQL) e a documentação do projeto.
-> A implementação das telas é feita pela equipe seguindo as histórias em `docs/HISTORIAS_USUARIO.md`.
+> A implementação das telas é feita pela equipe seguindo as histórias em `docs/HISTORIAS_USUARIO.md` e o plano em `docs/ROADMAP.md`.
 
 ## O caso
 
@@ -50,6 +50,18 @@ O projeto tem dupla finalidade:
 ### Fora do escopo (nesta versão)
 
 Voto remoto/on-line sem mesário, biometria, integração com o sistema acadêmico e eleições com mais de um cargo por cédula. Podem virar histórias futuras.
+
+### Roadmap
+
+Cinco sprints de duas semanas. O detalhe, com a ordem de dependência das histórias e os riscos, está em **[docs/ROADMAP.md](docs/ROADMAP.md)**.
+
+| Sprint | Objetivo                                 | Histórias      |
+| ------ | ---------------------------------------- | -------------- |
+| 0      | Ambiente, Trello, Figma, git flow        | —              |
+| 1      | Admin monta uma eleição                  | H1, H2, H3, H5 |
+| 2      | Dia da votação de ponta a ponta          | H4, H6, H7, H8 |
+| 3      | Resultado, painel da mesa e auditoria    | H9, H10, H11   |
+| 4      | Produção na Hostinger                    | H12            |
 
 ## Stack
 
