@@ -1,6 +1,6 @@
 # Roadmap
 
-Cinco sprints de duas semanas. Cada sprint fecha com demo e PR `develop → main`. Datas: ajustar ao calendário da disciplina.
+Cinco sprints de duas semanas. Cada sprint fecha com demo e PR `develop → staging` (homologação); `staging → main` quando a homologação aprova. Datas: ajustar ao calendário da disciplina.
 
 ## Os cinco perfis
 

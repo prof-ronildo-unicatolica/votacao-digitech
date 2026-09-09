@@ -73,7 +73,7 @@ Cinco sprints de duas semanas. O detalhe, por perfil, está em **[docs/ROADMAP.m
 | Testes     | PHPUnit (unitários e de integração)               |
 | Local      | XAMPP (Windows) ou LAMP (Linux)                   |
 | Produção   | Hostinger (hospedagem compartilhada)              |
-| Gestão     | GitHub Issues + Projects · Git Flow · Figma       |
+| Gestão     | GitHub Issues + Projects · Git Flow (`develop` → `staging` → `main`) · Figma |
 
 ## Começando em 5 comandos
 

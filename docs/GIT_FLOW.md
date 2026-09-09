@@ -4,7 +4,7 @@
 
 Três regras, aplicadas pelo próprio GitHub (rulesets do repositório), não só combinadas:
 
-1. **`main` é do professor.** Só ele faz push ou merge nela. Alunos nunca a tocam, nem por PR.
+1. **`main` e `staging` são do professor.** Só ele faz push ou merge nelas. Alunos nunca as tocam, nem por PR.
 2. **Ninguém commita direto em `develop`.** Todo código entra por Pull Request.
 3. **PR para `develop` só é mergeado com o CI verde** (check `phpunit`) **e pelo menos uma aprovação** de outro membro. Push forçado e exclusão das duas branches estão bloqueados.
 
@@ -12,8 +12,9 @@ Três regras, aplicadas pelo próprio GitHub (rulesets do repositório), não s�
 
 | Branch      | Papel                                                             |
 | ----------- | ----------------------------------------------------------------- |
-| `main`      | O que está em produção na Hostinger. Só o professor mexe; recebe merge de `develop` ao fim da sprint. |
-| `develop`   | Integração. Tudo que está pronto e testado, aguardando deploy.    |
+| `main`      | Produção na Hostinger. Só o professor mexe; recebe merge de `staging` quando a homologação aprova. |
+| `staging`   | Homologação. Só o professor mexe; recebe merge de `develop` ao fim da sprint para a equipe testar como se fosse produção. |
+| `develop`   | Integração dos alunos. Branch padrão do repositório. Tudo que está pronto e testado. |
 | `feature/*` | Uma história de usuário (ou parte dela). Nasce e morre em `develop`. |
 | `fix/*`     | Correção de bug encontrado em `develop`.                          |
 | `hotfix/*`  | Correção urgente em produção. Nasce de `main`, volta para `main` **e** `develop`. |
@@ -59,9 +60,18 @@ git pull origin develop
 git branch -d feature/12-liberar-votacao
 ```
 
-## Deploy (develop → main)
+## Pipeline (develop → staging → main)
 
-Ao fim de cada sprint, **o professor** abre um PR `main` ← `develop`, revisa e faz o merge. Alunos não têm permissão para isso; se um PR para `main` for aberto por engano, o GitHub bloqueia o merge. O merge em `main` dispara o deploy (ver `DEPLOY_HOSTINGER.md`).
+```
+feature/* ──PR──▶ develop ──PR──▶ staging ──PR──▶ main
+ (alunos)        (integração)   (homologação)   (produção)
+```
+
+1. Ao fim da sprint, **o professor** abre um PR `staging` ← `develop` e mescla. Isso publica no ambiente de homologação (ver `DEPLOY_HOSTINGER.md`).
+2. QA e a equipe testam em homologação. Bug encontrado vira issue `bug`, corrigida em `fix/*` a partir de `develop`, e o ciclo repete.
+3. Aprovada a homologação, **o professor** abre um PR `main` ← `staging` e mescla. Isso publica em produção.
+
+Alunos não têm permissão para mesclar em `staging` nem em `main`; o GitHub bloqueia. `staging` e `main` nasceram vazias: só recebem conteúdo por esses PRs, então o histórico delas é a lista de releases.
 
 ## Padrão de commits (Conventional Commits)
 
@@ -95,9 +105,11 @@ git push
 ## Resumo visual
 
 ```
-main    ────────────────────────●──────────────●──── (produção)
-                               ↑ PR            ↑ PR
-develop ───●─────●──────●──────●──────●────────●──── (integração)
+main    ─────────────────────────────●─────────────────────●──── (produção)
+                                    ↑ PR                   ↑ PR
+staging ────────────────────────●───●──────────────────●───●──── (homologação)
+                               ↑ PR                    ↑ PR
+develop ───●─────●──────●──────●──────●────────●───────●──────── (integração)
            ↑     ↑      ↑             ↑
 feature/12 ●──●──┘      │             │
 feature/13 ●──●──●──────┘             │
