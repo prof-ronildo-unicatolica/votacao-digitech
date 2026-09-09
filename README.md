@@ -156,11 +156,15 @@ docs/                     ← toda a documentação
 
 ## Equipe
 
-| Nome | Perfil |
-| ---- | ------ |
-| Prof. Ronildo Silva | Orientação |
+| Nome                              | GitHub              | Perfil            |
+| --------------------------------- | ------------------- | ----------------- |
+| Prof. Ronildo Silva               | prof-ronildo-unicatolica | Orientação   |
+| Isabely Xavier Mancuso Carmona    | XavierIsa24         | Front, UI/UX      |
+| Patricya I. Magalhães             | pmagalhaes-code     | Back, QA          |
+| Álvaro da Silva de Moura          | alvin-silvaM        | Back, Testes      |
+| Lucas Queiroz                     | Lucas-Queiroz1      | Front             |
 
-Cada membro adiciona sua linha aqui no PR de treino da Sprint 0.
+O perfil **Dados** (migrations e modelo) ainda não tem dono: definir na Sprint 0 (issue #18). No PR de treino, cada membro confere sua linha.
 
 ## Licença
 
