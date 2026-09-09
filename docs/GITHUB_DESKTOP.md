@@ -22,9 +22,11 @@ Para quem nunca usou Git. Faz o mesmo fluxo de `GIT_FLOW.md`, sem terminal. Quem
 
 ## 4. Começar uma história (branch)
 
+Antes: na aba **Issues** do site, abra a issue da história, clique em **Assignees → assign yourself** e leia os critérios de aceite.
+
 1. No topo, em **Current branch**, escolha `develop`.
 2. **Fetch origin** e, se aparecer, **Pull origin**, para trazer o que a equipe já subiu.
-3. **Current branch → New branch**. Nome no padrão: `feature/h6-liberar-votacao`. Confirme que ela é criada **a partir de `develop`**.
+3. **Current branch → New branch**. Nome no padrão: `feature/12-liberar-votacao` (12 = número da issue). Confirme que ela é criada **a partir de `develop`**.
 4. **Publish branch** (botão azul) para ela existir no GitHub.
 
 Nunca trabalhe direto em `main` ou `develop`. Se o **Current branch** mostrar uma dessas, crie a branch antes de editar.
@@ -34,7 +36,7 @@ Nunca trabalhe direto em `main` ou `develop`. Se o **Current branch** mostrar um
 1. Edite os arquivos no VS Code. O GitHub Desktop lista o que mudou em **Changes**.
 2. Marque só os arquivos da história (desmarque `.env` ou arquivos de teste locais, se aparecerem).
 3. Em **Summary**, escreva no padrão `tipo: descrição`, por exemplo `feat: buscar eleitor por matrícula`.
-4. **Commit to feature/h6-...**.
+4. **Commit to feature/12-...**.
 5. **Push origin** para enviar ao GitHub. Faça isso no fim de cada sessão de trabalho, mesmo que não tenha terminado.
 
 Commits pequenos e frequentes. Se a descrição precisa de "e", são dois commits.
@@ -43,10 +45,10 @@ Commits pequenos e frequentes. Se a descrição precisa de "e", são dois commit
 
 1. Antes: rode `php artisan test` no terminal do VS Code. Se falhar, corrija antes de abrir o PR.
 2. No GitHub Desktop, **Branch → Create pull request** (ou o botão **Preview Pull Request**). Abre o site.
-3. Confira: **base: `develop`** ← **compare: `feature/h6-...`**. Se a base vier como `main`, troque.
-4. Título igual ao commit principal. Na descrição: link do cartão do Trello, o que foi feito e **como testar**.
+3. Confira: **base: `develop`** ← **compare: `feature/12-...`**. Se a base vier como `main`, troque.
+4. Título igual ao commit principal. Na descrição: `closes #12` (fecha a issue no merge), o que foi feito e **como testar**.
 5. **Reviewers**: escolha alguém de outro perfil (ver `ROADMAP.md`). **Create pull request**.
-6. Mova o cartão no Trello para **Em revisão**.
+6. No quadro (aba **Projects**), a issue vai para **Em revisão**.
 
 O CI roda sozinho. Uma marca verde ao lado do último commit significa testes passando; uma vermelha, clique em **Details** para ver o que quebrou, corrija, faça commit e push: o PR atualiza sozinho.
 
@@ -62,7 +64,7 @@ O CI roda sozinho. Uma marca verde ao lado do último commit significa testes pa
 
 1. No GitHub Desktop, **Current branch → `develop`**, depois **Fetch origin** e **Pull origin**.
 2. A branch da história pode ser apagada: **Branch → Delete**.
-3. Mova o cartão no Trello para **Concluído**.
+3. A issue fecha sozinha por causa do `closes #12`.
 
 ## 9. Conflitos
 

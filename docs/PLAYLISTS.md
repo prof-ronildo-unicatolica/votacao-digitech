@@ -1,6 +1,6 @@
 # Playlists de estudo
 
-Todas as URLs foram verificadas em 09/09/2026 (título, canal e quantidade de vídeos). Sugestão: criar um cartão "Estudo" por trilha no Trello com estas playlists como checklist.
+Todas as URLs foram verificadas em 09/09/2026 (título, canal e quantidade de vídeos). Sugestão: uma issue "Estudo" por trilha, com estas playlists como checklist.
 
 ## Trilha comum (todos, Sprint 0)
 
@@ -45,7 +45,7 @@ Todas as URLs foram verificadas em 09/09/2026 (título, canal e quantidade de v�
 | Figma (oficial) | [Figma Design for beginners 2025](https://www.youtube.com/playlist?list=PLXDU_eVOJTx5IuSrbtanZHnDuPB3Hx0hq) | Figma | EN | 18 vídeos, UI atual. |
 | Scrum | [Curso de Gestão Ágil com Scrum](https://www.youtube.com/playlist?list=PLoGDMdX4pUAfso0bQWSZFgjEBlr2H9IBU) | D1UP Academy | pt-BR | 14 aulas. Papéis, eventos, estimativa. |
 | Kanban | [Kanban - Teoria e prática](https://www.youtube.com/playlist?list=PLmMYWsX6UEkI9Qgwy2DuaNWnkJR-78xoS) | Kelvin Weiss | pt-BR | 16 vídeos, lives. |
-| Trello | [Trello para Iniciantes](https://www.youtube.com/playlist?list=PLYBxhYi1-3nlFcKbL3-iD7HGd17v5d8ws) | Coach de Produtividade | pt-BR | 20 vídeos. |
+| Trello (só se a equipe preferir a Issues) | [Trello para Iniciantes](https://www.youtube.com/playlist?list=PLYBxhYi1-3nlFcKbL3-iD7HGd17v5d8ws) | Coach de Produtividade | pt-BR | 20 vídeos. |
 
 ## Extras de ambiente
 
@@ -56,7 +56,7 @@ Todas as URLs foram verificadas em 09/09/2026 (título, canal e quantidade de v�
 
 ## Ordem sugerida por sprint
 
-- **Sprint 0:** trilha comum inteira + Figma (design) + Trello (líder).
+- **Sprint 0:** trilha comum inteira + Figma (design) + Scrum/Kanban (QA).
 - **Sprint 1:** PHP OO → Laravel 12 (Celke) até a aula de CRUD → Bootstrap 5.
 - **Sprint 2:** Testes em Laravel → Livewire (se adotado).
 - **Sprint 3–4:** Modelagem de dados (revisão) → Deploy.

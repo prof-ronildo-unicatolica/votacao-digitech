@@ -10,7 +10,7 @@ Cinco sprints de duas semanas. Cada sprint fecha com demo e PR `develop → main
 | **Dados**  | Migrations, seeds, factories, integridade do banco                               | `database/`, `docs/MODELO_DADOS.md`         |
 | **Front**  | Protótipos no Figma, telas Blade, Bootstrap, responsividade                      | `resources/views/`, Figma                   |
 | **Testes** | Testes automatizados (unitários e de integração), CI                             | `tests/`, `.github/workflows/`              |
-| **QA**     | Histórias e critérios de aceite, Trello, revisão de PR, testes manuais, demo     | `docs/HISTORIAS_USUARIO.md`, Trello, PRs    |
+| **QA**     | Histórias e critérios de aceite, issues e quadro, revisão de PR, testes manuais, demo | `docs/HISTORIAS_USUARIO.md`, Issues, PRs |
 
 Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; Testes revisa se tem teste.
 
@@ -18,12 +18,12 @@ Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; T
 
 | Perfil | Entrega                                                                                  |
 | ------ | ---------------------------------------------------------------------------------------- |
-| Todos  | Scaffold rodando local (`INSTALACAO_*.md`), `php artisan test` verde, um PR de treino (`GITHUB_DESKTOP.md`) |
+| Todos  | Scaffold rodando local (`INSTALACAO_*.md`), `php artisan test` verde, um PR de treino (`GITHUB_DESKTOP.md`); etiqueta do seu perfil nas issues |
 | Back   | Ler `DECISOES.md`; mapear o que o Laravel já resolve (`Auth`, CSRF, validação)           |
 | Dados  | Propor os atributos de cada tabela (tabela de perguntas em `MODELO_DADOS.md`)            |
-| Front  | Wireframes de login, admin, mesário e urna (`FIGMA.md`)                                  |
+| Front  | Wireframes de login, admin, mesário e urna (`FIGMA.md`); link do frame em cada issue     |
 | Testes | Entender `tests/` e o CI; definir o que cada história precisa cobrir (`TESTES.md`)       |
-| QA     | Montar o Trello com as 12 histórias; combinar a definição de pronto                      |
+| QA     | Revisar as issues das 12 histórias e o quadro do GitHub Projects; combinar a definição de pronto |
 
 ## Sprint 1 — Admin monta uma eleição (H1, H2, H3, H5)
 
@@ -43,7 +43,7 @@ Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; T
 | Dados  | Atributos de `eleitores`, `sessoes_votacao` (situação, horários) e `votos` (branco/nulo) |
 | Front  | Painel do mesário; urna em modo quiosque com polling e tela de confirmação               |
 | Testes | Voto único, sessão expirada, duplo clique, CSV com linha inválida                        |
-| QA     | Simulação com 3 pessoas: mesário, eleitor, observador; registrar falhas no Trello        |
+| QA     | Simulação com 3 pessoas: mesário, eleitor, observador; registrar falhas como issues `bug` |
 
 ## Sprint 3 — Resultado, painel da mesa e auditoria (H9, H10, H11)
 

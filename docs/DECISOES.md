@@ -60,6 +60,10 @@ Detalhes em `GIT_FLOW.md`. Resumo: `main` (produção), `develop` (integração)
 
 Detalhes em `DEPLOY_HOSTINGER.md`. Consequências: sem workers de fila (`QUEUE_CONNECTION=sync`), cache em arquivo, agendador via cron do hPanel.
 
-## D9 — Trello como gestão
+## D9 — GitHub Issues como gestão (não Trello)
 
-Cartões = histórias de `HISTORIAS_USUARIO.md`. Colunas sugeridas: **Backlog → Sprint atual → Em desenvolvimento → Em revisão (PR aberto) → Concluído**. Todo cartão em "Em desenvolvimento" tem uma branch; todo cartão em "Em revisão" tem um PR.
+**Decisão:** cada história de `HISTORIAS_USUARIO.md` é uma **issue** no GitHub, com etiqueta de perfil (`geral`, `front`, `back`, `dados`, `testes`, `qa`) e **milestone** da sprint. O quadro é o GitHub Projects do repositório.
+
+**Por quê:** a issue fecha sozinha quando o PR diz `closes #12`; CI, revisão e discussão ficam no mesmo lugar; os alunos aprendem uma ferramenta só. Trello exigiria copiar link de cartão para PR e vice-versa.
+
+**Como usar:** toda branch nasce de uma issue (`feature/12-liberar-votacao`); todo PR cita a issue; issue sem PR aberto em duas semanas volta para discussão na reunião de sprint.

@@ -17,11 +17,11 @@ Duas regras que não têm exceção:
 | `fix/*`     | Correção de bug encontrado em `develop`.                          |
 | `hotfix/*`  | Correção urgente em produção. Nasce de `main`, volta para `main` **e** `develop`. |
 
-Nome da branch = tipo + número do cartão no Trello + descrição curta:
+Nome da branch = tipo + número da issue + descrição curta:
 
 ```
-feature/h4-liberar-votacao
-fix/h6-duplo-clique-no-voto
+feature/12-liberar-votacao
+fix/18-duplo-clique-no-voto
 ```
 
 ## Fluxo completo de uma história
@@ -32,7 +32,7 @@ git checkout develop
 git pull origin develop
 
 # 2. Criar a branch da história
-git checkout -b feature/h4-liberar-votacao
+git checkout -b feature/12-liberar-votacao
 
 # 3. Trabalhar em commits pequenos
 git add .
@@ -44,18 +44,18 @@ git commit -m "test: cobrir liberação de sessão e eleitor já votou"
 php artisan test
 
 # 5. Subir e abrir o PR (base: develop)
-git push -u origin feature/h4-liberar-votacao
+git push -u origin feature/12-liberar-votacao
 ```
 
-No GitHub: **Pull requests → New** → base `develop` ← compare `feature/h4-...`.
-No título use o mesmo padrão dos commits; na descrição cole o link do cartão do Trello e diga **como testar**.
+No GitHub: **Pull requests → New** → base `develop` ← compare `feature/12-...`.
+No título use o mesmo padrão dos commits; na descrição escreva `closes #12` (fecha a issue no merge) e diga **como testar**.
 
 Depois do merge:
 
 ```bash
 git checkout develop
 git pull origin develop
-git branch -d feature/h4-liberar-votacao
+git branch -d feature/12-liberar-votacao
 ```
 
 ## Deploy (develop → main)
@@ -98,7 +98,7 @@ main    ────────────────────────
                                ↑ PR            ↑ PR
 develop ───●─────●──────●──────●──────●────────●──── (integração)
            ↑     ↑      ↑             ↑
-feature/h1 ●──●──┘      │             │
-feature/h2 ●──●──●──────┘             │
-fix/h2-... ●──●───────────────────────┘
+feature/12 ●──●──┘      │             │
+feature/13 ●──●──●──────┘             │
+fix/18-... ●──●───────────────────────┘
 ```

@@ -1,6 +1,6 @@
 # Histórias de usuário
 
-Formato: **Como** [perfil], **quero** [ação] **para** [benefício]. Cada história vira um cartão no Trello com os critérios de aceite como checklist. Uma história = uma branch `feature/hN-...` = um PR.
+Formato: **Como** [perfil], **quero** [ação] **para** [benefício]. Cada história é uma **issue no GitHub** com os critérios de aceite como checklist, etiqueta de perfil e milestone da sprint. Uma história = uma issue = uma branch `feature/<nº da issue>-...` = um PR com `closes #<nº>`.
 
 ## Perfis
 
@@ -101,4 +101,4 @@ Como equipe, queremos o sistema no ar na Hostinger com HTTPS para realizar a ele
 - Protótipo da tela aprovado no Figma (quando houver tela).
 - Testes escritos e passando (`php artisan test`).
 - PR revisado e mergeado em `develop`.
-- Cartão do Trello com o link do PR.
+- Issue fechada pelo PR (`closes #<nº>` na descrição).

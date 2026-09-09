@@ -45,7 +45,7 @@ O fluxo reproduz a urna presencial: o eleitor não faz login; quem o identifica 
 O projeto tem dupla finalidade:
 
 - **Institucional**: entregar à UniCatólica uma ferramenta própria para suas eleições de colegiado, reutilizável a cada semestre.
-- **Formativa**: ser o projeto integrador da equipe do DIGITECH. Os alunos praticam levantamento de requisitos (histórias de usuário), modelagem de dados, prototipação (Figma), desenvolvimento em framework (Laravel), testes automatizados, Git Flow com revisão por pares, gestão ágil (Trello) e publicação em produção (Hostinger).
+- **Formativa**: ser o projeto integrador da equipe do DIGITECH. Os alunos praticam levantamento de requisitos (histórias de usuário), modelagem de dados, prototipação (Figma), desenvolvimento em framework (Laravel), testes automatizados, Git Flow com revisão por pares, gestão ágil (GitHub Issues e Projects) e publicação em produção (Hostinger).
 
 ### Fora do escopo (nesta versão)
 
@@ -53,7 +53,7 @@ Voto remoto/on-line sem mesário, biometria, integração com o sistema acadêmi
 
 ### Roadmap
 
-Cinco sprints de duas semanas. O detalhe, com a ordem de dependência das histórias e os riscos, está em **[docs/ROADMAP.md](docs/ROADMAP.md)**.
+Cinco sprints de duas semanas. O detalhe, por perfil, está em **[docs/ROADMAP.md](docs/ROADMAP.md)**. O trabalho é acompanhado na aba **Issues** (uma por história, com etiqueta de perfil e milestone da sprint) e no quadro em **Projects**.
 
 | Sprint | Objetivo                                 | Histórias      |
 | ------ | ---------------------------------------- | -------------- |
@@ -73,7 +73,7 @@ Cinco sprints de duas semanas. O detalhe, com a ordem de dependência das histó
 | Testes     | PHPUnit (unitários e de integração)               |
 | Local      | XAMPP (Windows) ou LAMP (Linux)                   |
 | Produção   | Hostinger (hospedagem compartilhada)              |
-| Gestão     | Trello · Git Flow · Figma                         |
+| Gestão     | GitHub Issues + Projects · Git Flow · Figma       |
 
 ## Começando em 5 comandos
 
@@ -128,7 +128,7 @@ Esperado: `9 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), ent
 | ------------------------------------------------------ | ----------------------------------------------------- |
 | [docs/DECISOES.md](docs/DECISOES.md)                   | Decisões de arquitetura e respostas às dúvidas iniciais |
 | [docs/MODELO_DADOS.md](docs/MODELO_DADOS.md)           | Diagrama ER e regras do banco (sigilo do voto)        |
-| [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md) | Histórias prontas para virar cartões no Trello        |
+| [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md) | Histórias de usuário (espelhadas nas Issues)          |
 | [docs/ROADMAP.md](docs/ROADMAP.md)                     | Sprints e ordem de implementação                      |
 | [docs/GIT_FLOW.md](docs/GIT_FLOW.md)                   | Branches, commits e Pull Requests (terminal)          |
 | [docs/GITHUB_DESKTOP.md](docs/GITHUB_DESKTOP.md)       | O mesmo fluxo no GitHub Desktop e no site, para iniciantes |

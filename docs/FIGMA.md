@@ -25,7 +25,7 @@ Também: **tela de login** (H1) e um **estado de erro** genérico.
 
 ## Como conecta com o código
 
-- O cartão no Trello de cada história linka o frame do Figma.
+- A issue de cada história linka o frame do Figma.
 - A branch da história só começa com o frame aprovado ("Definição de pronto" em `HISTORIAS_USUARIO.md`).
 - Bootstrap 5 tem kit oficial na Figma Community ("Bootstrap 5 UI Kit"); usar acelera e mantém o protótipo fiel ao que dá para construir.
 
