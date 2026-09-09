@@ -2,16 +2,17 @@
 
 > Sem terminal? O mesmo fluxo, com GitHub Desktop e o site, está em `GITHUB_DESKTOP.md`.
 
-Duas regras que não têm exceção:
+Três regras, aplicadas pelo próprio GitHub (rulesets do repositório), não só combinadas:
 
-1. **Ninguém commita direto em `main` nem em `develop`.** Todo código entra por Pull Request.
-2. **PR só é mergeado com o CI verde** (os testes rodam automaticamente) **e pelo menos uma aprovação** de outro membro.
+1. **`main` é do professor.** Só ele faz push ou merge nela. Alunos nunca a tocam, nem por PR.
+2. **Ninguém commita direto em `develop`.** Todo código entra por Pull Request.
+3. **PR para `develop` só é mergeado com o CI verde** (check `phpunit`) **e pelo menos uma aprovação** de outro membro. Push forçado e exclusão das duas branches estão bloqueados.
 
 ## Branches
 
 | Branch      | Papel                                                             |
 | ----------- | ----------------------------------------------------------------- |
-| `main`      | O que está em produção na Hostinger. Recebe merge só de `develop`. |
+| `main`      | O que está em produção na Hostinger. Só o professor mexe; recebe merge de `develop` ao fim da sprint. |
 | `develop`   | Integração. Tudo que está pronto e testado, aguardando deploy.    |
 | `feature/*` | Uma história de usuário (ou parte dela). Nasce e morre em `develop`. |
 | `fix/*`     | Correção de bug encontrado em `develop`.                          |
@@ -60,7 +61,7 @@ git branch -d feature/12-liberar-votacao
 
 ## Deploy (develop → main)
 
-Ao fim de cada sprint, o professor ou o líder técnico abre um PR `main` ← `develop`, revisa e faz o merge. O merge em `main` dispara o deploy (ver `DEPLOY_HOSTINGER.md`).
+Ao fim de cada sprint, **o professor** abre um PR `main` ← `develop`, revisa e faz o merge. Alunos não têm permissão para isso; se um PR para `main` for aberto por engano, o GitHub bloqueia o merge. O merge em `main` dispara o deploy (ver `DEPLOY_HOSTINGER.md`).
 
 ## Padrão de commits (Conventional Commits)
 

@@ -54,7 +54,7 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 ## D7 — Git Flow com PR obrigatório e CI
 
-Detalhes em `GIT_FLOW.md`. Resumo: `main` (produção), `develop` (integração), `feature/*` por história, PR com CI verde e uma aprovação.
+Detalhes em `GIT_FLOW.md`. Resumo: `main` (produção, só o professor), `develop` (integração dos alunos), `feature/*` por história, PR com CI verde e uma aprovação. As regras estão aplicadas como rulesets no GitHub, com bypass apenas para o administrador do repositório.
 
 ## D8 — Hostinger compartilhada como produção
 
