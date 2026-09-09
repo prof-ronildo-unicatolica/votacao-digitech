@@ -8,6 +8,8 @@ Figma tem plano **Education** gratuito para alunos e professores: <https://www.f
 
 ## O que prototipar (Sprint 0)
 
+Cada tela tem uma issue com etiqueta `ui-ux`: #23 design system, #24 login, #25 admin, #26 painel do mesário, #27 urna, #28 resultado, #29 teste de usabilidade. O quadro do projeto está em <https://github.com/users/prof-ronildo-unicatolica/projects/1>.
+
 | Tela                         | Contexto de uso                                   | Pontos de atenção                                              |
 | ---------------------------- | ------------------------------------------------- | -------------------------------------------------------------- |
 | **Urna** (H7, H8)            | Tela cheia, sem mouse às vezes, eleitor nervoso   | Fonte ≥ 24px, botões ≥ 48px, 3 estados: aguardando → escolha → confirmação → obrigado |
