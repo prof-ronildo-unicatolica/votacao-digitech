@@ -1,5 +1,7 @@
 # Git Flow do projeto
 
+> Sem terminal? O mesmo fluxo, com GitHub Desktop e o site, está em `GITHUB_DESKTOP.md`.
+
 Duas regras que não têm exceção:
 
 1. **Ninguém commita direto em `main` nem em `develop`.** Todo código entra por Pull Request.

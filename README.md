@@ -130,7 +130,8 @@ Esperado: `9 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), ent
 | [docs/MODELO_DADOS.md](docs/MODELO_DADOS.md)           | Diagrama ER e regras do banco (sigilo do voto)        |
 | [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md) | Histórias prontas para virar cartões no Trello        |
 | [docs/ROADMAP.md](docs/ROADMAP.md)                     | Sprints e ordem de implementação                      |
-| [docs/GIT_FLOW.md](docs/GIT_FLOW.md)                   | Branches, commits e Pull Requests                     |
+| [docs/GIT_FLOW.md](docs/GIT_FLOW.md)                   | Branches, commits e Pull Requests (terminal)          |
+| [docs/GITHUB_DESKTOP.md](docs/GITHUB_DESKTOP.md)       | O mesmo fluxo no GitHub Desktop e no site, para iniciantes |
 | [docs/TESTES.md](docs/TESTES.md)                       | Como escrever e rodar testes                          |
 | [docs/FIGMA.md](docs/FIGMA.md)                         | O que prototipar antes de codar                       |
 | [docs/DEPLOY_HOSTINGER.md](docs/DEPLOY_HOSTINGER.md)   | Publicação em produção                                |

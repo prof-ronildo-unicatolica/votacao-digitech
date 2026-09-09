@@ -18,7 +18,7 @@ Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; T
 
 | Perfil | Entrega                                                                                  |
 | ------ | ---------------------------------------------------------------------------------------- |
-| Todos  | Scaffold rodando local (`INSTALACAO_*.md`), `php artisan test` verde, um PR de treino    |
+| Todos  | Scaffold rodando local (`INSTALACAO_*.md`), `php artisan test` verde, um PR de treino (`GITHUB_DESKTOP.md`) |
 | Back   | Ler `DECISOES.md`; mapear o que o Laravel já resolve (`Auth`, CSRF, validação)           |
 | Dados  | Propor os atributos de cada tabela (tabela de perguntas em `MODELO_DADOS.md`)            |
 | Front  | Wireframes de login, admin, mesário e urna (`FIGMA.md`)                                  |
