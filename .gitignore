@@ -1,28 +1,26 @@
-# Variáveis de ambiente
-.env
-
-# XAMPP / Sistema
 *.log
-error_log
-
-# Sistema operacional
-Thumbs.db
-thumbs.db
-Desktop.ini
-desktop.ini
 .DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
 
-# IDEs e editores
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Dependências
-vendor/
-node_modules/
-
-# Arquivos temporários do PHP
-*.cache
-sessions/
+/database/*.sqlite*

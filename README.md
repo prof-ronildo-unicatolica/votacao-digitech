@@ -1,231 +1,99 @@
-# Sistema de Votação Digital — DIGITECH
+# Votação DigiTech
 
-> Sistema de votação digital para colegiado universitário, desenvolvido pelo laboratório DIGITECH da UniCatólica.
+> Sistema de votação digital para colegiado universitário — laboratório DIGITECH, UniCatólica.
+> Este repositório contém o **scaffold mínimo funcional** (Laravel 12 + MySQL) e a documentação do projeto.
+> A implementação das telas é feita pela equipe seguindo as histórias em `docs/HISTORIAS_USUARIO.md`.
 
----
+## Stack
 
-## Pré-requisitos
+| Camada     | Tecnologia                                        |
+| ---------- | ------------------------------------------------- |
+| Back-end   | PHP 8.2+ · Laravel 12                             |
+| Front-end  | Blade + Bootstrap 5 (CDN, sem Node no scaffold)   |
+| Banco      | MySQL / MariaDB 10.4+ (XAMPP) · SQLite nos testes |
+| Testes     | PHPUnit (unitários e de integração)               |
+| Local      | XAMPP (Windows) ou LAMP (Linux)                   |
+| Produção   | Hostinger (hospedagem compartilhada)              |
+| Gestão     | Trello · Git Flow · Figma                         |
 
-| Software                                | Versão mínima                          |
-| --------------------------------------- | -------------------------------------- |
-| [XAMPP](https://www.apachefriends.org/) | 8.2+ (Apache + MySQL + PHP)            |
-| Navegador                               | Chrome, Firefox ou Edge (versão atual) |
+## Começando em 5 comandos
 
----
-
-## Instalação
-
-### 1. Clonar o repositório
-
-```bash
-cd C:\xampp\htdocs
-git clone <url-do-repositorio> votacao-digitech
-```
-
-### 2. Configurar variáveis de ambiente
-
-Copie o arquivo de exemplo e preencha com suas credenciais:
+Pré-requisitos: PHP 8.2+, Composer e MySQL rodando. Tutorial passo a passo:
+**[docs/INSTALACAO_XAMPP.md](docs/INSTALACAO_XAMPP.md)** (Windows) ou **[docs/INSTALACAO_LAMP.md](docs/INSTALACAO_LAMP.md)** (Linux).
 
 ```bash
+git clone https://github.com/prof-ronildo-unicatolica/votacao-digitech.git
 cd votacao-digitech
-copy .env.example .env
+composer install
+copy .env.example .env      # Linux/macOS: cp .env.example .env
+php artisan key:generate
 ```
 
-Edite o `.env`:
-
-```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASS=
-DB_NAME=votacao_digitech
-```
-
-### 3. Criar o banco de dados
-
-Abra o phpMyAdmin (`http://localhost/phpmyadmin`) e execute:
-
-```sql
-CREATE DATABASE votacao_digitech CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 4. Criar as tabelas
-
-No phpMyAdmin, selecione o banco `votacao_digitech`, vá em **Importar** e selecione o arquivo `schema.sql`.
-
-Ou via terminal:
+Crie o banco `votacao_digitech` (phpMyAdmin ou `mysql -u root -e "CREATE DATABASE votacao_digitech"`), depois:
 
 ```bash
-C:\xampp\mysql\bin\mysql.exe -u root votacao_digitech < schema.sql
+php artisan migrate --seed
+php artisan serve
 ```
 
-### 5. Inserir dados de teste (opcional)
+Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a eleição ativa e as chapas do seed.
+
+## O que o scaffold entrega
+
+| Item                           | Onde                                          |
+| ------------------------------ | --------------------------------------------- |
+| Modelo de dados (7 migrations) | `database/migrations/2026_09_09_*`            |
+| Models Eloquent com relações   | `app/Models/`                                 |
+| Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |
+| Página inicial funcional       | `app/Http/Controllers/HomeController.php`     |
+| API de saúde e status da urna  | `routes/api.php`                              |
+| Telas placeholder              | `/mesario`, `/urna/{terminal}`, `/admin`      |
+| Regra de apuração pura         | `app/Support/Apuracao.php`                    |
+| 5 testes unitários             | `tests/Unit/ApuracaoTest.php`                 |
+| 10 testes de integração        | `tests/Feature/`                              |
+| CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
+
+Usuários do seed: `admin@digitech.local` / `admin123` e `mesario@digitech.local` / `mesario123` (login ainda não implementado — história H3).
+
+## Rodando os testes
 
 ```bash
-C:\xampp\mysql\bin\mysql.exe -u root votacao_digitech < dados-teste.sql
+php artisan test
 ```
 
-### 6. Iniciar o XAMPP
-
-1. Abra o **XAMPP Control Panel**
-2. Inicie **Apache** e **MySQL**
-3. Acesse `http://localhost/votacao-digitech/`
-
----
-
-## Estrutura do Projeto
-
-```
-votacao-digitech/
-├── config.php                   ← Conexão com banco (lê .env)
-├── models.php                   ← Classes de domínio (Aluno, Chapa, Voto, Mesario)
-├── schema.sql                   ← DDL — criação das tabelas
-├── dados-teste.sql              ← Seed de dados para desenvolvimento
-├── .env                         ← Credenciais locais (NÃO versionar)
-├── .env.example                 ← Template do .env
-├── .gitignore
-│
-├── assets/
-│   ├── css/styles.css           ← CSS centralizado
-│   ├── js/main.js               ← JavaScript compartilhado
-│   └── img/                     ← Imagens e logo
-│
-├── classes/
-│   ├── SessaoVotacao.php        ← Lógica de sessões e votação
-│   ├── Csrf.php                 ← Proteção CSRF
-│   ├── Validador.php            ← Validação de entradas
-│   ├── AutenticacaoMesario.php  ← Login/logout do mesário
-│   ├── Eleicao.php              ← Controle de período
-│   ├── AuditLog.php             ← Log de auditoria
-│   ├── AdminController.php      ← CRUD administrativo
-│   └── RateLimiter.php          ← Limitação de tentativas
-│
-├── api/
-│   ├── status.php               ← Polling JSON (estado do terminal)
-│   └── resultados.php           ← Resultados da eleição (JSON)
-│
-├── admin/
-│   ├── index.php                ← Painel administrativo
-│   ├── dashboard.php            ← Dashboard de resultados
-│   ├── alunos.php               ← CRUD de alunos
-│   ├── chapas.php               ← CRUD de chapas
-│   ├── terminais.php            ← CRUD de terminais
-│   ├── eleicao.php              ← Configuração de período
-│   └── logs.php                 ← Log de auditoria
-│
-├── mesario/
-│   ├── login.php                ← Login do mesário
-│   └── index.php                ← Painel do mesário
-│
-├── votante/
-│   └── index.php                ← Urna de votação
-│
-└── docs/                        ← Documentação do projeto
-```
-
----
-
-## Fluxo de Uso
-
-### 1. Mesário faz login
-
-1. Acesse `http://localhost/votacao-digitech/mesario/login.php`
-2. Informe matrícula e senha do mesário
-
-### 2. Mesário libera votação
-
-1. No painel, digite a matrícula do votante
-2. Selecione o terminal de votação
-3. Clique em **Liberar Votação**
-
-### 3. Votante vota
-
-1. A urna no terminal selecionado detecta a liberação automaticamente (polling)
-2. O votante seleciona uma chapa e confirma o voto
-3. O sistema registra o voto e encerra a sessão
-
-### 4. Apuração
-
-1. Após o encerramento do período de votação, acesse o dashboard
-2. Os resultados são exibidos com gráficos e percentuais
-
----
-
-## Dados de Teste
-
-### Votantes
-
-| Matrícula | Nome           |
-| --------- | -------------- |
-| 2024007   | Lucas Ferreira |
-| 2024008   | Beatriz Lima   |
-| 2024009   | Gabriel Rocha  |
-| 2024010   | Camila Souza   |
-| 2024011   | Rafael Torres  |
-| 2024012   | Isabela Gomes  |
-
-### Mesários
-
-| Matrícula | Nome             |
-| --------- | ---------------- |
-| 2024013   | Bruno Castro     |
-| 2024014   | Fernanda Ribeiro |
-
-### Chapas
-
-| Número | Nome          | Presidente   | Vice          |
-| ------ | ------------- | ------------ | ------------- |
-| 1      | Transformação | João Silva   | Maria Santos  |
-| 2      | Movimento     | Carlos Costa | Ana Oliveira  |
-| 3      | Integração    | Pedro Alves  | Sofia Martins |
-
-### Terminais
-
-| Número | Local             |
-| ------ | ----------------- |
-| 1      | Lab Informática A |
-| 2      | Lab Informática B |
-| 3      | Sala de Aula 101  |
-| 4      | Biblioteca        |
-
----
-
-## Solução de Problemas
-
-### "Erro ao conectar ao banco"
-
-- Verifique se Apache e MySQL estão rodando no XAMPP
-- Confirme as credenciais no arquivo `.env`
-- Verifique se o banco `votacao_digitech` existe no phpMyAdmin
-
-### "Aluno não encontrado"
-
-- Use uma matrícula válida do `dados-teste.sql` (2024007 a 2024012 para votantes)
-
-### "Nenhuma sessão liberada"
-
-- O mesário precisa liberar a votação antes do votante acessar a urna
-- Verifique se o terminal selecionado no mesário é o mesmo da urna
-
----
-
-## Stack Tecnológica
-
-| Camada         | Tecnologia                          |
-| -------------- | ----------------------------------- |
-| Linguagem      | PHP 8.2 (estrutural, sem framework) |
-| Front-end      | HTML5, Bootstrap, CSS3 customizado  |
-| Banco de Dados | MySQL (charset utf8mb4)             |
-| Ambiente Local | XAMPP                               |
-| Hospedagem     | Hostinger                           |
-
----
+Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 
-A documentação completa do projeto está na pasta `docs/`:
+| Documento                                              | Conteúdo                                              |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| [docs/DECISOES.md](docs/DECISOES.md)                   | Decisões de arquitetura e respostas às dúvidas iniciais |
+| [docs/MODELO_DADOS.md](docs/MODELO_DADOS.md)           | Diagrama ER e regras do banco (sigilo do voto)        |
+| [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md) | Histórias prontas para virar cartões no Trello        |
+| [docs/ROADMAP.md](docs/ROADMAP.md)                     | Sprints e ordem de implementação                      |
+| [docs/GIT_FLOW.md](docs/GIT_FLOW.md)                   | Branches, commits e Pull Requests                     |
+| [docs/TESTES.md](docs/TESTES.md)                       | Como escrever e rodar testes                          |
+| [docs/FIGMA.md](docs/FIGMA.md)                         | O que prototipar antes de codar                       |
+| [docs/DEPLOY_HOSTINGER.md](docs/DEPLOY_HOSTINGER.md)   | Publicação em produção                                |
+| [docs/PLAYLISTS.md](docs/PLAYLISTS.md)                 | Playlists de estudo da stack                          |
 
----
+## Estrutura (o que importa para a equipe)
+
+```
+app/
+├── Http/Controllers/     ← recebem a requisição e devolvem view ou JSON
+├── Models/               ← Eleicao, Chapa, Eleitor, Terminal, SessaoVotacao, Voto, User
+└── Support/Apuracao.php  ← regras puras (sem banco)
+database/
+├── migrations/           ← estrutura das tabelas (versionada)
+├── factories/            ← geram dados falsos para os testes
+└── seeders/              ← dados de desenvolvimento
+resources/views/          ← telas Blade (layouts/, placeholders/, home)
+routes/web.php            ← rotas de páginas · routes/api.php ← rotas JSON
+tests/Unit · tests/Feature
+docs/                     ← toda a documentação
+```
 
 ## Licença
 
-Projeto acadêmico do laboratório DIGITECH — UniCatólica.
+Projeto acadêmico do laboratório DIGITECH — UniCatólica. Uso educacional.
