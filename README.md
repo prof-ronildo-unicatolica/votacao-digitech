@@ -57,7 +57,7 @@ Cinco sprints de duas semanas. O detalhe, por perfil, está em **[docs/ROADMAP.m
 
 | Sprint | Objetivo                                 | Histórias      |
 | ------ | ---------------------------------------- | -------------- |
-| 0      | Ambiente, Trello, Figma, git flow        | —              |
+| 0      | Ambiente, Issues, Figma, git flow        | —              |
 | 1      | Admin monta uma eleição                  | H1, H2, H3, H5 |
 | 2      | Dia da votação de ponta a ponta          | H4, H6, H7, H8 |
 | 3      | Resultado, painel da mesa e auditoria    | H9, H10, H11   |
@@ -153,6 +153,14 @@ routes/web.php            ← rotas de páginas · routes/api.php ← rotas JSON
 tests/Unit · tests/Feature
 docs/                     ← toda a documentação
 ```
+
+## Equipe
+
+| Nome | Perfil |
+| ---- | ------ |
+| Prof. Ronildo Silva | Orientação |
+
+Cada membro adiciona sua linha aqui no PR de treino da Sprint 0.
 
 ## Licença
 
