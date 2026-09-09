@@ -21,7 +21,7 @@ Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; T
 | Todos  | Scaffold rodando local (`INSTALACAO_*.md`), `php artisan test` verde, um PR de treino (`GITHUB_DESKTOP.md`); etiqueta do seu perfil nas issues |
 | Back   | Ler `DECISOES.md`; mapear o que o Laravel já resolve (`Auth`, CSRF, validação)           |
 | Dados  | Propor os atributos de cada tabela (tabela de perguntas em `MODELO_DADOS.md`)            |
-| Front  | Wireframes de login, admin, mesário e urna (`FIGMA.md`); link do frame em cada issue     |
+| Front  | Design system e protótipos de login, admin, mesário e urna (issues `ui-ux` #23 a #27)     |
 | Testes | Entender `tests/` e o CI; definir o que cada história precisa cobrir (`TESTES.md`)       |
 | QA     | Revisar as issues das 12 histórias e o quadro do GitHub Projects; combinar a definição de pronto |
 
@@ -41,7 +41,7 @@ Regra: todo PR tem revisão de outro perfil. QA revisa se atende à história; T
 | ------ | ---------------------------------------------------------------------------------------- |
 | Back   | Importar eleitores por CSV; liberar sessão; API de status da urna; registrar voto em transação |
 | Dados  | Atributos de `eleitores`, `sessoes_votacao` (situação, horários) e `votos` (branco/nulo) |
-| Front  | Painel do mesário; urna em modo quiosque com polling e tela de confirmação               |
+| Front  | Painel do mesário; urna em modo quiosque com polling e confirmação; protótipo do resultado (#28) e teste de usabilidade (#29) |
 | Testes | Voto único, sessão expirada, duplo clique, CSV com linha inválida                        |
 | QA     | Simulação com 3 pessoas: mesário, eleitor, observador; registrar falhas como issues `bug` |
 

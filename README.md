@@ -53,7 +53,7 @@ Voto remoto/on-line sem mesário, biometria, integração com o sistema acadêmi
 
 ### Roadmap
 
-Cinco sprints de duas semanas. O detalhe, por perfil, está em **[docs/ROADMAP.md](docs/ROADMAP.md)**. O trabalho é acompanhado na aba **Issues** (uma por história, com etiqueta de perfil e milestone da sprint) e no quadro em **Projects**.
+Cinco sprints de duas semanas. O detalhe, por perfil, está em **[docs/ROADMAP.md](docs/ROADMAP.md)**. O trabalho é acompanhado na aba **Issues** (uma por história, com etiqueta de perfil e milestone da sprint) e no [quadro do projeto](https://github.com/users/prof-ronildo-unicatolica/projects/1).
 
 | Sprint | Objetivo                                 | Histórias      |
 | ------ | ---------------------------------------- | -------------- |
