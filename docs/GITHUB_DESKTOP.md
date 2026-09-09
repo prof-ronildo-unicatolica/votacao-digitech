@@ -29,7 +29,7 @@ Antes: na aba **Issues** do site, abra a issue da história, clique em **Assigne
 3. **Current branch → New branch**. Nome no padrão: `feature/12-liberar-votacao` (12 = número da issue). Confirme que ela é criada **a partir de `develop`**.
 4. **Publish branch** (botão azul) para ela existir no GitHub.
 
-Nunca trabalhe direto em `main` ou `develop`. Se o **Current branch** mostrar uma dessas, crie a branch antes de editar.
+Nunca trabalhe direto em `main` ou `develop`. Se o **Current branch** mostrar uma dessas, crie a branch antes de editar. `main` é só do professor: o GitHub recusa push e merge de qualquer outra pessoa.
 
 ## 5. Salvar o trabalho (commit)
 
