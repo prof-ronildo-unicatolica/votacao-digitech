@@ -1,5 +1,14 @@
 # Deploy na Hostinger (hospedagem compartilhada)
 
+Dois ambientes, um por branch:
+
+| Branch    | Ambiente    | Sugestão de endereço          | Banco                    |
+| --------- | ----------- | ----------------------------- | ------------------------ |
+| `staging` | Homologação | `homolog.SEU_DOMINIO`         | `votacao_homolog`        |
+| `main`    | Produção    | `SEU_DOMINIO`                 | `votacao_producao`       |
+
+Os passos abaixo valem para os dois: repita com o subdomínio, a pasta e o banco de cada um. Em homologação pode rodar o seed; em produção, nunca.
+
 > Confirmar na Sprint 0 qual plano foi contratado. Os passos abaixo assumem um plano com **SSH** e **PHP 8.2+** selecionável no hPanel (planos Premium/Business têm os dois). Sem SSH, use a seção "Sem SSH" no final.
 
 ## Antes do primeiro deploy
@@ -64,13 +73,13 @@ Se o painel não permitir o link simbólico, alternativa: copiar o conteúdo de 
 php artisan tinker --execute="App\Models\User::create(['name'=>'Admin','email'=>'admin@SEU_DOMINIO','password'=>'TROQUE-ESTA-SENHA']);"
 ```
 
-## Deploys seguintes (a cada merge em `main`)
+## Deploys seguintes (a cada merge em `staging` ou `main`)
 
 ```bash
 ssh -p PORTA usuario@host
 cd ~/domains/SEU_DOMINIO/app
 php artisan down
-git pull origin main
+git pull origin main      # ou staging, no ambiente de homologação
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
