@@ -27,16 +27,16 @@ class StatusController extends Controller
         ], $banco === 'ok' ? 200 : 503);
     }
 
-    /** GET /api/terminais/{terminal}/status — a urna faz polling aqui. */
+    /**
+     * GET /api/terminais/{terminal}/status — a urna fará polling aqui (histórias H6/H7).
+     * Hoje devolve só o que o schema mínimo permite; a regra "liberada" depende dos
+     * atributos que a equipe definir em sessoes_votacao.
+     */
     public function terminal(Terminal $terminal): JsonResponse
     {
-        $sessao = $terminal->sessaoAberta;
-
         return response()->json([
             'terminal' => $terminal->numero,
-            'liberada' => $sessao !== null,
-            'eleitor' => $sessao?->eleitor?->nome,
-            'expira_em' => $sessao?->expira_em?->toIso8601String(),
+            'sessoes' => $terminal->sessoes()->count(),
         ]);
     }
 }

@@ -15,9 +15,7 @@ class ChapaFactory extends Factory
     {
         return [
             'eleicao_id' => Eleicao::factory(),
-            'numero' => fake()->unique()->numberBetween(10, 99),
-            'nome' => 'Chapa '.fake()->unique()->word(),
-            'descricao' => fake()->sentence(),
+            'numero' => fake()->unique()->numberBetween(1, 99),
         ];
     }
 }

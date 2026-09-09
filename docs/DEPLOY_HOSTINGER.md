@@ -61,7 +61,7 @@ Se o painel não permitir o link simbólico, alternativa: copiar o conteúdo de 
 ## Criar o primeiro admin em produção
 
 ```bash
-php artisan tinker --execute="App\Models\User::create(['name'=>'Admin','email'=>'admin@SEU_DOMINIO','password'=>'TROQUE-ESTA-SENHA','perfil'=>'admin']);"
+php artisan tinker --execute="App\Models\User::create(['name'=>'Admin','email'=>'admin@SEU_DOMINIO','password'=>'TROQUE-ESTA-SENHA']);"
 ```
 
 ## Deploys seguintes (a cada merge em `main`)

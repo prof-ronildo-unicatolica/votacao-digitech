@@ -30,7 +30,7 @@ class LiberarVotacaoTest extends TestCase
     public function test_mesario_libera_eleitor_apto(): void
     {
         // Arrange — montar o cenário com factories
-        $mesario  = User::factory()->create(['perfil' => 'mesario']);
+        $mesario  = User::factory()->create();
         $eleicao  = Eleicao::factory()->create();
         $eleitor  = Eleitor::factory()->create();
         $terminal = Terminal::factory()->create();
@@ -41,7 +41,7 @@ class LiberarVotacaoTest extends TestCase
 
         // Assert — verificar resposta e banco
         $resposta->assertRedirect('/mesario');
-        $this->assertDatabaseHas('sessoes_votacao', ['eleitor_id' => $eleitor->id, 'status' => 'aberta']);
+        $this->assertDatabaseHas('sessoes_votacao', ['eleitor_id' => $eleitor->id, 'terminal_id' => $terminal->id]);
     }
 }
 ```
@@ -50,13 +50,13 @@ class LiberarVotacaoTest extends TestCase
 
 - **Caminho feliz**: o usuário faz o que a história descreve e dá certo.
 - **Um caminho triste**: dado inválido, sem permissão, ou regra violada (ex.: eleitor já votou).
-- **Regra que o banco garante** (quando houver): ex. `SigiloDoVotoTest` verifica que `votos` não tem `eleitor_id`.
+- **Regra que o banco garante** (quando houver): `SigiloDoVotoTest` mostra como testar constraints (unique, cascade, restrict).
 
 ## Convenções
 
 - Nome do método em português, descritivo: `test_eleitor_que_ja_votou_nao_pode_ser_liberado`.
 - Um `assert` principal por teste; vários asserts só se verificam a mesma ação.
-- Factories em `database/factories/`. Se precisar de um estado recorrente, crie um *state* (ex.: `Eleicao::factory()->encerrada()`).
+- Factories em `database/factories/`. Ao adicionar atributos numa migration, atualize a factory correspondente. Estados recorrentes viram *states* (ex.: `Eleicao::factory()->encerrada()`).
 - Não use o seeder nos testes; use factories.
 
 ## CI

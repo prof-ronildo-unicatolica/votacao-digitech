@@ -14,7 +14,6 @@ class TerminalFactory extends Factory
     {
         return [
             'numero' => fake()->unique()->numberBetween(1, 99),
-            'nome' => 'Terminal '.fake()->unique()->word(),
         ];
     }
 }

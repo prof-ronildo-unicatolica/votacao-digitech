@@ -93,7 +93,7 @@ Confira no phpMyAdmin: o banco deve ter as tabelas `eleicoes`, `chapas`, `eleito
 php artisan serve
 ```
 
-Abra <http://localhost:8000>. Você deve ver "Scaffold funcionando", o nome do banco, e as 3 chapas do seed.
+Abra <http://localhost:8000>. Você deve ver "Scaffold funcionando", o nome do banco, a contagem das tabelas e as chapas 1, 2 e 3 do seed.
 Teste também <http://localhost:8000/api/health> (deve responder `"banco":"ok"`).
 
 Para parar: `Ctrl + C` no terminal.
@@ -104,7 +104,7 @@ Para parar: `Ctrl + C` no terminal.
 php artisan test
 ```
 
-Esperado: `Tests: 15 passed`. Os testes usam SQLite em memória, por isso a extensão `pdo_sqlite` precisa estar habilitada (passo 2).
+Esperado: `Tests: 19 passed`. Os testes usam SQLite em memória, por isso a extensão `pdo_sqlite` precisa estar habilitada (passo 2).
 
 ## Problemas comuns
 

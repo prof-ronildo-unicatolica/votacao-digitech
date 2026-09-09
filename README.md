@@ -9,7 +9,7 @@
 | Camada     | Tecnologia                                        |
 | ---------- | ------------------------------------------------- |
 | Back-end   | PHP 8.2+ · Laravel 12                             |
-| Front-end  | Blade + Bootstrap 5 (CDN, sem Node no scaffold)   |
+| Front-end  | Blade + Bootstrap 5.3 via CDN (já no layout, sem Node) |
 | Banco      | MySQL / MariaDB 10.4+ (XAMPP) · SQLite nos testes |
 | Testes     | PHPUnit (unitários e de integração)               |
 | Local      | XAMPP (Windows) ou LAMP (Linux)                   |
@@ -36,13 +36,13 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a eleição ativa e as chapas do seed.
+Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a contagem de cada tabela e as chapas do seed.
 
 ## O que o scaffold entrega
 
 | Item                           | Onde                                          |
 | ------------------------------ | --------------------------------------------- |
-| Modelo de dados (7 migrations) | `database/migrations/2026_09_09_*`            |
+| Modelo de dados: só chaves e constraints (6 migrations) | `database/migrations/2026_09_09_*` |
 | Models Eloquent com relações   | `app/Models/`                                 |
 | Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |
 | Página inicial funcional       | `app/Http/Controllers/HomeController.php`     |
@@ -50,10 +50,10 @@ Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a
 | Telas placeholder              | `/mesario`, `/urna/{terminal}`, `/admin`      |
 | Regra de apuração pura         | `app/Support/Apuracao.php`                    |
 | 5 testes unitários             | `tests/Unit/ApuracaoTest.php`                 |
-| 10 testes de integração        | `tests/Feature/`                              |
+| 14 testes de integração (HTTP e constraints) | `tests/Feature/`                |
 | CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
 
-Usuários do seed: `admin@digitech.local` / `admin123` e `mesario@digitech.local` / `mesario123` (login ainda não implementado — história H3).
+As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe (ver `docs/MODELO_DADOS.md`). Usuário do seed: `mesario@digitech.local` / `mesario123` (login é a história H1).
 
 ## Rodando os testes
 
@@ -61,7 +61,7 @@ Usuários do seed: `admin@digitech.local` / `admin123` e `mesario@digitech.local
 php artisan test
 ```
 
-Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `19 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 

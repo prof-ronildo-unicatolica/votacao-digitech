@@ -12,25 +12,11 @@ class Eleicao extends Model
 
     protected $table = 'eleicoes';
 
-    protected $fillable = ['titulo', 'inicio', 'fim', 'ativa'];
-
-    protected function casts(): array
-    {
-        return [
-            'inicio' => 'datetime',
-            'fim' => 'datetime',
-            'ativa' => 'boolean',
-        ];
-    }
+    protected $guarded = [];
 
     public function chapas(): HasMany
     {
         return $this->hasMany(Chapa::class)->orderBy('numero');
-    }
-
-    public function votos(): HasMany
-    {
-        return $this->hasMany(Voto::class);
     }
 
     public function sessoes(): HasMany
@@ -38,14 +24,8 @@ class Eleicao extends Model
         return $this->hasMany(SessaoVotacao::class);
     }
 
-    /** Eleição marcada como ativa (no máximo uma por vez, por convenção). */
-    public static function ativa(): ?self
+    public function votos(): HasMany
     {
-        return static::where('ativa', true)->latest('inicio')->first();
-    }
-
-    public function votacaoAberta(): bool
-    {
-        return $this->ativa && now()->between($this->inicio, $this->fim);
+        return $this->hasMany(Voto::class);
     }
 }

@@ -18,35 +18,22 @@ class ApiStatusTest extends TestCase
             ->assertJson(['banco' => 'ok']);
     }
 
-    public function test_terminal_sem_sessao_nao_esta_liberado(): void
+    public function test_terminal_sem_sessao(): void
     {
         $terminal = Terminal::factory()->create(['numero' => 7]);
 
         $this->getJson("/api/terminais/{$terminal->id}/status")
             ->assertOk()
-            ->assertExactJson([
-                'terminal' => 7,
-                'liberada' => false,
-                'eleitor' => null,
-                'expira_em' => null,
-            ]);
+            ->assertExactJson(['terminal' => 7, 'sessoes' => 0]);
     }
 
-    public function test_terminal_com_sessao_aberta_informa_o_eleitor(): void
+    public function test_terminal_com_sessao(): void
     {
         $sessao = SessaoVotacao::factory()->create();
 
         $this->getJson("/api/terminais/{$sessao->terminal_id}/status")
             ->assertOk()
-            ->assertJson(['liberada' => true, 'eleitor' => $sessao->eleitor->nome]);
-    }
-
-    public function test_sessao_expirada_nao_libera_o_terminal(): void
-    {
-        $sessao = SessaoVotacao::factory()->create(['expira_em' => now()->subMinute()]);
-
-        $this->getJson("/api/terminais/{$sessao->terminal_id}/status")
-            ->assertJson(['liberada' => false]);
+            ->assertJson(['sessoes' => 1]);
     }
 
     public function test_terminal_inexistente_retorna_404(): void

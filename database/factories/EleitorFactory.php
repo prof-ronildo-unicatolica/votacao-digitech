@@ -14,9 +14,6 @@ class EleitorFactory extends Factory
     {
         return [
             'matricula' => (string) fake()->unique()->numberBetween(2020000, 2029999),
-            'nome' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'turma' => fake()->randomElement(['ADS 2026.1', 'ADS 2026.2', 'ENG 2026.1']),
         ];
     }
 }

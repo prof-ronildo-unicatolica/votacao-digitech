@@ -10,23 +10,9 @@ class SessaoVotacao extends Model
 {
     use HasFactory;
 
-    public const MINUTOS_VALIDADE = 30;
-
     protected $table = 'sessoes_votacao';
 
-    protected $fillable = [
-        'eleicao_id', 'eleitor_id', 'terminal_id', 'liberada_por',
-        'status', 'liberada_em', 'expira_em', 'votou_em',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'liberada_em' => 'datetime',
-            'expira_em' => 'datetime',
-            'votou_em' => 'datetime',
-        ];
-    }
+    protected $guarded = [];
 
     public function eleicao(): BelongsTo
     {
@@ -45,11 +31,6 @@ class SessaoVotacao extends Model
 
     public function mesario(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'liberada_por');
-    }
-
-    public function estaValida(): bool
-    {
-        return $this->status === 'aberta' && $this->expira_em->isFuture();
+        return $this->belongsTo(User::class, 'mesario_id');
     }
 }

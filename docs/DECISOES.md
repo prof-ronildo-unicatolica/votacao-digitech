@@ -28,17 +28,23 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Por quê:** o modelo antigo tinha `votos.eleitor_id`, o que permitia a qualquer pessoa com acesso ao banco saber o voto de cada aluno. Em eleição isso é inaceitável, mesmo em projeto acadêmico. O teste `SigiloDoVotoTest` falha se alguém adicionar essas colunas.
 
-**Limitação conhecida:** `votos.registrado_em` e `sessoes_votacao.votou_em` podem ser correlacionados por horário se houver poucos votantes. Mitigação simples para a Sprint 3: gravar `registrado_em` truncado ao minuto, ou só a data.
+**Atenção ao adicionar atributos:** um horário exato de voto em `votos` pode ser correlacionado com o horário da sessão se houver poucos votantes. Mitigação: gravar truncado ao minuto, ou só a data.
 
 ## D4 — Eleitores não são usuários
 
-**Decisão:** `users` guarda só admin e mesários (com `perfil`). Eleitores ficam em `eleitores`, sem senha, e são identificados pela matrícula pelo mesário.
+**Decisão:** `users` guarda só quem faz login (admin e mesários). Eleitores ficam em `eleitores`, sem senha, e são identificados pela matrícula pelo mesário. Como distinguir admin de mesário é decisão da equipe (H1).
 
 **Por quê:** o eleitor nunca faz login: ele é liberado presencialmente pelo mesário. Misturar os dois em uma tabela `alunos` com `tipo` (como no modelo antigo) obrigava a ter `senha_hash` nulo para a maioria e confundia autenticação com cadastro eleitoral.
 
+## D10 — Migrations do scaffold só com chaves e constraints
+
+**Decisão:** as tabelas do domínio nascem com PK, FKs, chaves naturais únicas (`matricula`, `numero`) e as constraints que codificam regras de negócio. Nenhum outro atributo.
+
+**Por quê:** modelar os atributos é parte do aprendizado da equipe. O que não pode ficar a critério de cada um é a integridade: sigilo do voto, voto único, cascatas. Isso o scaffold fixa e testa (`SigiloDoVotoTest`). A lista de decisões pendentes por tabela está em `MODELO_DADOS.md`.
+
 ## D5 — Uma eleição por vez, mas várias no histórico
 
-**Decisão:** tudo (chapas, sessões, votos) tem `eleicao_id`. Só uma eleição tem `ativa = true`.
+**Decisão:** tudo (chapas, sessões, votos) tem `eleicao_id`. Como marcar a eleição ativa é decisão da equipe (H2).
 
 **Por quê:** o modelo antigo não tinha `eleicao_id` em `chapas` e `votos`, então o sistema servia para uma única eleição e depois precisava ser zerado. Com `eleicao_id`, o próximo semestre é só cadastrar outra eleição.
 

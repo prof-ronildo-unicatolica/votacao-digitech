@@ -2,23 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Voto anônimo: nunca adicione eleitor_id, terminal_id ou sessao_id aqui.
- * O teste tests/Feature/SigiloDoVotoTest.php garante isso.
+ * Voto anônimo: nunca crie relação com Eleitor, Terminal ou SessaoVotacao aqui.
  */
 class Voto extends Model
 {
-    public $timestamps = false;
+    use HasFactory;
 
-    protected $fillable = ['eleicao_id', 'chapa_id', 'tipo', 'registrado_em'];
-
-    protected function casts(): array
-    {
-        return ['registrado_em' => 'datetime'];
-    }
+    protected $guarded = [];
 
     public function eleicao(): BelongsTo
     {

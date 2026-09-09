@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/** `numero` é a chave natural do terminal (aparece na URL da urna: /urna/{terminal}). */
 return new class extends Migration
 {
     public function up(): void
@@ -11,7 +12,6 @@ return new class extends Migration
         Schema::create('terminais', function (Blueprint $table) {
             $table->id();
             $table->unsignedSmallInteger('numero')->unique();
-            $table->string('nome', 100);
             $table->timestamps();
         });
     }

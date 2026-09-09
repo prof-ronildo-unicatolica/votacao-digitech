@@ -6,8 +6,8 @@ Formato: **Como** [perfil], **quero** [ação] **para** [benefício]. Cada hist�
 
 | Perfil      | Quem é                                          | Como entra no sistema                   |
 | ----------- | ----------------------------------------------- | --------------------------------------- |
-| **Admin**   | Comissão eleitoral / professor                  | Login (`users.perfil = admin`)          |
-| **Mesário** | Aluno ou servidor que atende na mesa            | Login (`users.perfil = mesario`)        |
+| **Admin**   | Comissão eleitoral / professor                  | Login (`users`; como diferenciar do mesário é parte da H1) |
+| **Mesário** | Aluno ou servidor que atende na mesa            | Login (`users`)                         |
 | **Eleitor** | Aluno do colegiado                              | Não faz login: é liberado pelo mesário  |
 
 ## Épico A — Configuração (Admin)
@@ -52,7 +52,7 @@ Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal
 - [ ] Busca por matrícula mostra nome e turma antes de confirmar.
 - [ ] Bloqueia se: eleição fora do período, eleitor já votou, terminal já tem sessão aberta.
 - [ ] Sessão expira em 30 minutos; mesário pode liberar de novo se expirou.
-- [ ] Registra quem liberou (`liberada_por`).
+- [ ] Registra quem liberou (`mesario_id`).
 - [ ] Testes: liberação válida, eleitor já votou, terminal ocupado, fora do período.
 
 ### H7 · Urna aguarda liberação

@@ -12,18 +12,10 @@ class Eleitor extends Model
 
     protected $table = 'eleitores';
 
-    protected $fillable = ['matricula', 'nome', 'email', 'turma'];
+    protected $guarded = [];
 
     public function sessoes(): HasMany
     {
         return $this->hasMany(SessaoVotacao::class);
-    }
-
-    public function jaVotou(Eleicao $eleicao): bool
-    {
-        return $this->sessoes()
-            ->where('eleicao_id', $eleicao->id)
-            ->where('status', 'votou')
-            ->exists();
     }
 }

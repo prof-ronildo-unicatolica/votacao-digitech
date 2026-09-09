@@ -19,19 +19,19 @@ class PaginaInicialTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('Nenhuma eleição ativa');
+            ->assertSee('Nenhuma eleição');
     }
 
-    public function test_pagina_inicial_lista_as_chapas_da_eleicao_ativa(): void
+    public function test_pagina_inicial_lista_as_chapas_de_cada_eleicao(): void
     {
-        $eleicao = Eleicao::factory()->create(['titulo' => 'Eleição de Teste']);
-        Chapa::factory()->for($eleicao)->create(['numero' => 10, 'nome' => 'Chapa Alfa']);
-        Chapa::factory()->for($eleicao)->create(['numero' => 20, 'nome' => 'Chapa Beta']);
+        $eleicao = Eleicao::factory()->create();
+        Chapa::factory()->for($eleicao)->create(['numero' => 10]);
+        Chapa::factory()->for($eleicao)->create(['numero' => 20]);
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Eleição de Teste')
-            ->assertSeeInOrder(['Chapa Alfa', 'Chapa Beta']);
+            ->assertSee("Eleição #{$eleicao->id}")
+            ->assertSeeInOrder(['Chapa <strong>10</strong>', 'Chapa <strong>20</strong>'], false);
     }
 
     public function test_telas_placeholder_respondem(): void

@@ -11,7 +11,7 @@ class Chapa extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['eleicao_id', 'numero', 'nome', 'descricao'];
+    protected $guarded = [];
 
     public function eleicao(): BelongsTo
     {

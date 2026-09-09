@@ -1,39 +1,35 @@
 @extends('layouts.app')
 
 @section('conteudo')
-    <h1 class="h3 mb-3">Scaffold funcionando <span class="badge bg-success">ok</span></h1>
+    <h1 class="h3 mb-1">Scaffold funcionando <span class="badge bg-success">ok</span></h1>
+    <p class="text-muted">Banco: {{ $banco }}</p>
 
     <div class="row g-3 mb-4">
-        @foreach ($resumo as $rotulo => $valor)
-            <div class="col-6 col-md-3">
+        @foreach ($contagens as $tabela => $total)
+            <div class="col-6 col-md-2">
                 <div class="card h-100"><div class="card-body">
-                    <div class="text-muted small">{{ $rotulo }}</div>
-                    <div class="fs-5">{{ $valor }}</div>
+                    <div class="text-muted small"><code>{{ $tabela }}</code></div>
+                    <div class="fs-4">{{ $total }}</div>
                 </div></div>
             </div>
         @endforeach
     </div>
 
-    @if ($eleicao)
-        <h2 class="h5">{{ $eleicao->titulo }}
-            <span class="badge {{ $eleicao->votacaoAberta() ? 'bg-primary' : 'bg-secondary' }}">
-                {{ $eleicao->votacaoAberta() ? 'votação aberta' : 'fora do período' }}
-            </span>
-        </h2>
-        <p class="text-muted">{{ $eleicao->inicio->format('d/m/Y H:i') }} a {{ $eleicao->fim->format('d/m/Y H:i') }}</p>
+    @forelse ($eleicoes as $eleicao)
+        <h2 class="h5">Eleição #{{ $eleicao->id }}</h2>
         <ul class="list-group mb-4">
-            @forelse ($chapas as $chapa)
-                <li class="list-group-item d-flex justify-content-between">
-                    <span><strong>{{ $chapa->numero }}</strong> — {{ $chapa->nome }}</span>
-                    <span class="text-muted">{{ $chapa->descricao }}</span>
-                </li>
+            @forelse ($eleicao->chapas as $chapa)
+                <li class="list-group-item">Chapa <strong>{{ $chapa->numero }}</strong></li>
             @empty
                 <li class="list-group-item">Nenhuma chapa cadastrada.</li>
             @endforelse
         </ul>
-    @else
-        <div class="alert alert-warning">Nenhuma eleição ativa. Rode <code>php artisan db:seed</code>.</div>
-    @endif
+    @empty
+        <div class="alert alert-warning">Nenhuma eleição. Rode <code>php artisan db:seed</code>.</div>
+    @endforelse
 
-    <p class="small text-muted">Endpoints: <code>/api/health</code> · <code>/api/terminais/1/status</code></p>
+    <p class="small text-muted">
+        As tabelas têm só chaves e constraints; os atributos são definidos pela equipe (<code>docs/MODELO_DADOS.md</code>).
+        Endpoints: <code>/api/health</code> · <code>/api/terminais/1/status</code>
+    </p>
 @endsection
