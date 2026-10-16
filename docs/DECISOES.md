@@ -28,7 +28,7 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Por quê:** o modelo antigo tinha `votos.eleitor_id`, o que permitia a qualquer pessoa com acesso ao banco saber o voto de cada aluno. Em eleição isso é inaceitável, mesmo em projeto acadêmico. O teste `ConstraintsTest` falha se alguém adicionar essas colunas.
 
-**Atenção ao adicionar atributos:** um horário exato de voto em `votos` pode ser correlacionado com o horário da sessão se houver poucos votantes. Mitigação: gravar truncado ao minuto, ou só a data.
+**Ordem e horário também identificam:** se `votos` tivesse `id` sequencial ou `created_at`, bastaria ordenar as duas tabelas e emparelhar linha a linha. Por isso `votos` **não tem timestamps** e o `id` é **UUID v4 aleatório** (D11). Não adicione coluna de horário em `votos`; se precisar, grave só a data.
 
 ## D4 — Eleitores não são usuários
 
@@ -41,6 +41,17 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 **Decisão:** as tabelas do domínio nascem com PK, FKs, chaves naturais únicas (`matricula`, `numero`) e as constraints que codificam regras de negócio. Nenhum outro atributo.
 
 **Por quê:** modelar os atributos é parte do aprendizado da equipe. O que não pode ficar a critério de cada um é a integridade: sigilo do voto, voto único, cascatas. Isso o scaffold fixa e testa (`ConstraintsTest`). A lista de decisões pendentes por tabela está em `MODELO_DADOS.md`.
+
+## D11 — UUID como chave primária no domínio
+
+**Decisão:** `eleicoes`, `chapas`, `eleitores`, `terminais`, `sessoes_votacao` e `votos` usam UUID (`$table->uuid('id')->primary()`, `foreignUuid(...)` e trait `HasUuids` nos models). `users` e as tabelas internas do Laravel (`sessions`, `jobs`, `cache`...) continuam com `bigint`.
+
+**Por quê:**
+- **Sigilo:** em `votos`, um `id` auto-incremento revela a ordem dos votos. O model `Voto` sobrescreve `newUniqueId()` para gerar UUID **v4 aleatório**. O padrão do `HasUuids` é ordenado por tempo, e vazaria a ordem do mesmo jeito.
+- **Não expor IDs previsíveis** em URLs e APIs (`/urna/{terminal}`, `/api/terminais/{terminal}/status`): não dá para "chutar" o próximo registro.
+- **Prática de mercado:** a equipe aprende desde cedo a lidar com chaves não numéricas.
+
+**Custo:** índices maiores (`char(36)`) e IDs menos legíveis no DBeaver. Para identificar algo para humanos, use a chave natural (`chapas.numero`, `terminais.numero`, `eleitores.matricula`).
 
 ## D5 — Uma eleição por vez, mas várias no histórico
 

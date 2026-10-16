@@ -17,10 +17,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sessoes_votacao', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('eleicao_id')->constrained('eleicoes')->cascadeOnDelete();
-            $table->foreignId('eleitor_id')->constrained('eleitores')->cascadeOnDelete();
-            $table->foreignId('terminal_id')->constrained('terminais')->restrictOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('eleicao_id')->constrained('eleicoes')->cascadeOnDelete();
+            $table->foreignUuid('eleitor_id')->constrained('eleitores')->cascadeOnDelete();
+            $table->foreignUuid('terminal_id')->constrained('terminais')->restrictOnDelete();
             $table->foreignId('mesario_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 

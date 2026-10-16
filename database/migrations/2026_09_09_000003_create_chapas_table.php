@@ -14,8 +14,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chapas', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('eleicao_id')->constrained('eleicoes')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('eleicao_id')->constrained('eleicoes')->cascadeOnDelete();
             $table->unsignedSmallInteger('numero');
             $table->timestamps();
 
