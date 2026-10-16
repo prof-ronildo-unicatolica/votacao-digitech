@@ -16,7 +16,7 @@
     </div>
 
     @forelse ($eleicoes as $eleicao)
-        <h2 class="h5">Eleição #{{ $eleicao->id }}</h2>
+        <h2 class="h5">Eleição <code>{{ $eleicao->id }}</code></h2>
         <ul class="list-group mb-4">
             @forelse ($eleicao->chapas as $chapa)
                 <li class="list-group-item">Chapa <strong>{{ $chapa->numero }}</strong></li>
