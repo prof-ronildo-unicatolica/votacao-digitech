@@ -88,7 +88,22 @@ copy .env.example .env      # Linux/macOS: cp .env.example .env
 php artisan key:generate
 ```
 
-Crie o banco `votacao_digitech` (phpMyAdmin ou `mysql -u root -e "CREATE DATABASE votacao_digitech"`), depois:
+Crie o banco `votacao_digitech` (phpMyAdmin ou `mysql -u root -e "CREATE DATABASE votacao_digitech"`).
+
+> **Linux (LAMP):** no MySQL/MariaDB do Linux o `root` costuma autenticar via socket (`ERROR 1698: Access denied for user 'root'@'localhost'`), e o Laravel não consegue entrar com `root` sem senha. Crie um usuário próprio e ajuste `DB_USERNAME`/`DB_PASSWORD` no `.env`:
+>
+> ```bash
+> sudo mysql -e "CREATE DATABASE IF NOT EXISTS votacao_digitech CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+>   CREATE USER IF NOT EXISTS 'votacao'@'localhost' IDENTIFIED BY 'votacao';
+>   CREATE USER IF NOT EXISTS 'votacao'@'127.0.0.1' IDENTIFIED BY 'votacao';
+>   GRANT ALL PRIVILEGES ON votacao_digitech.* TO 'votacao'@'localhost';
+>   GRANT ALL PRIVILEGES ON votacao_digitech.* TO 'votacao'@'127.0.0.1';
+>   FLUSH PRIVILEGES;"
+> ```
+>
+> No `.env`: `DB_USERNAME=votacao` e `DB_PASSWORD=votacao`.
+
+Depois:
 
 ```bash
 php artisan migrate --seed
