@@ -33,7 +33,7 @@ erDiagram
         uuid eleicao_id FK "UK (eleicao_id, eleitor_id)"
         uuid eleitor_id FK
         uuid terminal_id FK
-        bigint mesario_id FK "users, nullable"
+        bigint mesario_id FK "users"
     }
     VOTOS {
         uuid id PK
@@ -47,7 +47,7 @@ erDiagram
     CHAPAS   |o--o{ VOTOS : "recebe"
     ELEITORES ||--o{ SESSOES_VOTACAO : "e liberado em"
     TERMINAIS ||--o{ SESSOES_VOTACAO : "hospeda"
-    USERS    |o--o{ SESSOES_VOTACAO : "mesario libera"
+    USERS    ||--o{ SESSOES_VOTACAO : "mesario libera"
 ```
 
 Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama, **exceto em `votos`, que não tem timestamps**.
@@ -69,13 +69,14 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `votos.eleicao_id` e `votos.chapa_id ON DELETE RESTRICT` | Eleição ou chapa que **já recebeu votos não pode ser apagada**: o resultado é histórico (D5) | `ConstraintsTest` |
 | `ON DELETE CASCADE` de `eleicoes` para `chapas` e `sessoes_votacao` | Apagar eleição **sem votos** (ex.: cadastrada errada) apaga chapas e sessões dela | `ConstraintsTest` |
 | `sessoes_votacao.terminal_id ON DELETE RESTRICT`  | Terminal com histórico de sessão não pode ser apagado                   | `ConstraintsTest` |
-| `sessoes_votacao.mesario_id ON DELETE SET NULL`   | Remover um usuário mesário não apaga a ata                              | —                |
+| `sessoes_votacao.eleitor_id ON DELETE RESTRICT`   | Eleitor já liberado não pode ser apagado: a ata não perde quem votou     | `ConstraintsTest` |
+| `sessoes_votacao.mesario_id NOT NULL` e `ON DELETE RESTRICT` | Toda liberação tem um mesário responsável; usuário com liberações não é apagado (desativar, H1) | `ConstraintsTest` |
 
 ## Atributos: perguntas para a equipe responder (uma migration por resposta)
 
 | Tabela            | O que falta decidir                                                                                   | História |
 | ----------------- | ----------------------------------------------------------------------------------------------------- | -------- |
-| `users`           | Como distinguir admin de mesário? (coluna `perfil`? tabela `perfis`? pacote de permissões?)           | H1       |
+| `users`           | Como distinguir admin de mesário? (coluna `perfil`? tabela `perfis`? pacote de permissões?) Como desativar um usuário sem apagá-lo (`ativo`?) | H1       |
 | `eleicoes`        | Título, período (início/fim), como marcar a eleição ativa                                             | H2       |
 | `chapas`          | Nome, descrição, candidatos (coluna ou tabela `candidatos`?), foto                                    | H3       |
 | `eleitores`       | Nome, e-mail, turma; eleitor é apto em toda eleição ou precisa de tabela `eleicao_eleitor`?           | H4       |
