@@ -106,7 +106,8 @@ Abra <http://localhost:8000>. Com `APP_ENV=local`, a página **recarrega sozinha
 | Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |
 | Página inicial funcional       | `app/Http/Controllers/HomeController.php`     |
 | API de saúde e status da urna  | `routes/api.php`                              |
-| Telas placeholder              | `/mesario`, `/urna/{terminal}`, `/admin`      |
+| Telas com a identidade (sem lógica ainda) | `/login` (H1), `/urna/{uuid do terminal}` (H7) |
+| Telas placeholder              | `/mesario`, `/admin`                          |
 | Componentes Blade, layouts e vitrine `/estilo` | `resources/views/components/`, `public/css/digitech.css` |
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
 | 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
@@ -122,7 +123,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `36 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `39 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 

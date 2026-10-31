@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Terminal;
 use App\Support\Contraste;
 use Illuminate\View\View;
 
@@ -46,6 +47,11 @@ class EstiloController extends Controller
 
     public function tela(string $tela): View
     {
-        return view("estilo.telas.$tela", ['telas' => self::TELAS]);
+        // Login e espera da urna são as telas reais; as demais são composições de referência.
+        return match ($tela) {
+            'login' => view('auth.login'),
+            'urna-espera' => view('urna.espera', ['terminal' => new Terminal(['numero' => 3])]),
+            default => view("estilo.telas.$tela", ['telas' => self::TELAS]),
+        };
     }
 }

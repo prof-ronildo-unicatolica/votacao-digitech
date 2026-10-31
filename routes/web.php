@@ -3,13 +3,17 @@
 use App\Http\Controllers\Dev\RecarregarController;
 use App\Http\Controllers\EstiloController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\UrnaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
+// Telas com a identidade visual; a lógica é das histórias H1 (login) e H7/H8 (urna).
+Route::view('/login', 'auth.login')->name('login');
+Route::get('/urna/{terminal}', UrnaController::class)->name('urna');
+
 // Placeholders: cada tela é uma história de usuário (issue no GitHub, ver docs/HISTORIAS_USUARIO.md)
 Route::view('/mesario', 'placeholders.mesario')->name('mesario');
-Route::view('/urna/{terminal}', 'placeholders.urna')->name('urna');
 Route::view('/admin', 'placeholders.admin')->name('admin');
 
 // Vitrine da identidade visual (docs/IDENTIDADE_VISUAL.md), com dados fictícios. Fora de produção.
