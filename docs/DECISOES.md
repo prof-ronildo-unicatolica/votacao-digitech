@@ -53,6 +53,14 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Custo:** índices maiores (`char(36)`) e IDs menos legíveis no DBeaver. Para identificar algo para humanos, use a chave natural (`chapas.numero`, `terminais.numero`, `eleitores.matricula`).
 
+## D12 — Identidade visual com fonte única de tokens
+
+**Decisão:** cores, fontes, espaços e raios vivem em `design/tokens/tokens.json` (formato W3C Design Tokens). O CSS (`public/css/tokens.css`) é **gerado** por `php design/tokens/gerar-css.php`; o Figma importa o mesmo arquivo pelo plugin Tokens Studio. Base: marca da UniCatólica (laranja `#F5821F`, grafite, Poppins). Guia em `IDENTIDADE_VISUAL.md`.
+
+**Por quê:** sem fonte única, o Figma e o código divergem na primeira semana (o rascunho inicial já usava um azul `#003865` que não existe na marca). O gerador é PHP para não exigir Node (D2), e o `TokensTest` falha se o CSS for editado à mão ou se uma combinação de texto cair abaixo do contraste AA.
+
+**Neutralidade:** o laranja da marca nunca é cor de chapa e todas as chapas têm o mesmo peso visual na urna.
+
 ## D5 — Uma eleição por vez, mas várias no histórico
 
 **Decisão:** tudo (chapas, sessões, votos) tem `eleicao_id`. Como marcar a eleição ativa é decisão da equipe (H2).
