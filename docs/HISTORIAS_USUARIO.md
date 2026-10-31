@@ -69,10 +69,12 @@ Como eleitor, quero que a urna do terminal mostre "aguardando" até o mesário m
 ### H8 · Votar
 Como eleitor, quero escolher uma chapa (ou branco/nulo), confirmar e ver "voto registrado" para ter certeza de que votei.
 - [ ] Seleção → tela de confirmação ("Você escolheu a chapa 2 — Movimento. Confirmar?") → registro.
-- [ ] Voto e encerramento da sessão na mesma transação (ver `MODELO_DADOS.md`).
-- [ ] Duplo clique ou F5 não gera segundo voto (sessão já está `votou`).
+- [ ] Voto e encerramento da sessão na mesma transação, **reivindicando a sessão antes de gravar o voto** (ver `MODELO_DADOS.md`, "Registro de um voto").
+- [ ] Duplo clique, F5 ou duas abas não geram segundo voto.
+- [ ] A eleição do voto vem da sessão liberada, não do formulário; a chapa precisa ser dessa eleição.
+- [ ] Nada que ligue a chapa escolhida ao eleitor vai para log, auditoria ou sessão HTTP.
 - [ ] A urna volta a "aguardando" 5 segundos após confirmar.
-- [ ] Testes: voto válido, voto branco, segundo voto rejeitado, sessão expirada rejeitada.
+- [ ] Testes: voto válido, voto branco, segundo voto rejeitado, sessão expirada rejeitada, chapa de outra eleição rejeitada.
 
 ### H9 · Acompanhar a mesa
 Como mesário, quero ver no painel quais terminais estão livres, liberados ou votando para organizar a fila.
