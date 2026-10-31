@@ -111,7 +111,7 @@ Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
 | 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
 | Identidade visual: tokens, marca e testes de contraste | `design/`, `public/css/tokens.css`, `tests/Unit/TokensTest.php` |
-| 4 testes de integração de exemplo + 14 testes das constraints | `tests/Feature/`  |
+| 5 testes de integração de exemplo + 14 testes das constraints | `tests/Feature/`  |
 | CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
 
 As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe (ver `docs/MODELO_DADOS.md`). Usuário do seed: `mesario@digitech.local` / `mesario123` (login é a história H1).
@@ -122,7 +122,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `34 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `35 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 

@@ -52,4 +52,11 @@ class PaginaInicialTest extends TestCase
 
         $this->get('/')->assertOk()->assertSee("/api/terminais/{$terminal->id}/status", false);
     }
+
+    public function test_telas_placeholder_usam_a_identidade_visual(): void
+    {
+        foreach (['/mesario', '/admin', '/urna/qualquer'] as $url) {
+            $this->get($url)->assertOk()->assertSee('css/digitech.css')->assertSee('Tela ainda não implementada');
+        }
+    }
 }
