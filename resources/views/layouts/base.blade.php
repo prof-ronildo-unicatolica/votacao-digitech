@@ -23,5 +23,21 @@
 <body @yield('body-atributos')>
     @yield('corpo')
     @stack('scripts')
+    @if (app()->isLocal())
+        {{-- Auto-refresh de desenvolvimento: recarrega quando um arquivo observado muda. --}}
+        <script>
+            (() => {
+                let versao = null;
+                setInterval(async () => {
+                    try {
+                        const r = await fetch(@json(route('dev.recarregar')), { cache: 'no-store' });
+                        const { versao: nova } = await r.json();
+                        if (versao !== null && nova !== versao) location.reload();
+                        versao = nova;
+                    } catch (e) { /* servidor reiniciando: tenta de novo no próximo ciclo */ }
+                }, 1000);
+            })();
+        </script>
+    @endif
 </body>
 </html>

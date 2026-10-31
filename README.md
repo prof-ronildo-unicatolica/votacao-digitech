@@ -95,7 +95,7 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a contagem de cada tabela e as chapas do seed.
+Abra <http://localhost:8000>. Com `APP_ENV=local`, a página **recarrega sozinha** quando você salva uma view, CSS, controller ou rota (sem Node: o layout consulta `/_dev/recarregar` a cada segundo). A página inicial mostra a conexão com o banco, a contagem de cada tabela e as chapas do seed.
 
 ## O que o scaffold entrega
 
@@ -122,7 +122,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `35 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `36 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 
