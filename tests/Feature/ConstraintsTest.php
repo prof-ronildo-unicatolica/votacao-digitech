@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Chapa;
+use App\Models\Eleicao;
 use App\Models\SessaoVotacao;
 use App\Models\Terminal;
 use App\Models\Voto;
@@ -68,16 +69,48 @@ class ConstraintsTest extends TestCase
         Chapa::factory()->for($chapa->eleicao)->create(['numero' => 5]);
     }
 
-    public function test_apagar_eleicao_apaga_chapas_sessoes_e_votos_em_cascata(): void
+    public function test_voto_so_pode_ir_para_chapa_da_mesma_eleicao(): void
+    {
+        $chapaDeOutraEleicao = Chapa::factory()->create();
+        $eleicao = Eleicao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Voto::create(['eleicao_id' => $eleicao->id, 'chapa_id' => $chapaDeOutraEleicao->id]);
+    }
+
+    public function test_voto_sem_chapa_e_aceito(): void
+    {
+        $voto = Voto::factory()->semChapa()->create();
+
+        $this->assertNull($voto->chapa_id);
+        $this->assertDatabaseCount('votos', 1);
+    }
+
+    public function test_chapa_com_votos_nao_pode_ser_apagada(): void
     {
         $voto = Voto::factory()->create();
-        SessaoVotacao::factory()->create(['eleicao_id' => $voto->eleicao_id]);
 
+        $this->expectException(QueryException::class);
+        $voto->chapa->delete();
+    }
+
+    public function test_eleicao_com_votos_nao_pode_ser_apagada(): void
+    {
+        $voto = Voto::factory()->create();
+
+        $this->expectException(QueryException::class);
         $voto->eleicao->delete();
+    }
+
+    public function test_apagar_eleicao_sem_votos_apaga_chapas_e_sessoes_em_cascata(): void
+    {
+        $chapa = Chapa::factory()->create();
+        SessaoVotacao::factory()->create(['eleicao_id' => $chapa->eleicao_id]);
+
+        $chapa->eleicao->delete();
 
         $this->assertDatabaseCount('chapas', 0);
         $this->assertDatabaseCount('sessoes_votacao', 0);
-        $this->assertDatabaseCount('votos', 0);
     }
 
     public function test_terminal_com_sessao_nao_pode_ser_apagado(): void

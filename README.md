@@ -109,7 +109,7 @@ Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a
 | Telas placeholder              | `/mesario`, `/urna/{terminal}`, `/admin`      |
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
 | 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
-| 2 testes de integração de exemplo + 7 testes das constraints | `tests/Feature/`  |
+| 2 testes de integração de exemplo + 11 testes das constraints | `tests/Feature/`  |
 | CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
 
 As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe (ver `docs/MODELO_DADOS.md`). Usuário do seed: `mesario@digitech.local` / `mesario123` (login é a história H1).
@@ -120,7 +120,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `11 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `15 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 
