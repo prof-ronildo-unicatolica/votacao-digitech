@@ -5,7 +5,7 @@
 @section('conteudo')
     <h1 class="h3">Urna (terminal)</h1>
     <div class="alert alert-info">
-        Tela ainda não implementada. História de usuário: <strong>H4 – Votar no terminal liberado</strong>
+        Tela ainda não implementada. História de usuário: <strong>H7 – Urna aguarda liberação</strong> e <strong>H8 – Votar</strong>
         (ver <code>docs/HISTORIAS_USUARIO.md</code>).
     </div>
 @endsection
