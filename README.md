@@ -109,6 +109,7 @@ Abra <http://localhost:8000>. A página inicial mostra a conexão com o banco, a
 | Telas placeholder              | `/mesario`, `/urna/{terminal}`, `/admin`      |
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
 | 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
+| Identidade visual: tokens, marca e testes de contraste | `design/`, `public/css/tokens.css`, `tests/Unit/TokensTest.php` |
 | 4 testes de integração de exemplo + 14 testes das constraints | `tests/Feature/`  |
 | CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
 
@@ -120,7 +121,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `20 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `31 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 
@@ -133,6 +134,7 @@ Esperado: `20 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), en
 | [docs/GIT_FLOW.md](docs/GIT_FLOW.md)                   | Branches, commits e Pull Requests (terminal)          |
 | [docs/GITHUB_DESKTOP.md](docs/GITHUB_DESKTOP.md)       | O mesmo fluxo no GitHub Desktop e no site, para iniciantes |
 | [docs/TESTES.md](docs/TESTES.md)                       | Como escrever e rodar testes                          |
+| [docs/IDENTIDADE_VISUAL.md](docs/IDENTIDADE_VISUAL.md) | Marca, cores, tipografia e como importar no Figma     |
 | [docs/FIGMA.md](docs/FIGMA.md)                         | O que prototipar antes de codar                       |
 | [docs/DEPLOY_HOSTINGER.md](docs/DEPLOY_HOSTINGER.md)   | Publicação em produção                                |
 | [docs/PLAYLISTS.md](docs/PLAYLISTS.md)                 | Playlists de estudo da stack                          |
