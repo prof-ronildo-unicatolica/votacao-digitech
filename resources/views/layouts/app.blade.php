@@ -1,27 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('titulo', 'Votação DigiTech')</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">Votação DigiTech</a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="{{ route('mesario') }}">Mesário</a>
-                <a class="nav-link" href="{{ route('urna', 1) }}">Urna</a>
-                <a class="nav-link" href="{{ route('admin') }}">Admin</a>
+{{-- Layout padrão: barra superior escura com a marca. Telas simples (início, login, erros). --}}
+@extends('layouts.base')
+
+@section('corpo')
+    <header class="dt-topo mb-5">
+        <nav class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3" aria-label="Principal">
+            <x-marca tema="escuro" :href="route('home')" />
+            <div class="nav">
+                <a @class(['nav-link', 'active' => request()->routeIs('mesario')]) href="{{ route('mesario') }}">Mesário</a>
+                <a @class(['nav-link', 'active' => request()->routeIs('admin')]) href="{{ route('admin') }}">Admin</a>
+                @unless (app()->isProduction())
+                    <a @class(['nav-link', 'active' => request()->routeIs('estilo*')]) href="{{ route('estilo') }}">Estilo</a>
+                @endunless
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
     <main class="container">
         @yield('conteudo')
     </main>
-    <footer class="container text-muted small mt-5 mb-3">
+    <footer class="container dt-rodape mt-5 py-5">
         Laboratório DIGITECH — UniCatólica · ambiente: {{ app()->environment() }}
     </footer>
-</body>
-</html>
+@endsection
