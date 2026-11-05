@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Candidato;
+use App\Models\Cargo;
 use App\Models\Chapa;
 use App\Models\Eleicao;
 use App\Models\Eleitor;
@@ -24,8 +26,25 @@ class DatabaseSeeder extends Seeder
 
         $eleicao = Eleicao::first() ?? Eleicao::create();
 
+        // 5 cargos por chapa (ex.: Presidente, Vice, 1º Secretário, 2º Secretário, Tesoureiro).
+        // O título é atributo da equipe (H13); aqui só a ordem.
+        $cargos = collect([1, 2, 3, 4, 5])->map(
+            fn (int $ordem) => Cargo::firstOrCreate(['eleicao_id' => $eleicao->id, 'ordem' => $ordem]),
+        );
+
+        // 3 chapas completas: um aluno diferente por cargo (matrículas 2024101 a 2024115).
         foreach ([1, 2, 3] as $numero) {
-            Chapa::firstOrCreate(['eleicao_id' => $eleicao->id, 'numero' => $numero]);
+            $chapa = Chapa::firstOrCreate(['eleicao_id' => $eleicao->id, 'numero' => $numero]);
+
+            foreach ($cargos as $cargo) {
+                $matricula = (string) (2024100 + ($numero - 1) * $cargos->count() + $cargo->ordem);
+                $aluno = Eleitor::firstOrCreate(['matricula' => $matricula]);
+
+                Candidato::firstOrCreate(
+                    ['chapa_id' => $chapa->id, 'cargo_id' => $cargo->id],
+                    ['eleicao_id' => $eleicao->id, 'eleitor_id' => $aluno->id],
+                );
+            }
         }
 
         foreach ([1, 2, 3, 4] as $numero) {
