@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Perfil;
 use App\Models\Candidato;
 use App\Models\Cargo;
 use App\Models\Chapa;
@@ -12,19 +13,42 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * Dados mínimos de desenvolvimento (só chaves). NÃO rodar em produção.
+ * Dados de desenvolvimento. NÃO roda em produção (o próprio seed se recusa).
+ * Usuários: admin@digitech.local / admin123 e mesario@digitech.local / mesario123.
  * Quando a equipe adicionar atributos, complete aqui.
  */
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->error('Seed é só para desenvolvimento. Em produção, crie o admin com: php artisan digitech:admin');
+
+            return;
+        }
+
+        User::updateOrCreate(
+            ['email' => 'admin@digitech.local'],
+            ['name' => 'Admin de Teste', 'password' => 'admin123', 'perfil' => Perfil::Admin, 'ativo' => true],
+        );
         User::updateOrCreate(
             ['email' => 'mesario@digitech.local'],
-            ['name' => 'Mesário de Teste', 'password' => 'mesario123'],
+            ['name' => 'Mesário de Teste', 'password' => 'mesario123', 'perfil' => Perfil::Mesario, 'ativo' => true],
         );
 
-        $eleicao = Eleicao::first() ?? Eleicao::create();
+        // Eleição de desenvolvimento, ativa, com as inscrições abertas desde ontem.
+        $abre = now()->subDay()->setTime(8, 0);
+        $eleicao = Eleicao::first() ?? Eleicao::create(['titulo' => 'Eleição de teste do Colegiado']);
+        $eleicao->update([
+            'titulo' => $eleicao->titulo ?: 'Eleição de teste do Colegiado',
+            'inscricao_abre_em' => $eleicao->inscricao_abre_em ?? $abre,
+            'inscricao_fecha_em' => $eleicao->inscricao_fecha_em ?? $abre->copy()->addWeeks(2)->setTime(18, 0),
+            'votacao_abre_em' => $eleicao->votacao_abre_em ?? $abre->copy()->addWeeks(2)->addDays(3),
+            'votacao_fecha_em' => $eleicao->votacao_fecha_em ?? $abre->copy()->addWeeks(2)->addDays(3)->setTime(18, 0),
+        ]);
+        if (! Eleicao::atual()) {
+            $eleicao->ativar();
+        }
 
         // 5 cargos por chapa (ex.: Presidente, Vice, 1º Secretário, 2º Secretário, Tesoureiro).
         // O título é atributo da equipe (H13); aqui só a ordem.

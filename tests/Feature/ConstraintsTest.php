@@ -246,4 +246,25 @@ class ConstraintsTest extends TestCase
         $this->assertDatabaseCount('candidatos', 0);
         $this->assertDatabaseCount('eleitores', 1);
     }
+
+    // ---------------------------------------------------------------------------------
+    // Eleição ativa (H2, D15)
+    // ---------------------------------------------------------------------------------
+
+    public function test_banco_aceita_uma_unica_eleicao_ativa(): void
+    {
+        Eleicao::factory()->ativa()->create();
+        Eleicao::factory()->count(2)->create(); // várias inativas (NULL): permitido
+
+        $this->expectException(QueryException::class);
+        Eleicao::factory()->ativa()->create();
+    }
+
+    public function test_eleicao_inativa_e_gravada_como_null_e_nao_false(): void
+    {
+        $eleicao = Eleicao::factory()->create(['ativa' => false]);
+
+        $this->assertNull($eleicao->getRawOriginal('ativa'));
+        $this->assertFalse($eleicao->ativa);
+    }
 }
