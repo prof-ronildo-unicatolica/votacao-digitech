@@ -113,8 +113,10 @@ Já tinha o banco de uma versão anterior? Rode `php artisan migrate`. Se der er
 | Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |
 | Página inicial funcional       | `app/Http/Controllers/HomeController.php`     |
 | API de saúde e status da urna  | `routes/api.php`                              |
-| Telas com a identidade (sem lógica ainda) | `/login` (H1), `/urna/{uuid do terminal}` (H7) |
-| Telas placeholder              | `/mesario`, `/admin`                          |
+| Login, perfis e usuários (H1) | `/login`, `/admin/usuarios`, `app/Http/Controllers/Auth/` |
+| Eleições com os dois períodos e a fase atual (H2) | `/admin`, `/admin/eleicoes`, `app/Enums/FaseEleicao.php` |
+| Tela da urna com a identidade (sem lógica ainda) | `/urna/{uuid do terminal}` (H7) |
+| Tela placeholder               | `/mesario` (H6, H9)                           |
 | Componentes Blade, layouts e vitrine `/estilo` | `resources/views/components/`, `public/css/digitech.css` |
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
 | 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
@@ -122,7 +124,16 @@ Já tinha o banco de uma versão anterior? Rode `php artisan migrate`. Se der er
 | 6 testes de integração de exemplo + 24 testes das constraints | `tests/Feature/`  |
 | CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
 
-As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe (ver `docs/MODELO_DADOS.md`). Usuário do seed: `mesario@digitech.local` / `mesario123` (login é a história H1).
+As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe, história a história (ver `docs/MODELO_DADOS.md`). Já implementados: **H1** (login, perfis, usuários) e **H2** (eleições com período de inscrição e de votação).
+
+Usuários do seed (só desenvolvimento):
+
+| Perfil  | E-mail                   | Senha        | Entra em   |
+| ------- | ------------------------ | ------------ | ---------- |
+| Admin   | `admin@digitech.local`   | `admin123`   | `/admin`   |
+| Mesário | `mesario@digitech.local` | `mesario123` | `/mesario` |
+
+Para criar um admin com outro e-mail (e o **primeiro admin em produção**, onde o seed não roda): `php artisan digitech:admin`. O comando pergunta e-mail, nome e senha; se o e-mail já existe, promove o usuário a admin.
 
 ## Rodando os testes
 
@@ -130,7 +141,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `50 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `104 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 

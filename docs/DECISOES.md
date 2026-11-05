@@ -1,6 +1,6 @@
 # Decisões de arquitetura
 
-Registro das decisões tomadas em 09/09/2026 (D13 e D14 em 05/11/2026), com o porquê. Mudar uma decisão é permitido, mas exige atualizar este arquivo.
+Registro das decisões tomadas em 09/09/2026 (D13 a D15 em 05/11/2026), com o porquê. Mudar uma decisão é permitido, mas exige atualizar este arquivo.
 
 ## D1 — Um único repositório
 
@@ -118,3 +118,19 @@ Registrada em 05/11/2026, com a ampliação do escopo para a inscrição de chap
 **Consequência no cronograma:** as inscrições acontecem **antes** da votação, então formulário, CSV e homologação (H13, H14, H15, H3) precisam estar em produção primeiro. O roadmap foi reordenado para isso.
 
 **Riscos e respostas:** spam no formulário público → `throttle` e homologação; aluno inscrito sem saber → a comissão pode exigir confirmação (decisão da equipe na H14, ex.: e-mail de confirmação para cada candidato); dados pessoais em página pública → a página pública só confirma o recebimento, sem listar nomes de outras chapas antes da homologação.
+
+## D15 — Perfil em coluna e "só uma eleição ativa" no banco
+
+Registrada em 05/11/2026, na implementação de H1 e H2.
+
+**Perfil:** `users.perfil` é uma coluna de texto com dois valores, `admin` e `mesario` (enum `App\Enums\Perfil`), e não uma tabela `perfis` nem um pacote de permissões. São só dois perfis, fixos, e a regra de acesso é uma linha por rota (middleware `perfil:admin`). Se um dia houver permissões finas (ex.: "mesário que também importa eleitores"), aí vale um pacote como `spatie/laravel-permission`.
+
+- **Admin também acessa `/mesario`**, para acompanhar a mesa. Mesário em `/admin` recebe 403.
+- **Desativar, não apagar:** `users.ativo = false` impede o login e derruba quem já estava logado na próxima requisição (middleware `ativo`). Quem já liberou sessões faz parte da ata e não pode ser apagado (RESTRICT).
+- **O admin não se tranca para fora:** não pode desativar, excluir nem rebaixar a si mesmo. Por isso sempre sobra pelo menos um admin ativo.
+- **Primeiro admin em produção:** `php artisan digitech:admin`, porque o seed não roda em produção. A senha é perguntada no terminal, nunca passada como opção, para não ficar no histórico.
+- **Tentativas de login:** 5 erradas por minuto para o mesmo e-mail + IP bloqueiam por 1 minuto. Só os erros contam (RateLimiter no `LoginRequest`), então quem acerta não é penalizado.
+
+**Só uma eleição ativa, garantido pelo banco:** `eleicoes.ativa` é `TRUE` ou `NULL`, nunca `FALSE`, e tem índice `UNIQUE`. MySQL, MariaDB e SQLite aceitam vários `NULL` num índice único, mas só um `TRUE`. O model `Eleicao` converte `false` em `NULL` ao gravar. Ativar uma eleição desativa a anterior na mesma transação; se duas ativações acontecerem ao mesmo tempo, o banco rejeita uma em vez de deixar duas eleições ativas.
+
+**Fase calculada, não gravada:** a fase (aguardando inscrições, inscrições abertas, em homologação, votação aberta, encerrada) sai das quatro datas (`App\Enums\FaseEleicao::em`, função pura com testes unitários). Gravar a fase numa coluna exigiria um agendador para trocá-la na hora certa, e a hospedagem compartilhada só tem cron de minuto em minuto (D8).

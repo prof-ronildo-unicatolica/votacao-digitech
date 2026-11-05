@@ -6,7 +6,7 @@ Formato: **Como** [perfil], **quero** [ação] **para** [benefício]. Cada hist�
 
 | Perfil      | Quem é                                          | Como entra no sistema                   |
 | ----------- | ----------------------------------------------- | --------------------------------------- |
-| **Admin**   | Comissão eleitoral / professor                  | Login (`users`; como diferenciar do mesário é parte da H1) |
+| **Admin**   | Comissão eleitoral / professor                  | Login (`users.perfil = admin`) |
 | **Mesário** | Aluno ou servidor que atende na mesa            | Login (`users`)                         |
 | **Eleitor** | Aluno do colegiado                              | Não faz login: é liberado pelo mesário  |
 | **Representante de chapa** | Aluno que inscreve a chapa (é um dos candidatos) | Não faz login: usa o formulário público de inscrição, só durante o período (D14) |
@@ -17,21 +17,21 @@ Todo aluno, eleitor ou candidato, é identificado pela **matrícula** (`eleitore
 
 ### H1 · Autenticar admin e mesário
 Como admin ou mesário, quero entrar com e-mail e senha para acessar só o que meu perfil permite.
-- [ ] Tela de login em `/login`; após entrar, admin vai para `/admin` e mesário para `/mesario`.
-- [ ] Mesário que tenta abrir `/admin` recebe 403.
-- [ ] Logout encerra a sessão.
-- [ ] Admin pode desativar um usuário (ele não entra mais); usuário que já liberou sessões não pode ser apagado (o banco bloqueia).
-- [ ] 5 tentativas erradas em 1 minuto bloqueiam por 1 minuto (middleware `throttle`).
-- [ ] Testes: login válido, senha errada, mesário bloqueado em `/admin`.
+- [x] Tela de login em `/login`; após entrar, admin vai para `/admin` e mesário para `/mesario`.
+- [x] Mesário que tenta abrir `/admin` recebe 403.
+- [x] Logout encerra a sessão.
+- [x] Admin pode desativar um usuário (ele não entra mais); usuário que já liberou sessões não pode ser apagado (o banco bloqueia).
+- [x] 5 tentativas erradas em 1 minuto bloqueiam por 1 minuto (middleware `throttle`).
+- [x] Testes: login válido, senha errada, mesário bloqueado em `/admin`.
 
 ### H2 · Cadastrar eleição
 Como admin, quero criar uma eleição com título, **período de inscrição de chapas** e **período de votação** para controlar quando cada fase está aberta.
-- [ ] CRUD em `/admin/eleicoes`; só uma pode estar `ativa`.
-- [ ] Datas obrigatórias, nesta ordem: abertura das inscrições < fim das inscrições ≤ início da votação < fim da votação (validação, com mensagem dizendo qual data está fora de ordem).
-- [ ] A tela da eleição mostra a fase atual: *aguardando inscrições*, *inscrições abertas*, *em homologação*, *votação aberta*, *encerrada*.
-- [ ] Depois que a primeira chapa se inscreve, o período de inscrição só pode ser **prorrogado** (fim mais tarde), nunca antecipado.
-- [ ] Ativar uma eleição desativa a anterior.
-- [ ] Testes: criação válida; cada par de datas fora de ordem rejeitado; ativação exclusiva; fase calculada corretamente para uma data antes, durante e depois de cada período.
+- [x] CRUD em `/admin/eleicoes`; só uma pode estar `ativa`.
+- [x] Datas obrigatórias, nesta ordem: abertura das inscrições < fim das inscrições ≤ início da votação < fim da votação (validação, com mensagem dizendo qual data está fora de ordem).
+- [x] A tela da eleição mostra a fase atual: *aguardando inscrições*, *inscrições abertas*, *em homologação*, *votação aberta*, *encerrada*.
+- [x] Depois que a primeira chapa se inscreve, o período de inscrição só pode ser **prorrogado** (fim mais tarde), nunca antecipado.
+- [x] Ativar uma eleição desativa a anterior.
+- [x] Testes: criação válida; cada par de datas fora de ordem rejeitado; ativação exclusiva; fase calculada corretamente para uma data antes, durante e depois de cada período.
 
 ### H4 · Cadastrar eleitores (individual e CSV)
 Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, nome, turma, e-mail) para montar o eleitorado sem digitação manual.
