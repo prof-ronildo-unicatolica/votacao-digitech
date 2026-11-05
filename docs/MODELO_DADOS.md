@@ -20,6 +20,18 @@ erDiagram
         uuid eleicao_id FK
         smallint numero "UK (eleicao_id, numero)"
     }
+    CARGOS {
+        uuid id PK
+        uuid eleicao_id FK
+        smallint ordem "UK (eleicao_id, ordem)"
+    }
+    CANDIDATOS {
+        uuid id PK
+        uuid eleicao_id FK "UK (eleicao_id, eleitor_id)"
+        uuid chapa_id FK "UK (chapa_id, cargo_id); FK (eleicao_id, chapa_id)"
+        uuid cargo_id FK "FK (eleicao_id, cargo_id)"
+        uuid eleitor_id FK "o aluno, pela matrícula"
+    }
     ELEITORES {
         uuid id PK
         string matricula UK
@@ -42,6 +54,10 @@ erDiagram
     }
 
     ELEICOES ||--o{ CHAPAS : "possui"
+    ELEICOES ||--o{ CARGOS : "define"
+    CHAPAS   ||--o{ CANDIDATOS : "e composta por"
+    CARGOS   ||--o{ CANDIDATOS : "e ocupado por"
+    ELEITORES ||--o{ CANDIDATOS : "concorre como"
     ELEICOES ||--o{ SESSOES_VOTACAO : "registra"
     ELEICOES ||--o{ VOTOS : "recebe"
     CHAPAS   |o--o{ VOTOS : "recebe"
@@ -50,7 +66,7 @@ erDiagram
     USERS    ||--o{ SESSOES_VOTACAO : "mesario libera"
 ```
 
-Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama, **exceto em `votos`, que não tem timestamps**.
+Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). O voto também não aponta para `CANDIDATOS`: vota-se na chapa inteira (D13). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama, **exceto em `votos`, que não tem timestamps**.
 
 **Chaves:** as tabelas do domínio usam **UUID** (`char(36)`); `users` e as tabelas internas do Laravel continuam `bigint` (ver `DECISOES.md`, D11). Em `votos` o UUID é **v4 aleatório**; nas demais, ordenado por tempo (padrão do `HasUuids`).
 
@@ -61,7 +77,13 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `votos` sem `created_at`/`updated_at` e com `id` UUID v4 | Sigilo do voto: não dá para cruzar ordem/horário com `sessoes_votacao` | `ConstraintsTest` |
 | `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)` | Um eleitor tem **uma** sessão por eleição: sem voto duplo               | `ConstraintsTest` |
 | `chapas UNIQUE (eleicao_id, numero)`              | Número de chapa único dentro da eleição; pode repetir em outra eleição  | `ConstraintsTest` |
-| `eleitores.matricula UNIQUE`                      | Um cadastro por matrícula                                               | —                |
+| `eleitores.matricula UNIQUE`                      | Um cadastro por matrícula. Todo aluno, eleitor ou candidato, é identificado por ela | —                |
+| `cargos UNIQUE (eleicao_id, ordem)`               | Cada eleição tem sua lista de cargos, sem duas posições iguais na cédula | `ConstraintsTest` |
+| `candidatos UNIQUE (chapa_id, cargo_id)`          | Um candidato por cargo em cada chapa                                    | `ConstraintsTest` |
+| `candidatos UNIQUE (eleicao_id, eleitor_id)`      | O aluno concorre em **uma** chapa e **um** cargo por eleição; pode concorrer de novo em outra | `ConstraintsTest` |
+| `candidatos (eleicao_id, chapa_id)` → `chapas` e `(eleicao_id, cargo_id)` → `cargos` | Chapa, cargo e candidatura são da **mesma eleição** | `ConstraintsTest` |
+| `candidatos.eleitor_id` FK `ON DELETE RESTRICT`   | Candidato precisa ser aluno cadastrado; aluno que é candidato não pode ser apagado | `ConstraintsTest` |
+| `ON DELETE CASCADE` de `chapas`, `cargos` e `eleicoes` para `candidatos` | Apagar uma chapa inscrita errada (sem votos) apaga sua composição; o aluno continua cadastrado | `ConstraintsTest` |
 | `terminais.numero UNIQUE`                         | Um terminal por número (o que o mesário vê e escolhe). A URL da urna usa o **UUID** (`/urna/{id}`), não o número (D11) | —                |
 | `votos` sem FK para eleitor/terminal/sessão       | Sigilo do voto                                                          | `ConstraintsTest` |
 | `votos.chapa_id` nullable                         | Voto em branco/nulo possível sem chapa                                  | `ConstraintsTest` |
@@ -77,13 +99,58 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | Tabela            | O que falta decidir                                                                                   | História |
 | ----------------- | ----------------------------------------------------------------------------------------------------- | -------- |
 | `users`           | Como distinguir admin de mesário? (coluna `perfil`? tabela `perfis`? pacote de permissões?) Como desativar um usuário sem apagá-lo (`ativo`?) | H1       |
-| `eleicoes`        | Título, período (início/fim), como marcar a eleição ativa                                             | H2       |
-| `chapas`          | Nome, descrição, candidatos (coluna ou tabela `candidatos`?), foto                                    | H3       |
-| `eleitores`       | Nome, e-mail, turma; eleitor é apto em toda eleição ou precisa de tabela `eleicao_eleitor`?           | H4       |
+| `eleicoes`        | Título; **período de inscrição de chapas** (abertura/fim) e **período de votação** (início/fim); como marcar a eleição ativa | H2       |
+| `cargos`          | Título (Presidente, Vice-presidente, 1º Secretário...). A **quantidade de candidatos por chapa** é o número de cargos da eleição | H13      |
+| `chapas`          | Nome, descrição, foto; **situação** da inscrição (`pendente` → `homologada` \| `indeferida`), motivo do indeferimento, contato do responsável, origem (formulário ou CSV) | H3, H14, H15 |
+| `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
+| `eleitores`       | Nome, e-mail, turma; eleitor é apto em toda eleição ou precisa de tabela `eleicao_eleitor`? Candidato precisa ser eleitor apto **na mesma eleição**? | H4       |
 | `terminais`       | Nome/local                                                                                            | H5       |
 | `sessoes_votacao` | Situação (aberta/votou/expirada/cancelada), horários de liberação, expiração e voto                   | H6, H8   |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
 | (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |
+
+## Inscrição de chapas (H13, H14, H15, H3)
+
+Antes da votação há uma fase de **inscrição**, com período próprio em cada eleição:
+
+```
+ admin cria a eleição ─▶ admin define cargos ─▶ inscrições abertas ─▶ inscrições encerradas ─▶ votação
+ (H2: datas)             (H13: Presidente,      (H14 formulário,      (composição congela;      (H6–H8: só chapas
+                          Vice…)                 H15 CSV: pendente)    H3: homologar)            homologadas)
+```
+
+Linha do tempo de uma eleição (validada na aplicação, H2):
+
+`inscricao_abre` < `inscricao_fecha` ≤ `votacao_inicio` < `votacao_fim` (nomes das colunas: decisão da equipe).
+
+Regras:
+
+- **Cargos primeiro.** Os cargos são definidos antes de abrir as inscrições e **não mudam depois que a primeira chapa se inscreve**: mudar a lista deixaria chapas já inscritas incompletas.
+- **Chapa completa ou nada.** Uma chapa só é gravada com **um candidato para cada cargo** da eleição, na mesma transação (chapa + todos os candidatos). Isso a aplicação garante; o banco garante que não há **dois** candidatos no mesmo cargo nem o mesmo aluno em duas chapas.
+- **Candidato é aluno.** Cada candidato é indicado pela **matrícula**, que precisa existir em `eleitores` (por isso o eleitorado, H4, é importado antes de abrir as inscrições).
+- **Dentro do período.** Formulário (H14) e CSV (H15) só gravam entre a abertura e o fim das inscrições. Fora dele, o formulário mostra as datas e não aceita envio.
+- **Toda inscrição entra `pendente`.** A comissão eleitoral (admin) homologa ou indefere com motivo (H3). Só chapas **homologadas** aparecem na urna e na apuração.
+- **Número da chapa.** Atribuído na inscrição (o próximo livre na eleição). Duas inscrições simultâneas podem tentar o mesmo número: o `UNIQUE (eleicao_id, numero)` rejeita uma e a aplicação tenta o próximo.
+- **Depois do fim das inscrições, a composição congela**: só muda a situação (homologar/indeferir).
+
+### Formato do CSV de chapas (H15)
+
+Uma linha por **candidato**; as linhas de uma mesma chapa repetem o número e o nome. Separador `;` (padrão do Excel em português), UTF-8, com cabeçalho. Exemplo completo em [`docs/exemplos/chapas.csv`](exemplos/chapas.csv).
+
+```csv
+numero_chapa;nome_chapa;cargo;matricula
+1;Movimento Estudantil;Presidente;2024101
+1;Movimento Estudantil;Vice-presidente;2024102
+```
+
+| Coluna         | Regra                                                                        |
+| -------------- | ---------------------------------------------------------------------------- |
+| `numero_chapa` | Inteiro; agrupa as linhas da mesma chapa; não pode já existir na eleição     |
+| `nome_chapa`   | Igual em todas as linhas da chapa                                            |
+| `cargo`        | Título de um cargo **desta** eleição (sem diferenciar maiúsculas/minúsculas) |
+| `matricula`    | Aluno cadastrado em `eleitores`; não pode estar em outra chapa da eleição    |
+
+Validação **por chapa, tudo ou nada**: se qualquer linha de uma chapa falhar (cargo faltando, cargo repetido, matrícula inexistente, aluno já em outra chapa), **a chapa inteira** é rejeitada e o relatório diz a linha e o motivo. As outras chapas do arquivo entram normalmente, como `pendente`.
 
 ## Ciclo de vida da sessão (uma linha por eleitor e eleição)
 

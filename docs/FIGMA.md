@@ -26,9 +26,10 @@ Cada tela tem uma issue com etiqueta `ui-ux`: #23 design system, #24 login, #25 
 
 | Tela                         | Contexto de uso                                   | Pontos de atenção                                              |
 | ---------------------------- | ------------------------------------------------- | -------------------------------------------------------------- |
-| **Urna** (H7, H8)            | Tela cheia, sem mouse às vezes, eleitor nervoso   | Fonte ≥ 24px, botões ≥ 48px, 3 estados: aguardando → escolha → confirmação → obrigado |
+| **Urna** (H7, H8)            | Tela cheia, sem mouse às vezes, eleitor nervoso   | Fonte ≥ 24px, botões ≥ 48px, 3 estados: aguardando → escolha → confirmação → obrigado. Cada chapa mostra seus candidatos por cargo sem ficar poluída (5 nomes por chapa) |
 | **Painel do mesário** (H6, H9) | Notebook, atendimento rápido                    | Campo de matrícula em foco ao abrir; feedback claro de erro (já votou, terminal ocupado); grade de terminais com cor por estado |
-| **Admin** (H2–H5, H10)       | Mesa, sem pressa                                  | Padrão lista + formulário reutilizável; importação de CSV com resultado; página de resultado com gráfico |
+| **Inscrição de chapa** (H14) | Público, celular ou computador do aluno, sem login | Um campo de matrícula por cargo, com o nome do aluno aparecendo para conferência; datas do período bem visíveis; estado "inscrições fechadas"; comprovante |
+| **Admin** (H2–H5, H13, H15, H3, H10) | Mesa, sem pressa                          | Padrão lista + formulário reutilizável; fase da eleição em destaque; cargos com reordenação; importação de CSV com relatório por linha; homologação com a composição completa e motivo do indeferimento; página de resultado com gráfico |
 
 Também: **tela de login** (H1) e um **estado de erro** genérico.
 

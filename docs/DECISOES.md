@@ -1,6 +1,6 @@
 # Decisões de arquitetura
 
-Registro das decisões tomadas em 09/09/2026, com o porquê. Mudar uma decisão é permitido, mas exige atualizar este arquivo.
+Registro das decisões tomadas em 09/09/2026 (D13 e D14 em 05/11/2026), com o porquê. Mudar uma decisão é permitido, mas exige atualizar este arquivo.
 
 ## D1 — Um único repositório
 
@@ -88,3 +88,33 @@ Detalhes em `DEPLOY_HOSTINGER.md`. Consequências: sem workers de fila (`QUEUE_C
 **Por quê:** a issue fecha sozinha quando o PR diz `closes #12`; CI, revisão e discussão ficam no mesmo lugar; os alunos aprendem uma ferramenta só. Trello exigiria copiar link de cartão para PR e vice-versa.
 
 **Como usar:** toda branch nasce de uma issue (`feature/12-liberar-votacao`); todo PR cita a issue; issue sem PR aberto em duas semanas volta para discussão na reunião de sprint.
+
+## D13 — Chapa com cargos: um candidato por cargo, voto na chapa
+
+Registrada em 05/11/2026, com a ampliação do escopo para a inscrição de chapas.
+
+**Decisão:** cada eleição define seus **cargos** (`cargos`, ordenados por `ordem`): por exemplo Presidente, Vice-presidente, 1º Secretário, 2º Secretário e Tesoureiro. Toda chapa precisa de **um candidato por cargo** (`candidatos`), e cada candidato é um aluno identificado pela **matrícula** (`eleitores`). O eleitor continua votando **na chapa inteira**.
+
+**Por quê:**
+- **Um cargo = uma vaga.** "1º e 2º secretário" são dois cargos, não um cargo com duas vagas. Assim `UNIQUE (chapa_id, cargo_id)` garante no banco que não há dois presidentes na mesma chapa, sem coluna de "posição". A quantidade de candidatos por chapa é simplesmente o número de cargos da eleição.
+- **Candidato é aluno, não texto livre.** Ligar o candidato a `eleitores` pela matrícula evita nome digitado errado, permite checar que o aluno existe e `UNIQUE (eleicao_id, eleitor_id)` impede o mesmo aluno em duas chapas.
+- **Cargos por eleição, não globais.** Colegiados diferentes têm estruturas diferentes, e a eleição do próximo semestre pode mudar a lista sem alterar o histórico.
+- **Voto na chapa, não por cargo.** Mantém a cédula simples e a apuração (`votos`) intacta. "Mais de um cargo por cédula" (voto separado para presidente, vice...) continua fora do escopo.
+
+**Integridade (no banco, testada em `ConstraintsTest`):** FKs compostas `(eleicao_id, chapa_id)` e `(eleicao_id, cargo_id)`, iguais à de `votos`: chapa, cargo e candidato são da mesma eleição. Aluno candidato não pode ser apagado (RESTRICT).
+
+**Seguindo D10:** as novas tabelas nascem só com chaves e constraints; o título do cargo e os demais atributos são da equipe (H13, H14).
+
+## D14 — Inscrição de chapas com período, formulário público, CSV e homologação
+
+**Decisão:** cada eleição tem um **período de inscrição** de chapas, anterior ao período de votação. Durante ele, a chapa se inscreve por um **formulário público** (sem login), e a comissão também pode **importar um CSV**. Toda inscrição entra **pendente**; a comissão (admin) **homologa** ou **indefere** com motivo, e só chapas homologadas vão para a urna.
+
+**Por quê:**
+- **Formulário público, sem login:** coerente com D4 (aluno não é usuário). Quem preenche é um representante da chapa; o sistema confere as matrículas, não a identidade de quem digita. A **homologação** pela comissão é a barreira contra inscrição falsa ou com aluno que não autorizou, como no processo em papel.
+- **CSV para a comissão:** inscrições recebidas por outro canal (papel, e-mail) entram sem digitação manual, pelas mesmas regras do formulário e também como pendentes, para haver um só fluxo de homologação.
+- **Período fechado:** depois do fim das inscrições a composição das chapas congela. Isso evita troca de candidato às vésperas da votação e dá uma data clara para a comissão analisar.
+- **Tudo ou nada por chapa:** chapa incompleta não existe. O formulário e o CSV gravam a chapa e todos os candidatos na mesma transação.
+
+**Consequência no cronograma:** as inscrições acontecem **antes** da votação, então formulário, CSV e homologação (H13, H14, H15, H3) precisam estar em produção primeiro. O roadmap foi reordenado para isso.
+
+**Riscos e respostas:** spam no formulário público → `throttle` e homologação; aluno inscrito sem saber → a comissão pode exigir confirmação (decisão da equipe na H14, ex.: e-mail de confirmação para cada candidato); dados pessoais em página pública → a página pública só confirma o recebimento, sem listar nomes de outras chapas antes da homologação.
