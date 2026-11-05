@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Candidato;
+use App\Models\Cargo;
 use App\Models\Chapa;
 use App\Models\Eleicao;
+use App\Models\Eleitor;
 use App\Models\SessaoVotacao;
 use App\Models\Terminal;
 use App\Models\Voto;
@@ -141,5 +144,106 @@ class ConstraintsTest extends TestCase
 
         $this->expectException(QueryException::class);
         Terminal::findOrFail($sessao->terminal_id)->delete();
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Cargos e candidatos (composição das chapas, D13)
+    // ---------------------------------------------------------------------------------
+
+    public function test_ordem_do_cargo_e_unica_por_eleicao(): void
+    {
+        $cargo = Cargo::factory()->create(['ordem' => 1]);
+
+        Cargo::factory()->create(['ordem' => 1]); // outra eleição: permitido
+
+        $this->expectException(QueryException::class);
+        Cargo::factory()->for($cargo->eleicao)->create(['ordem' => 1]);
+    }
+
+    public function test_chapa_tem_um_unico_candidato_por_cargo(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->create([
+            'chapa_id' => $candidato->chapa_id,
+            'cargo_id' => $candidato->cargo_id,
+        ]);
+    }
+
+    public function test_aluno_concorre_em_uma_unica_chapa_por_eleicao(): void
+    {
+        $candidato = Candidato::factory()->create();
+        $outraChapa = Chapa::factory()->create(['eleicao_id' => $candidato->eleicao_id]);
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->for($outraChapa)->create(['eleitor_id' => $candidato->eleitor_id]);
+    }
+
+    public function test_aluno_pode_concorrer_de_novo_em_outra_eleicao(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        Candidato::factory()->create(['eleitor_id' => $candidato->eleitor_id]);
+
+        $this->assertSame(2, Eleitor::findOrFail($candidato->eleitor_id)->candidaturas()->count());
+    }
+
+    public function test_candidato_so_ocupa_cargo_da_mesma_eleicao_da_chapa(): void
+    {
+        $chapa = Chapa::factory()->create();
+        $cargoDeOutraEleicao = Cargo::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->for($chapa)->create(['cargo_id' => $cargoDeOutraEleicao->id]);
+    }
+
+    public function test_candidato_so_entra_em_chapa_da_mesma_eleicao(): void
+    {
+        $cargo = Cargo::factory()->create();
+        $chapaDeOutraEleicao = Chapa::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->create([
+            'eleicao_id' => $cargo->eleicao_id,
+            'cargo_id' => $cargo->id,
+            'chapa_id' => $chapaDeOutraEleicao->id,
+        ]);
+    }
+
+    public function test_candidato_precisa_ser_aluno_cadastrado(): void
+    {
+        $this->expectException(QueryException::class);
+        Candidato::factory()->create(['eleitor_id' => (string) Str::uuid()]);
+    }
+
+    public function test_aluno_candidato_nao_pode_ser_apagado(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $candidato->eleitor->delete();
+    }
+
+    public function test_apagar_chapa_sem_votos_apaga_a_composicao(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $candidato->chapa->delete();
+
+        $this->assertDatabaseCount('candidatos', 0);
+        $this->assertDatabaseCount('cargos', 1);
+        $this->assertDatabaseCount('eleitores', 1);
+    }
+
+    public function test_apagar_eleicao_sem_votos_apaga_cargos_e_candidatos(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $candidato->eleicao->delete();
+
+        $this->assertDatabaseCount('cargos', 0);
+        $this->assertDatabaseCount('candidatos', 0);
+        $this->assertDatabaseCount('eleitores', 1);
     }
 }

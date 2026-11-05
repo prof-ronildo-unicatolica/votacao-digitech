@@ -19,6 +19,12 @@ class Chapa extends Model
         return $this->belongsTo(Eleicao::class);
     }
 
+    /** Composição da chapa: um candidato por cargo da eleição (D13). */
+    public function candidatos(): HasMany
+    {
+        return $this->hasMany(Candidato::class);
+    }
+
     public function votos(): HasMany
     {
         return $this->hasMany(Voto::class);

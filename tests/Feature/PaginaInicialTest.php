@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Candidato;
+use App\Models\Cargo;
 use App\Models\Chapa;
 use App\Models\Eleicao;
 use App\Models\Terminal;
@@ -26,6 +28,18 @@ class PaginaInicialTest extends TestCase
             ->assertOk()
             ->assertSee($eleicao->id)
             ->assertSeeInOrder(['Chapa <strong>10</strong>', 'Chapa <strong>20</strong>'], false);
+    }
+
+    public function test_pagina_inicial_mostra_a_composicao_de_cada_chapa(): void
+    {
+        $eleicao = Eleicao::factory()->create();
+        $cargos = Cargo::factory()->count(5)->for($eleicao)->create();
+        $chapa = Chapa::factory()->for($eleicao)->create(['numero' => 10]);
+        foreach ($cargos->take(3) as $cargo) {
+            Candidato::factory()->for($chapa)->for($cargo)->create();
+        }
+
+        $this->get('/')->assertOk()->assertSee('5 cargos por chapa')->assertSee('3 de 5 candidatos');
     }
 
     public function test_health_responde_json_com_banco_ok(): void

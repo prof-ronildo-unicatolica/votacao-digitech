@@ -19,10 +19,11 @@
     </div>
 
     @forelse ($eleicoes as $eleicao)
-        <x-cartao titulo="Eleição" :subtitulo="$eleicao->id" sem-padding class="mb-4">
+        <x-cartao titulo="Eleição ({{ $eleicao->cargos_count }} cargos por chapa)" :subtitulo="$eleicao->id" sem-padding class="mb-4">
             <ul class="list-group list-group-flush">
                 @forelse ($eleicao->chapas as $chapa)
-                    <li class="list-group-item px-4">Chapa <strong>{{ $chapa->numero }}</strong></li>
+                    <li class="list-group-item px-4">Chapa <strong>{{ $chapa->numero }}</strong>
+                        <span class="text-secondary">· {{ $chapa->candidatos_count }} de {{ $eleicao->cargos_count }} candidatos</span></li>
                 @empty
                     <li class="list-group-item px-4 text-secondary">Nenhuma chapa cadastrada.</li>
                 @endforelse
