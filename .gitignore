@@ -24,3 +24,5 @@ Homestead.yaml
 Thumbs.db
 
 /database/*.sqlite*
+
+_raw/
