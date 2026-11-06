@@ -206,7 +206,34 @@ h1, h2, h3, h4, h5, h6,
     margin-bottom: var(--dt-espaco-1);
 }
 
+/* Item de menu ainda não implementado (mostra a história) */
+.dt-menu-lateral a.dt-menu-em-breve { opacity: 0.45; cursor: not-allowed; }
+.dt-menu-lateral a.dt-menu-em-breve:hover { background: none; color: inherit; }
+
+/* Usuário logado e botão Sair, no pé do menu */
+.dt-menu-usuario {
+    margin-top: auto;
+    padding: var(--dt-espaco-3);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.dt-menu-usuario button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dt-espaco-2);
+    min-height: 44px;
+    padding: 0 var(--dt-espaco-3);
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: var(--dt-raio-sm);
+    color: var(--dt-tema-texto-inverso);
+    font-weight: var(--dt-fonte-peso-medio);
+}
+.dt-menu-usuario button:hover { background: rgba(255, 255, 255, 0.08); }
+.dt-menu-usuario button:focus-visible { outline: 2px solid var(--dt-tema-acao-acento); outline-offset: 2px; }
+
 @media (max-width: 991.98px) {
+    .dt-menu-lateral a.dt-menu-em-breve { display: none; }
+    .dt-menu-usuario { margin-top: 0; }
     .dt-painel { flex-direction: column; }
     .dt-menu-lateral { width: 100%; padding: var(--dt-espaco-4); gap: var(--dt-espaco-3); }
     .dt-menu-lateral nav { flex-direction: row; flex-wrap: wrap; }

@@ -42,7 +42,8 @@ Regras do `.env` de produção:
 
 ```bash
 php artisan key:generate
-php artisan migrate --force         # SEM --seed em produção
+php artisan migrate --force         # SEM --seed em produção (o seed se recusa a rodar)
+php artisan digitech:admin          # cria o primeiro admin: pergunta e-mail, nome e senha
 php artisan storage:link
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 ```
@@ -103,7 +104,7 @@ cd ~/domains/SEU_DOMINIO/app && php artisan schedule:run >> /dev/null 2>&1
 
 - [ ] `https://SEU_DOMINIO/` abre com HTTPS e sem aviso de debug.
 - [ ] `/api/health` → `"banco":"ok"`.
-- [ ] Login do admin funciona.
+- [ ] Login do admin criado com `php artisan digitech:admin` funciona; `admin@digitech.local` **não** existe.
 - [ ] `/mesario` exige login.
 - [ ] `storage/logs/laravel-AAAA-MM-DD.log` (log diário) sem erros após navegar.
 - [ ] `php artisan about` mostra `Environment: production` e `Debug Mode: OFF`.

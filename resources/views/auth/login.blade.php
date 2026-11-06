@@ -1,6 +1,6 @@
 {{--
-    Tela de login de admin e mesário (H1). Visual pronto; a AUTENTICAÇÃO é a história H1:
-    criar POST /login (Auth::attempt + throttle), redirecionar por perfil e trocar o aviso abaixo.
+    Login de admin e mesário (H1). POST /login → App\Http\Controllers\Auth\LoginController.
+    Erros (senha errada, usuário desativado, muitas tentativas) chegam no campo email.
 --}}
 @extends('layouts.base')
 
@@ -14,11 +14,14 @@
                 <h1 class="h3 mb-1">Entrar</h1>
                 <p class="text-secondary mb-4">Acesso da comissão eleitoral e dos mesários.</p>
 
+                @if (session('status'))
+                    <x-alerta tipo="sucesso" class="mb-4">{{ session('status') }}</x-alerta>
+                @endif
                 @if ($errors->any())
                     <x-alerta tipo="perigo" class="mb-4">{{ $errors->first() }}</x-alerta>
                 @endif
 
-                <form method="POST" action="#" novalidate>
+                <form method="POST" action="{{ route('login.store') }}" novalidate>
                     @csrf
                     <x-campo name="email" type="email" label="E-mail" autocomplete="username" autofocus required placeholder="nome@unicatolicaquixada.edu.br" />
                     <x-campo name="password" type="password" label="Senha" autocomplete="current-password" required />
@@ -29,7 +32,6 @@
                     <x-botao type="submit" tamanho="grande" class="w-100">Entrar</x-botao>
                 </form>
 
-                <x-alerta tipo="info" class="mt-4">A autenticação ainda não foi implementada (história <strong>H1</strong>).</x-alerta>
             </x-cartao>
             <p class="text-center small text-secondary mt-4">Eleitor não faz login: procure o mesário.</p>
         </div>
