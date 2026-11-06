@@ -115,7 +115,7 @@ Já tinha o banco de uma versão anterior? Rode `php artisan migrate`. Se der er
 | API de saúde e status da urna  | `routes/api.php`                              |
 | Login, perfis e usuários (H1) | `/login`, `/admin/usuarios`, `app/Http/Controllers/Auth/` |
 | Eleições com os dois períodos e a fase atual (H2) | `/admin`, `/admin/eleicoes`, `app/Enums/FaseEleicao.php` |
-| Tela da urna com a identidade (sem lógica ainda) | `/urna/{uuid do terminal}` (H7) |
+| Tela da urna com a identidade (sem lógica ainda) | `/urna/{uuid do terminal}` (H7; vai virar `/urna` com pareamento, D16) |
 | Tela placeholder               | `/mesario` (H6, H9)                           |
 | Componentes Blade, layouts e vitrine `/estilo` | `resources/views/components/`, `public/css/digitech.css` |
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
