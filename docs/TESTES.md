@@ -15,7 +15,7 @@ Regra prática: **regra de negócio que dá para expressar como função pura va
 ```bash
 php artisan test                       # tudo
 php artisan test --testsuite=Unit      # só unitários (rápidos)
-php artisan test --filter=ApiStatus    # um arquivo/teste
+php artisan test --filter=ConstraintsTest  # um arquivo/teste
 php artisan test --coverage            # cobertura (precisa de Xdebug ou PCOV)
 ```
 
