@@ -17,6 +17,7 @@ Como admin ou mesário, quero entrar com e-mail e senha para acessar só o que m
 - [ ] Tela de login em `/login`; após entrar, admin vai para `/admin` e mesário para `/mesario`.
 - [ ] Mesário que tenta abrir `/admin` recebe 403.
 - [ ] Logout encerra a sessão.
+- [ ] Admin pode desativar um usuário (ele não entra mais); usuário que já liberou sessões não pode ser apagado (o banco bloqueia).
 - [ ] 5 tentativas erradas em 1 minuto bloqueiam por 1 minuto (middleware `throttle`).
 - [ ] Testes: login válido, senha errada, mesário bloqueado em `/admin`.
 
@@ -38,6 +39,7 @@ Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, no
 - [ ] CRUD em `/admin/eleitores` com busca por matrícula/nome e paginação.
 - [ ] Importação de CSV mostra quantos entraram e quais linhas falharam (e por quê).
 - [ ] Matrícula duplicada no CSV atualiza o nome, não cria outro registro.
+- [ ] Eleitor que já foi liberado em alguma eleição não pode ser excluído (o banco bloqueia; a tela explica o motivo).
 - [ ] Testes: importação com 3 linhas válidas + 1 inválida.
 
 ### H5 · Cadastrar terminais

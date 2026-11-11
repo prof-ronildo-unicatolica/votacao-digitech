@@ -113,6 +113,28 @@ class ConstraintsTest extends TestCase
         $this->assertDatabaseCount('sessoes_votacao', 0);
     }
 
+    public function test_eleitor_com_sessao_nao_pode_ser_apagado(): void
+    {
+        $sessao = SessaoVotacao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $sessao->eleitor->delete();
+    }
+
+    public function test_mesario_com_sessao_nao_pode_ser_apagado(): void
+    {
+        $sessao = SessaoVotacao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $sessao->mesario->delete();
+    }
+
+    public function test_sessao_exige_mesario(): void
+    {
+        $this->expectException(QueryException::class);
+        SessaoVotacao::factory()->create(['mesario_id' => null]);
+    }
+
     public function test_terminal_com_sessao_nao_pode_ser_apagado(): void
     {
         $sessao = SessaoVotacao::factory()->create();
