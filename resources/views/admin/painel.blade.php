@@ -18,13 +18,14 @@
         </x-cartao>
 
         <div class="row g-3">
-            <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Cargos por chapa" :valor="$eleicao->cargos_count" /></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ route('admin.eleicoes.cargos.index', $eleicao) }}" class="text-reset text-decoration-none"><x-indicador rotulo="Cargos por chapa" :valor="$eleicao->cargos_count" /></a></div>
             <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Chapas inscritas" :valor="$eleicao->chapas_count" /></div>
         </div>
 
         @if ($eleicao->cargos_count === 0)
             <x-alerta tipo="aviso" titulo="Sem cargos definidos" class="mt-4">
-                As inscrições não podem abrir sem os cargos das chapas (Presidente, Vice...). A tela de cargos é a história <strong>H13</strong>.
+                As inscrições não podem abrir sem os cargos das chapas (Presidente, Vice...).
+                <a href="{{ route('admin.eleicoes.cargos.index', $eleicao) }}">Definir os cargos</a>.
             </x-alerta>
         @endif
     @else

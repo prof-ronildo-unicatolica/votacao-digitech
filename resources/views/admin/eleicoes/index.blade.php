@@ -28,7 +28,10 @@
                                     @if ($eleicao->ativa)
                                         <x-selo tipo="marca" icone="star-fill">Ativa</x-selo>
                                     @endif
-                                    <span class="small text-secondary">{{ $eleicao->chapas_count }} {{ $eleicao->chapas_count === 1 ? 'chapa' : 'chapas' }}</span>
+                                    <span class="small text-secondary">{{ $eleicao->chapas_count }} {{ $eleicao->chapas_count === 1 ? 'chapa' : 'chapas' }} · {{ $eleicao->cargos_count }} {{ $eleicao->cargos_count === 1 ? 'cargo' : 'cargos' }}</span>
+                                    @if ($eleicao->cargos_count === 0)
+                                        <div><x-selo tipo="aviso" icone="exclamation-triangle">Sem cargos: inscrições não abrem</x-selo></div>
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($fase)
@@ -41,6 +44,7 @@
                                 <td class="small text-nowrap">de {{ $eleicao->votacao_abre_em?->format('d/m/Y H:i') }}<br>até {{ $eleicao->votacao_fecha_em?->format('d/m/Y H:i') }}</td>
                                 <td class="text-end text-nowrap">
                                     <x-botao variante="fantasma" tamanho="pequeno" icone="pencil" :href="route('admin.eleicoes.edit', $eleicao)">Editar</x-botao>
+                                    <x-botao variante="fantasma" tamanho="pequeno" icone="list-ol" :href="route('admin.eleicoes.cargos.index', $eleicao)">Cargos</x-botao>
                                     <form method="POST" class="d-inline" action="{{ route($eleicao->ativa ? 'admin.eleicoes.desativar' : 'admin.eleicoes.ativar', $eleicao) }}">
                                         @csrf
                                         <x-botao type="submit" variante="fantasma" tamanho="pequeno" :icone="$eleicao->ativa ? 'pause-circle' : 'play-circle'">{{ $eleicao->ativa ? 'Desativar' : 'Ativar' }}</x-botao>
