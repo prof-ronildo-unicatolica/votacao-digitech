@@ -89,7 +89,8 @@ class Terminal extends Model
 
     /**
      * Estado mostrado ao admin e ao mesário (componente x-status-terminal): inativo (não
-     * pareado), liberado (tem sessão em andamento) ou livre. "Votando" depende da urna (H7).
+     * pareado), livre, liberado (sessão em andamento, cédula ainda não apareceu) ou votando
+     * (a cédula está na tela da urna, H7).
      */
     public function estado(): string
     {
@@ -97,7 +98,11 @@ class Terminal extends Model
             return 'inativo';
         }
 
-        return $this->sessaoEmAndamento ? 'liberado' : 'livre';
+        return match (true) {
+            ! $this->sessaoEmAndamento => 'livre',
+            $this->sessaoEmAndamento->exibida_em !== null => 'votando',
+            default => 'liberado',
+        };
     }
 
     private static function hash(string $token): string

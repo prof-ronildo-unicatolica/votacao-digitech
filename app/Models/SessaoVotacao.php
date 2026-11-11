@@ -32,6 +32,7 @@ class SessaoVotacao extends Model
             'situacao' => SituacaoSessao::class,
             'liberada_em' => 'datetime',
             'expira_em' => 'datetime',
+            'exibida_em' => 'datetime',
             'votou_em' => 'datetime',
             'cancelada_em' => 'datetime',
         ];
@@ -62,6 +63,15 @@ class SessaoVotacao extends Model
     public function minutosRestantes(): int
     {
         return $this->emAndamento() ? (int) ceil(now()->diffInSeconds($this->expira_em) / 60) : 0;
+    }
+
+    /**
+     * Identifica ESTA liberação para a urna (H7): muda se a sessão for cancelada e liberada de
+     * novo, mesmo que o eleitor seja o mesmo. Não revela nada do eleitor.
+     */
+    public function versao(): string
+    {
+        return substr(hash('sha256', $this->id.'|'.$this->liberada_em?->format('Uu')), 0, 16);
     }
 
     public function eleicao(): BelongsTo

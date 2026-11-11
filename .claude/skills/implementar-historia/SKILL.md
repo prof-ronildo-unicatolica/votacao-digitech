@@ -45,6 +45,8 @@ O backlog está em `docs/HISTORIAS_USUARIO.md` (critérios com `[ ]`/`[x]`); cad
 - Pela linha de comando: `curl` com cookie jar para logar e navegar; screenshot com `google-chrome --headless=new --screenshot` em 1440 px e 390 px (celular).
 - Para matar o servidor: `pkill -f "artisan serve --port=876[5]"` (os colchetes evitam que o `pkill` mate o próprio shell).
 - Teste as ações de verdade (POST com o `_token` da página), não só as telas.
+- **Telas que dependem do cookie da urna ou de JavaScript** (polling da `/urna`): o `curl` não executa script, e o Chrome headless sozinho não recebe o cookie. Pegue o cookie `terminal` ativando o terminal com o `curl` (cookie jar) e abra a página num Chrome controlado pelo DevTools Protocol: `google-chrome --headless=new --remote-debugging-port=9333`, com um script em `node --experimental-websocket`. O script faz `Network.setCookie`, `Page.navigate` e `Page.captureScreenshot`, e chama `php artisan tinker` entre as fotos para liberar e cancelar. Coloque o script no scratchpad, não no repositório.
+- Se precisar mudar o estado do banco local (datas da eleição, chapas homologadas, terminais ativados), salve o estado antes num JSON e restaure no fim.
 - Apague do banco local os dados de teste que criou, ou devolva-os ao estado anterior.
 
 ## 6. PR

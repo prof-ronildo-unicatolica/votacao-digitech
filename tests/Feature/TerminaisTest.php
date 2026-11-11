@@ -67,7 +67,7 @@ class TerminaisTest extends TestCase
             ->assertOk()->assertSee('Terminal 7')->assertSee('Aguardando liberação');
 
         $this->withCredentials()->withCookie(Terminal::COOKIE, $token)->getJson('/urna/status')
-            ->assertOk()->assertExactJson(['terminal' => 7, 'estado' => 'livre']);
+            ->assertOk()->assertExactJson(['terminal' => 7, 'liberada' => false, 'versao' => null]);
     }
 
     public function test_sem_cookie_ou_com_cookie_invalido_a_urna_responde_403(): void

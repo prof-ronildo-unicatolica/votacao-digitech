@@ -1,8 +1,4 @@
-{{--
-    Urna do terminal pareado, aguardando liberação (H7). Visual pronto; a LÓGICA é a H7/H8:
-    consultar /urna/status a cada 3 s (o terminal vem do cookie, D16) e, quando liberada, mostrar as chapas
-    (componente x-opcao-chapa, ver /estilo/telas/urna-escolha).
---}}
+{{-- Urna do terminal pareado, aguardando liberação (H7). Muda sozinha quando o mesário libera. --}}
 @extends('layouts.urna')
 
 @section('titulo', 'Urna · terminal '.$terminal->numero)
@@ -14,4 +10,5 @@
         <h1>Aguardando liberação</h1>
         <p><span class="dt-urna-pulso" aria-hidden="true"></span>Apresente seu documento ao mesário.</p>
     </div>
+    @include('urna._monitor')
 @endsection

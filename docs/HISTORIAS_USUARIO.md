@@ -47,7 +47,7 @@ Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, no
 ### H5 · Cadastrar terminais
 Como admin, quero cadastrar os terminais (número e local) para saber em qual computador cada eleitor será liberado.
 - [x] CRUD em `/admin/terminais`; número único.
-- [x] Lista mostra o estado atual: inativo (não pareado), livre, liberado (com nome do eleitor) ou votando. *Inativo, livre e liberado prontos (H6); votando depende da urna (H7).*
+- [x] Lista mostra o estado atual: inativo (não pareado), livre, liberado (com nome do eleitor) ou votando (a cédula está na urna, H7).
 - [x] **Pareamento (D16):** em `/terminal/ativar`, admin ou mesário logado no computador da urna escolhe qual terminal aquele computador é. O servidor grava o hash de um token em `terminais.token_hash` (e `ativado_em`), envia o token num cookie `terminal` (criptografado, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas), faz logout desse navegador e redireciona para `/urna`.
 - [x] Ativar o mesmo terminal em outro computador invalida o anterior. O admin pode desativar um terminal (apaga o hash).
 - [x] Testes: ativação grava só o hash (o token não aparece no banco); reativação invalida o cookie antigo; usuário é deslogado após ativar; visitante sem login não acessa `/terminal/ativar`.
@@ -117,11 +117,12 @@ Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal
 
 ### H7 · Urna aguarda liberação
 Como eleitor, quero que a urna do terminal mostre "aguardando" até o mesário me liberar, e então mostre meu nome e as chapas.
-- [ ] `/urna` consulta `/urna/status` a cada 3 segundos. Não há ID na URL: o terminal vem do cookie de pareamento (H5, D16), conferido por um middleware `terminal`. As rotas ficam no grupo `web` (o grupo `api` não lê cookies).
-- [ ] Sem cookie válido, `/urna`, `/urna/status` e `/urna/votar` respondem 403 com a tela "Este computador não está ativado como terminal. Chame o mesário." O status nunca devolve o nome do eleitor para quem não é o terminal pareado.
-- [ ] Quando `liberada = true`, mostra nome do eleitor e as chapas **homologadas** da eleição ativa, cada uma com sua composição (cargo → candidato) na ordem dos cargos.
-- [ ] Tela em modo quiosque: sem menu, fonte grande, botões de no mínimo 48px.
-- [ ] Testes: status muda de falso para verdadeiro após liberação; sem cookie → 403; cookie de outro terminal não vê a liberação deste; cookie antigo (terminal reativado em outro computador) → 403.
+- [x] `/urna` consulta `/urna/status` a cada 3 segundos. Não há ID na URL: o terminal vem do cookie de pareamento (H5, D16), conferido por um middleware `terminal`. As rotas ficam no grupo `web` (o grupo `api` não lê cookies). A tela é montada no servidor; o script só recarrega quando a liberação muda (liberou, cancelou, expirou, D23).
+- [x] Sem cookie válido, `/urna` e `/urna/status` respondem 403 com a tela "Este computador não está ativado como terminal. Chame o mesário." O status **nunca** devolve o nome do eleitor: só `liberada` e uma `versao` da liberação. *`/urna/votar` é da H8 e entra no mesmo middleware.*
+- [x] Quando liberada, mostra nome do eleitor e as chapas **homologadas** da eleição ativa (`chapasNaUrna`, D20), na ordem do número, cada uma com sua composição (cargo → candidato) na ordem dos cargos, mais branco e nulo. Com a votação encerrada, volta para "aguardando".
+- [x] Quando a cédula aparece, a sessão grava `exibida_em` e o terminal passa a **votando** no painel da mesa e na lista de terminais.
+- [x] Tela em modo quiosque: sem menu, fonte grande, opções e botões com 88 px de altura (`--dt-tamanho-toque-urna`).
+- [x] Testes: status muda de falso para verdadeiro após liberação; sem cookie → 403; cookie de outro terminal não vê a liberação deste; cookie antigo (terminal reativado em outro computador) → 403; o status não traz nome nem matrícula; cédula só com homologadas e composição em ordem; "votando"; expirada, cancelada e votação encerrada voltam para "aguardando".
 
 ### H8 · Votar
 Como eleitor, quero escolher uma chapa (ou branco/nulo), confirmar e ver "voto registrado" para ter certeza de que votei.
