@@ -88,6 +88,16 @@ class Eleicao extends Model
         return $this->hasMany(Chapa::class)->orderBy('numero');
     }
 
+    /**
+     * As chapas que aparecem na urna e entram na apuração: só as homologadas (H3), pela ordem
+     * do número. A urna (H7, H8) e a apuração (H10) devem usar SEMPRE esta consulta, e o voto
+     * deve recusar chapa que não esteja nela.
+     */
+    public function chapasNaUrna(): HasMany
+    {
+        return $this->chapas()->homologadas();
+    }
+
     /** Cargos que toda chapa precisa preencher, na ordem da cédula (D13). */
     public function cargos(): HasMany
     {

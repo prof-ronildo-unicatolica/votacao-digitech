@@ -113,22 +113,25 @@ class InscricaoDeChapa
      * @param  array<string, string>  $cargos  chave => título, na ordem da cédula
      * @param  array<string, string|null>  $matriculas  chave do cargo => matrícula
      * @param  bool  $comissao  mensagens para a comissão (CSV) em vez do representante (formulário)
+     * @param  Chapa|null  $propria  a chapa que está sendo corrigida (H3): o nome e os alunos dela não contam como "outra chapa"
      * @return array{0: array<string, string>, 1: array<string, Eleitor>} erros (chave do cargo ou `nome`) e o aluno de cada cargo
      */
-    public function conferir(Eleicao $eleicao, string $nome, array $cargos, array $matriculas, bool $comissao = false): array
+    public function conferir(Eleicao $eleicao, string $nome, array $cargos, array $matriculas, bool $comissao = false, ?Chapa $propria = null): array
     {
         $erros = [];
 
         if ($nome === '') {
             $erros['nome'] = 'Informe o nome da chapa.';
-        } elseif ($eleicao->chapas()->whereRaw('LOWER(nome) = ?', [Str::lower($nome)])->exists()) {
+        } elseif ($eleicao->chapas()->whereRaw('LOWER(nome) = ?', [Str::lower($nome)])->when($propria, fn ($q) => $q->whereKeyNot($propria->getKey()))->exists()) {
             $erros['nome'] = 'Já existe uma chapa com este nome nesta eleição.';
         }
 
         $porCargo = collect($cargos)->map(fn ($titulo, $chave) => trim((string) ($matriculas[$chave] ?? '')));
         $alunos = Eleitor::whereIn('matricula', $porCargo->filter()->unique()->values())->get()->keyBy('matricula');
         $daEquipe = User::whereIn('matricula', $porCargo->filter()->unique()->values())->pluck('perfil', 'matricula');
-        $jaCandidatos = Candidato::where('eleicao_id', $eleicao->id)->whereIn('eleitor_id', $alunos->pluck('id'))->pluck('eleitor_id')->flip();
+        $jaCandidatos = Candidato::where('eleicao_id', $eleicao->id)->whereIn('eleitor_id', $alunos->pluck('id'))
+            ->when($propria, fn ($q) => $q->where('chapa_id', '!=', $propria->getKey()))
+            ->pluck('eleitor_id')->flip();
 
         $alunosPorCargo = [];
         $cargoDaMatricula = [];

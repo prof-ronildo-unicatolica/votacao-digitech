@@ -25,7 +25,7 @@
                     <li class="list-group-item px-4">Chapa <strong>{{ $chapa->numero }}</strong>
                         <span class="text-secondary">· {{ $chapa->candidatos_count }} de {{ $eleicao->cargos_count }} candidatos</span></li>
                 @empty
-                    <li class="list-group-item px-4 text-secondary">Nenhuma chapa cadastrada.</li>
+                    <li class="list-group-item px-4 text-secondary">Nenhuma chapa homologada.</li>
                 @endforelse
             </ul>
         </x-cartao>

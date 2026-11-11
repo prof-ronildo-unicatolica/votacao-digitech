@@ -32,6 +32,9 @@ erDiagram
         smallint numero "UK (eleicao_id, numero)"
         string nome "UK (eleicao_id, nome)"
         string situacao "pendente | homologada | indeferida"
+        string motivo_indeferimento "nullable (H3)"
+        timestamp analisada_em "nullable (H3)"
+        bigint analisada_por_id FK "users, nullable (H3)"
         string origem "formulario | csv"
         string contato_email
         string contato_telefone "nullable"
@@ -87,6 +90,7 @@ erDiagram
     ELEITORES ||--o{ SESSOES_VOTACAO : "e liberado em"
     TERMINAIS ||--o{ SESSOES_VOTACAO : "hospeda"
     USERS    ||--o{ SESSOES_VOTACAO : "mesario libera"
+    USERS    |o--o{ CHAPAS : "analisa (H3)"
 ```
 
 Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). O voto também não aponta para `CANDIDATOS`: vota-se na chapa inteira (D13). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama, **exceto em `votos`, que não tem timestamps**.
@@ -127,7 +131,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | ~~`users`~~       | **Respondido na H1 (D15):** coluna `perfil` (`admin`/`mesario`, enum `App\Enums\Perfil`) e `ativo` (desativar sem apagar). **H15 (D19):** `matricula` (opcional, única) para quem trabalha na eleição e é aluno: essa pessoa não pode ser candidata | H1, H15  |
 | ~~`eleicoes`~~    | **Respondido na H2 (D15):** `titulo`, `inscricao_abre_em`, `inscricao_fecha_em`, `votacao_abre_em`, `votacao_fecha_em` e `ativa` (TRUE ou NULL, com UNIQUE). A fase é calculada pelas datas (`App\Enums\FaseEleicao`) | H2       |
 | ~~`cargos`~~      | **Respondido na H13 (D13):** `titulo`, único na eleição (`UNIQUE (eleicao_id, titulo)`). A **quantidade de candidatos por chapa** é o número de cargos da eleição | H13      |
-| `chapas`          | **Respondido na H14 (D18):** `nome` (único na eleição), `situacao` (`pendente` → `homologada` \| `indeferida`, `App\Enums\SituacaoChapa`), `origem` (`formulario` \| `csv`), `contato_email` e `contato_telefone`. **Falta (H3):** motivo do indeferimento. Descrição e foto: a equipe decide se entram | H3, H14, H15 |
+| ~~`chapas`~~      | **Respondido na H14 (D18):** `nome` (único na eleição), `situacao` (`pendente` → `homologada` \| `indeferida`, `App\Enums\SituacaoChapa`), `origem` (`formulario` \| `csv`), `contato_email` e `contato_telefone`. **H3 (D20):** `motivo_indeferimento`, `analisada_em` e `analisada_por_id` (quem decidiu por último; o histórico é da auditoria, H11). Descrição e foto: a equipe decide se entram | H3, H14, H15 |
 | `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
 | ~~`eleitores`~~   | **Respondido na H4 (D17):** `nome`, `turma` (opcional) e `email` (opcional). Cadastro único de alunos, apto em **toda** eleição: sem tabela `eleicao_eleitor`. Candidato precisa estar cadastrado em `eleitores` | H4       |
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |

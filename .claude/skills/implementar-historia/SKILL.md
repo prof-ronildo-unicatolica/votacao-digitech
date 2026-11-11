@@ -10,6 +10,7 @@ O backlog está em `docs/HISTORIAS_USUARIO.md` (critérios com `[ ]`/`[x]`); cad
 ## 1. Branch
 
 - Parta de `develop`: `git checkout -b feature/<issue>-<nome-curto>` (ex.: `feature/51-importar-chapas`).
+- **Se o app estiver no ar para alguém olhar** (`php artisan serve` na pasta principal), trabalhe num **git worktree** (`git worktree add ../votacao-digitech-hN -b feature/...  develop`), com `vendor` **copiado** (`cp -a`, não link simbólico: o autoload do Composer resolveria as classes da pasta original) e `composer dump-autoload`. O banco MySQL é o mesmo: avise antes de rodar uma migration nele.
 - **Dependência de PR ainda aberta:** faça merge da branch da qual depende (não rebase, não mude a base da PR). A PR continua contra `develop`, e a descrição diz qual commit revisar. Mudar a base de uma PR descarta as aprovações.
 
 ## 2. Implementar (convenções do projeto)
@@ -26,7 +27,8 @@ O backlog está em `docs/HISTORIAS_USUARIO.md` (critérios com `[ ]`/`[x]`); cad
 ## 3. Testes
 
 - `php artisan test` (SQLite em memória). Um `tests/Feature/<Assunto>Test.php` por história, cobrindo **cada critério** da história; restrições de banco em `ConstraintsTest`.
-- Arquivos de exemplo em `tests/Fixtures/<assunto>/`.
+- Arquivos de exemplo em `tests/Fixtures/<assunto>/` (o `.gitattributes` guarda esses arquivos byte a byte).
+- Em redirecionamento, use `assertRedirect(<url exata>)`, não só `assertRedirect()`: o teste não envia cabeçalhos de verdade, e um `Location` quebrado (ex.: concatenar texto numa `RedirectResponse` em vez de na URL) só aparece no navegador.
 - `vendor/bin/pint` antes de commitar.
 
 ## 4. Documentação (na mesma PR)
@@ -42,7 +44,8 @@ O backlog está em `docs/HISTORIAS_USUARIO.md` (critérios com `[ ]`/`[x]`); cad
 - `php artisan migrate` no MySQL local, `php artisan serve --port=8765`, login com `admin@digitech.local` / `admin123` (seed).
 - Pela linha de comando: `curl` com cookie jar para logar e navegar; screenshot com `google-chrome --headless=new --screenshot` em 1440 px e 390 px (celular).
 - Para matar o servidor: `pkill -f "artisan serve --port=876[5]"` (os colchetes evitam que o `pkill` mate o próprio shell).
-- Apague do banco local os dados de teste que criou.
+- Teste as ações de verdade (POST com o `_token` da página), não só as telas.
+- Apague do banco local os dados de teste que criou, ou devolva-os ao estado anterior.
 
 ## 6. PR
 

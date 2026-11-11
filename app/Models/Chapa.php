@@ -22,12 +22,18 @@ class Chapa extends Model
 
     protected function casts(): array
     {
-        return ['situacao' => SituacaoChapa::class, 'origem' => OrigemChapa::class];
+        return ['situacao' => SituacaoChapa::class, 'origem' => OrigemChapa::class, 'analisada_em' => 'datetime'];
     }
 
     public function scopeHomologadas(Builder $query): Builder
     {
         return $query->where('situacao', SituacaoChapa::Homologada);
+    }
+
+    /** Quem homologou, indeferiu ou reabriu por último (H3). */
+    public function analisadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'analisada_por_id');
     }
 
     public function eleicao(): BelongsTo

@@ -93,13 +93,14 @@ Como admin, quero importar as chapas de um arquivo CSV para registrar inscriçõ
 
 ### H3 · Homologar chapas
 Como admin (comissão eleitoral), quero analisar as chapas inscritas e homologar ou indeferir cada uma para que só chapas válidas apareçam na urna.
-- [ ] `/admin/chapas` lista as chapas da eleição com número, nome, situação (`pendente`, `homologada`, `indeferida`), origem (formulário/CSV) e a composição completa (cargo → nome e matrícula).
-- [ ] Homologar e indeferir exigem confirmação; indeferir exige **motivo**. Uma chapa indeferida pode voltar para `pendente` até o início da votação.
-- [ ] A composição não pode ser editada depois do fim das inscrições (D14); antes, o admin pode corrigir um candidato, com as mesmas validações da H14.
-- [ ] Só chapas `homologadas` aparecem na urna e na apuração. A votação não pode começar sem ao menos uma chapa homologada (aviso na tela da eleição).
-- [ ] Não é possível excluir chapa depois que a eleição recebeu votos (o banco bloqueia).
-- [ ] Toda homologação/indeferimento vai para a auditoria (H11).
-- [ ] Testes: homologar, indeferir sem motivo rejeitado, chapa pendente não aparece na urna, edição bloqueada após o fim das inscrições, exclusão bloqueada com votos.
+- [x] `/admin/chapas` lista as chapas da eleição (a ativa, ou outra escolhida na lista) com número, nome, situação (`pendente`, `homologada`, `indeferida`), origem (formulário/CSV), contato e a composição completa (cargo → nome e matrícula). Filtro por situação, com a contagem de cada uma.
+- [x] Homologar e indeferir exigem confirmação (o botão abre um painel com "Confirmar"); indeferir exige **motivo** (mínimo de 10 caracteres). Uma chapa homologada ou indeferida pode voltar para `pendente` ("Reabrir análise") **até o início da votação**; depois, a tela fica só para leitura (D20).
+- [x] A composição não pode ser editada depois do fim das inscrições (D14); antes, o admin corrige um candidato com as mesmas validações da H14 (incluindo mesário/admin, D19). Corrigir uma chapa homologada a devolve para `pendente`.
+- [x] Só chapas `homologadas` aparecem na urna e na apuração: `Eleicao::chapasNaUrna()` é a consulta única para H7, H8 e H10 (D20). A página inicial pública também mostra só as homologadas. *O voto (H8) ainda precisa recusar chapa fora dessa lista.*
+- [x] A votação não pode começar sem ao menos uma chapa homologada: aviso no painel, na lista de eleições e na lista de chapas. *O bloqueio de fato fica na liberação (H6) e na urna (H7).*
+- [x] Não é possível excluir chapa depois que a eleição recebeu votos (o banco bloqueia e a tela explica). A exclusão só existe até a votação abrir.
+- [ ] Toda homologação/indeferimento vai para a auditoria (H11). *Por enquanto a chapa guarda quem decidiu por último e quando (`analisada_por_id`, `analisada_em`); o histórico completo é da H11.*
+- [x] Testes: homologar, indeferir sem motivo rejeitado, reabrir até a votação, chapa pendente fora da urna, correção de candidato com as regras da H14, edição bloqueada após o fim das inscrições, exclusão bloqueada com votos, avisos, acesso negado ao mesário.
 
 ## Épico C — Dia da votação
 

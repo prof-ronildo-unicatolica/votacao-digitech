@@ -513,3 +513,17 @@ h1, h2, h3, h4, h5, h6,
     max-width: min(100%, calc(100vw - 4rem));
     white-space: normal;
 }
+
+/* Ações com confirmação sem JavaScript (H3): o botão abre um painel com o "Confirmar". */
+.dt-acao > summary { list-style: none; }
+.dt-acao > summary::-webkit-details-marker { display: none; }
+.dt-acao[open] > summary { box-shadow: inset 0 0 0 2px var(--dt-tema-borda-padrao); }
+.dt-acao-painel {
+    margin-top: var(--dt-espaco-2);
+    padding: var(--dt-espaco-3);
+    border: 1px solid var(--dt-tema-borda-padrao);
+    border-radius: var(--dt-raio-md);
+    background: var(--dt-tema-superficie-pagina);
+    max-width: 420px;
+}
+.nav-pills { --bs-nav-pills-link-active-bg: var(--dt-cor-laranja-700); --bs-nav-link-color: var(--dt-cor-laranja-700); --bs-nav-link-hover-color: var(--dt-cor-laranja-700); }

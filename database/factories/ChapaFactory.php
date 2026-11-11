@@ -20,4 +20,14 @@ class ChapaFactory extends Factory
             'contato_email' => fake()->safeEmail(),
         ];
     }
+
+    public function homologada(): static
+    {
+        return $this->state(fn () => ['situacao' => 'homologada', 'analisada_em' => now()]);
+    }
+
+    public function indeferida(string $motivo = 'Candidato a tesoureiro não está matriculado.'): static
+    {
+        return $this->state(fn () => ['situacao' => 'indeferida', 'motivo_indeferimento' => $motivo, 'analisada_em' => now()]);
+    }
 }

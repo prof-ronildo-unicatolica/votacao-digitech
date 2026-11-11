@@ -29,7 +29,8 @@ class HomeController extends Controller
                 'sessoes_votacao' => SessaoVotacao::count(),
                 'votos' => Voto::count(),
             ],
-            'eleicoes' => Eleicao::withCount('cargos')->with(['chapas' => fn ($q) => $q->withCount('candidatos')])->get(),
+            // Página pública: só chapas homologadas (H3). Pendentes e indeferidas não aparecem (H14).
+            'eleicoes' => Eleicao::withCount('cargos')->with(['chapas' => fn ($q) => $q->homologadas()->withCount('candidatos')])->get(),
         ]);
     }
 }

@@ -32,6 +32,9 @@
                                     @if ($eleicao->cargos_count === 0)
                                         <div><x-selo tipo="aviso" icone="exclamation-triangle">Sem cargos: inscrições não abrem</x-selo></div>
                                     @endif
+                                    @if ($eleicao->homologadas_count === 0 && in_array($fase, [\App\Enums\FaseEleicao::InscricoesAbertas, \App\Enums\FaseEleicao::EmHomologacao], true))
+                                        <div><x-selo tipo="aviso" icone="exclamation-triangle">Sem chapa homologada: a votação não pode começar</x-selo></div>
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($fase)
@@ -45,6 +48,7 @@
                                 <td class="text-end text-nowrap">
                                     <x-botao variante="fantasma" tamanho="pequeno" icone="pencil" :href="route('admin.eleicoes.edit', $eleicao)">Editar</x-botao>
                                     <x-botao variante="fantasma" tamanho="pequeno" icone="list-ol" :href="route('admin.eleicoes.cargos.index', $eleicao)">Cargos</x-botao>
+                                    <x-botao variante="fantasma" tamanho="pequeno" icone="people" :href="route('admin.chapas.index', ['eleicao' => $eleicao->id])">Chapas</x-botao>
                                     <form method="POST" class="d-inline" action="{{ route($eleicao->ativa ? 'admin.eleicoes.desativar' : 'admin.eleicoes.ativar', $eleicao) }}">
                                         @csrf
                                         <x-botao type="submit" variante="fantasma" tamanho="pequeno" :icone="$eleicao->ativa ? 'pause-circle' : 'play-circle'">{{ $eleicao->ativa ? 'Desativar' : 'Ativar' }}</x-botao>

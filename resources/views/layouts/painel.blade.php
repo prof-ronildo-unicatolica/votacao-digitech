@@ -11,7 +11,7 @@
             'painel' => ['Início', 'house', 'admin.painel', null],
             'eleicoes' => ['Eleições', 'calendar-check', 'admin.eleicoes.index', null],
             'cargos' => ['Cargos', 'list-ol', 'admin.cargos', null],
-            'chapas' => ['Chapas', 'people', 'admin.chapas.importar', null], // H3 troca pela lista de chapas
+            'chapas' => ['Chapas', 'people', 'admin.chapas.index', null],
             'eleitores' => ['Eleitores', 'person-vcard', 'admin.eleitores.index', null],
             'terminais' => ['Terminais', 'display', 'admin.terminais.index', null],
         ],
