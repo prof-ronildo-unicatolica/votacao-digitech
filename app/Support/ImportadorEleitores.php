@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\AcaoAuditoria;
 use App\Models\Eleitor;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -105,12 +106,12 @@ class ImportadorEleitores
      * @throws ImportacaoRecusada com erros que o admin não mandou ignorar
      * @throws ArquivoInvalido
      */
-    public function importar(string $conteudo, string $assinatura, bool $ignorarErros): array
+    public function importar(string $conteudo, string $assinatura, bool $ignorarErros, string $arquivo = 'arquivo.csv'): array
     {
         $mudou = 'O cadastro mudou desde a conferência (por exemplo, um aluno foi cadastrado ou editado em outra tela). Nada foi gravado: confira o resultado de novo antes de confirmar.';
 
         try {
-            return DB::transaction(function () use ($conteudo, $assinatura, $ignorarErros, $mudou) {
+            return DB::transaction(function () use ($conteudo, $assinatura, $ignorarErros, $mudou, $arquivo) {
                 $analise = $this->analisar($conteudo);
 
                 if (! hash_equals($analise->assinatura(), $assinatura)) {
@@ -130,6 +131,16 @@ class ImportadorEleitores
                     Eleitor::whereRaw('LOWER(matricula) = ?', [Str::lower($linha['matricula'])])->firstOrFail()
                         ->update(array_map(fn (array $mudanca) => $mudanca[1], $linha['mudancas']));
                 }
+
+                // H11 fase 2: o nome e o hash do arquivo, nunca o conteúdo (D22).
+                Auditoria::registrar(AcaoAuditoria::EleitoresImportados, dados: [
+                    'arquivo' => $arquivo,
+                    'sha256' => hash('sha256', $conteudo),
+                    'criados' => count($analise->com('novo')),
+                    'atualizados' => count($analise->com('atualizar')),
+                    'iguais' => count($analise->com('igual')),
+                    'ignoradas' => count($analise->comErro()),
+                ]);
 
                 return [
                     'criados' => count($analise->com('novo')),

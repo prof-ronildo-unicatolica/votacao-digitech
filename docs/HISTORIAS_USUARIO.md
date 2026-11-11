@@ -158,7 +158,7 @@ Como admin, quero ver o resultado por chapa, brancos, nulos e participação dep
 Como admin, quero ver um log de quem fez login, liberou sessões e alterou cadastros para dar transparência ao processo.
 Plano completo em `docs/AUDITORIA.md` (catálogo de eventos, tabela, fases), decisão D22.
 - [x] **Fase 1 (antes da H8):** tabela `auditoria` só-acrescenta, `App\Support\Auditoria::registrar` gravando **na mesma transação** da ação, enum `AcaoAuditoria`. Registra login (sucesso, falha e bloqueio) e logout; **ativação e desativação de terminal** (com IP, D16); liberação, re-liberação, cancelamento e **tentativa recusada** de liberação (H6); **inscrição de chapa** pelo formulário (com IP, H14); **homologação, indeferimento (com motivo), reabertura, troca de candidato e exclusão** (H3).
-- [ ] **Fase 2:** CRUD de eleição, cargo, eleitor, terminal e usuário; importações de eleitores e chapas confirmadas ou canceladas (nome e SHA-256 do arquivo, contagens).
+- [x] **Fase 2:** CRUD de eleição, cargo, eleitor, terminal e usuário; importações de eleitores e chapas confirmadas ou canceladas (nome e SHA-256 do arquivo, contagens). Alteração guarda só o que mudou (antes e depois); senha e token nunca entram (`AuditoriaCadastrosTest`).
 - [ ] **Fase 3:** tela `/admin/auditoria` (só admin) com filtro por eleição, categoria, ação, usuário, período e matrícula/número; detalhes; exportação CSV; atalho "Histórico" em cada chapa.
 - [ ] **Fase 4 (opcional, antes da H12):** corrente de hashes com comando de verificação e o hash final impresso na ata; usuário do banco sem `UPDATE`/`DELETE` na tabela em produção.
 - [ ] **Nunca** registra em quem alguém votou: o voto não gera evento; `sessao.votou` (H8) não tem a chapa.

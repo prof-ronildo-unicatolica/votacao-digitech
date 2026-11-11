@@ -4,8 +4,10 @@ namespace App\Support;
 
 use App\Enums\AcaoAuditoria;
 use App\Enums\Perfil;
+use App\Models\Eleicao;
 use App\Models\EventoAuditoria;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
@@ -42,7 +44,7 @@ class Auditoria
             'user_id' => $usuario?->getKey(),
             'ator' => $usuario ? $usuario->name.' ('.($usuario->perfil === Perfil::Admin ? 'admin' : 'mesário').')' : 'Visitante',
             'ip' => request()?->ip(),
-            'eleicao_id' => $eleicaoId ?? ($alvo?->getAttribute('eleicao_id')),
+            'eleicao_id' => $eleicaoId ?? ($alvo instanceof Eleicao ? $alvo->getKey() : $alvo?->getAttribute('eleicao_id')),
             'alvo_tipo' => $alvo ? self::tipo($alvo) : null,
             'alvo_id' => $alvo ? (string) $alvo->getKey() : null,
             'dados' => $dados,
@@ -53,6 +55,62 @@ class Auditoria
     public static function registrarTentativa(AcaoAuditoria $acao, array $dados = [], ?string $eleicaoId = null, ?User $usuario = null): EventoAuditoria
     {
         return self::registrar($acao, null, $dados, $eleicaoId, $usuario);
+    }
+
+    /** Campos que nunca entram em `dados`, nem como "alterado" (D22, princípio 5). */
+    private const NUNCA = ['password', 'remember_token', 'token_hash', 'created_at', 'updated_at'];
+
+    /**
+     * O que mudou no último `save()` do model: `campo => ['antes' => ..., 'depois' => ...]`.
+     * Chame logo depois do `update()`. Datas vão em ISO 8601; senha e tokens nunca entram.
+     *
+     * @return array<string, array{antes: mixed, depois: mixed}>
+     */
+    public static function alteracoes(Model $model): array
+    {
+        $antes = $model->getPrevious();
+        $mudancas = [];
+        foreach (array_keys($model->getChanges()) as $campo) {
+            if (in_array($campo, self::NUNCA, true)) {
+                continue;
+            }
+            $mudancas[$campo] = [
+                'antes' => self::valor($model, $campo, $antes[$campo] ?? null),
+                'depois' => self::valor($model, $campo, $model->getAttributes()[$campo] ?? null),
+            ];
+        }
+
+        return $mudancas;
+    }
+
+    /**
+     * Os campos escolhidos do model, como estão agora, prontos para `dados` (datas em ISO 8601).
+     *
+     * @param  list<string>  $campos
+     */
+    public static function campos(Model $model, array $campos): array
+    {
+        return collect($campos)->mapWithKeys(fn (string $c) => [$c => self::valor($model, $c, $model->getAttributes()[$c] ?? null)])->all();
+    }
+
+    /**
+     * Valor bruto para JSON, passando pelos casts do model (o número vindo do formulário é texto,
+     * o do banco é inteiro): datas em ISO 8601, enums pelo valor.
+     */
+    private static function valor(Model $model, string $campo, mixed $bruto): mixed
+    {
+        if ($bruto === null) {
+            return null;
+        }
+        $copia = $model->newInstance();
+        $copia->setRawAttributes([$campo => $bruto]);
+        $valor = $copia->getAttribute($campo);
+
+        return match (true) {
+            $valor instanceof CarbonInterface => $valor->toIso8601String(),
+            $valor instanceof \BackedEnum => $valor->value,
+            default => $valor,
+        };
     }
 
     private static function tipo(Model $alvo): string

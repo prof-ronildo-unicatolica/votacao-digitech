@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AcaoAuditoria;
 use App\Enums\FaseEleicao;
 use App\Http\Controllers\Controller;
 use App\Models\Eleicao;
 use App\Support\ArquivoEmConferencia;
 use App\Support\ArquivoInvalido;
+use App\Support\Auditoria;
 use App\Support\ImportacaoDesatualizada;
 use App\Support\ImportadorChapas;
 use App\Support\InscricaoDeChapa;
@@ -95,6 +97,7 @@ class ImportacaoChapasController extends Controller
     public function confirmar(Request $request, ImportadorChapas $importador): RedirectResponse
     {
         if ($request->input('acao') === 'cancelar') {
+            $this->auditarCancelamento();
             $this->descartar();
 
             return redirect()->route('admin.chapas.importar')->with('status', 'Importação cancelada. O arquivo foi descartado e nenhuma chapa foi gravada.');
@@ -111,7 +114,7 @@ class ImportacaoChapasController extends Controller
         }
 
         try {
-            $resultado = $importador->importar($eleicao, $conteudo, $request->input('assinatura'), $request->input('acao') === 'ignorar');
+            $resultado = $importador->importar($eleicao, $conteudo, $request->input('assinatura'), $request->input('acao') === 'ignorar', $this->arquivo()->dados()['nome']);
         } catch (ImportacaoDesatualizada $e) {
             return redirect()->route('admin.chapas.importar.conferir')->with('aviso', $e->getMessage());
         } catch (InscricaoRecusada $e) {
@@ -140,6 +143,15 @@ class ImportacaoChapasController extends Controller
         }
 
         return $eleicao->fase() === FaseEleicao::InscricoesAbertas ? null : InscricaoDeChapa::mensagemForaDoPeriodo($eleicao);
+    }
+
+    /** Cancelar na conferência é um rollback que a comissão quer ver (H11 fase 2). */
+    private function auditarCancelamento(): void
+    {
+        $dados = $this->arquivo()->dados();
+        if ($dados) {
+            Auditoria::registrar(AcaoAuditoria::ImportacaoCancelada, dados: ['tipo' => 'chapas', 'arquivo' => $dados['nome'], 'sha256' => hash('sha256', (string) $this->arquivo()->conteudo())], eleicaoId: $dados['eleicao_id'] ?? null);
+        }
     }
 
     private function arquivo(): ArquivoEmConferencia

@@ -33,7 +33,7 @@ class Terminal extends Model
 
     protected function casts(): array
     {
-        return ['ativado_em' => 'datetime'];
+        return ['numero' => 'integer', 'ativado_em' => 'datetime'];
     }
 
     public function sessoes(): HasMany

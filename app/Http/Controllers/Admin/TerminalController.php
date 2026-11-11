@@ -31,7 +31,12 @@ class TerminalController extends Controller
 
     public function store(TerminalRequest $request): RedirectResponse
     {
-        $terminal = Terminal::create($request->validated());
+        $terminal = DB::transaction(function () use ($request) {
+            $terminal = Terminal::create($request->validated());
+            Auditoria::registrar(AcaoAuditoria::TerminalCriado, $terminal, Auditoria::campos($terminal, ['numero', 'local']));
+
+            return $terminal;
+        });
 
         return redirect()->route('admin.terminais.index')->with('status', "Terminal {$terminal->numero} cadastrado. Ative-o no computador da urna.");
     }
@@ -43,7 +48,12 @@ class TerminalController extends Controller
 
     public function update(TerminalRequest $request, Terminal $terminal): RedirectResponse
     {
-        $terminal->update($request->validated());
+        DB::transaction(function () use ($request, $terminal) {
+            $terminal->update($request->validated());
+            if ($mudancas = Auditoria::alteracoes($terminal)) {
+                Auditoria::registrar(AcaoAuditoria::TerminalAlterado, $terminal, ['numero' => $terminal->numero, 'campos' => $mudancas]);
+            }
+        });
 
         return redirect()->route('admin.terminais.index')->with('status', "Terminal {$terminal->numero} atualizado.");
     }
@@ -67,7 +77,10 @@ class TerminalController extends Controller
         }
 
         try {
-            $terminal->delete();
+            DB::transaction(function () use ($terminal) {
+                $terminal->delete();
+                Auditoria::registrar(AcaoAuditoria::TerminalExcluido, $terminal, Auditoria::campos($terminal, ['numero', 'local']));
+            });
         } catch (QueryException) {
             return back()->withErrors(['geral' => "O terminal {$terminal->numero} passou a ter sessões e não pode mais ser excluído."]);
         }

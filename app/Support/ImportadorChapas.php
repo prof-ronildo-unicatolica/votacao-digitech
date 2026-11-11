@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\AcaoAuditoria;
 use App\Enums\OrigemChapa;
 use App\Models\Eleicao;
 use App\Models\Eleitor;
@@ -114,10 +115,10 @@ class ImportadorChapas
      * @throws ImportacaoDesatualizada quando o resultado mudou desde a conferência
      * @throws ArquivoInvalido
      */
-    public function importar(Eleicao $eleicao, string $conteudo, string $assinatura, bool $ignorarErros): array
+    public function importar(Eleicao $eleicao, string $conteudo, string $assinatura, bool $ignorarErros, string $arquivo = 'arquivo.csv'): array
     {
         try {
-            return DB::transaction(function () use ($eleicao, $conteudo, $assinatura, $ignorarErros) {
+            return DB::transaction(function () use ($eleicao, $conteudo, $assinatura, $ignorarErros, $arquivo) {
                 $eleicao = $this->inscricao->travar($eleicao);
                 $analise = $this->analisar($eleicao, $conteudo);
 
@@ -149,6 +150,15 @@ class ImportadorChapas
                     $this->inscricao->criar($eleicao, $chapa['nome'], $chapa['numero'], $eleitores, $chapa['contato_email'], $chapa['contato_telefone'], OrigemChapa::Csv);
                     $importadas[] = ['numero' => $chapa['numero'], 'nome' => $chapa['nome']];
                 }
+
+                // H11 fase 2: o nome e o hash do arquivo, nunca o conteúdo (D22).
+                Auditoria::registrar(AcaoAuditoria::ChapasImportadas, dados: [
+                    'arquivo' => $arquivo,
+                    'sha256' => hash('sha256', $conteudo),
+                    'numeros' => array_column($importadas, 'numero'),
+                    'ignoradas' => count($analise->comErro()),
+                    'cargos_criados' => $analise->criaCargos ? array_column($analise->cargos, 'titulo') : [],
+                ], eleicaoId: $eleicao->id);
 
                 return [
                     'importadas' => $importadas,

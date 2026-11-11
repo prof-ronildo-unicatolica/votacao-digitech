@@ -136,7 +136,7 @@ flowchart LR
 | [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado (PR #59) |
 | [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
-| [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fase 1) |
+| [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fases 1 e 2) |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23, D24 | Implementado (PRs #64 e #66) |
 | [S9 · Apurar o resultado e exportar a ata](#s9--apurar-o-resultado-e-exportar-a-ata-h10-d26) | H10, D26 | Em revisão |
 
