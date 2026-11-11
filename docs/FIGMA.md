@@ -16,6 +16,7 @@ A paleta, a tipografia, os espaçamentos e a marca já estão definidos em **[ID
 4. *Styles & Variables → Create variables* (cores, espaços, raios) e *Create styles* (tipografia, sombras).
 5. Arraste os arquivos de `design/marca/` para uma página "Marca".
 6. Instale as fontes **Poppins**, **Inter** e **JetBrains Mono** (Google Fonts) na sua máquina, ou o Figma vai substituí-las.
+7. Componentes e telas prontos: rode `php artisan serve`, instale a extensão do Chrome **html.to.design** e importe `http://localhost:8000/estilo` (vitrine com todos os componentes) e as telas de referência em `/estilo/telas/urna-escolha`, `/mesario`, `/apuracao`, `/login`... Cada página vira um frame editável; promova os blocos a componentes com os mesmos nomes dos componentes Blade (`x-botao`, `x-status-terminal`...).
 
 Mudou um token no Figma? Exporte com o Tokens Studio, substitua `tokens.json`, rode `php design/tokens/gerar-css.php` e abra um PR: o código acompanha.
 

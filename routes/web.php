@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EstiloController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -9,3 +10,11 @@ Route::get('/', HomeController::class)->name('home');
 Route::view('/mesario', 'placeholders.mesario')->name('mesario');
 Route::view('/urna/{terminal}', 'placeholders.urna')->name('urna');
 Route::view('/admin', 'placeholders.admin')->name('admin');
+
+// Vitrine da identidade visual (docs/IDENTIDADE_VISUAL.md), com dados fictícios. Fora de produção.
+if (! app()->isProduction()) {
+    Route::get('/estilo', [EstiloController::class, 'index'])->name('estilo');
+    Route::get('/estilo/telas/{tela}', [EstiloController::class, 'tela'])
+        ->whereIn('tela', array_keys(EstiloController::TELAS))
+        ->name('estilo.tela');
+}

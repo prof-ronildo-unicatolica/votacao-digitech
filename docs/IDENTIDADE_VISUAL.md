@@ -114,11 +114,42 @@ Todas do Google Fonts, carregadas no layout. Pesos: 400, 500, 600, 700.
 - **Foco**: contorno de 3px em `laranja.700`, afastado 2px. Nunca remova o foco.
 - **Alvo mínimo**: 48px em qualquer tela; 88px nas opções da urna.
 
-## Levar para o Figma
+## Componentes
+
+Componentes Blade em `resources/views/components/`, estilos em `public/css/digitech.css` (só variáveis `--dt-*`, nada de cor solta). A vitrine com todos eles fica em **`/estilo`** (só fora de produção), e as telas de referência em `/estilo/telas/...`. Cada componente deve ter um componente com o mesmo nome no Figma.
+
+| Componente               | Uso                                                        | Exemplo |
+| ------------------------ | ---------------------------------------------------------- | ------- |
+| `<x-marca>`              | Assinatura do produto (`tema="escuro"`, `tamanho="grande"`) | topo de todas as telas |
+| `<x-botao>`              | `variante`: primario (uma por tela), secundario, contorno, fantasma, perigo; `tamanho`: grande, pequeno; `icone`; `href` | `<x-botao icone="unlock">Liberar</x-botao>` |
+| `<x-campo>`              | Rótulo + campo + ajuda + erro de validação do Laravel; `mono` para matrícula | `<x-campo name="matricula" label="Matrícula" mono autofocus />` |
+| `<x-alerta>`             | `tipo`: info, sucesso, aviso, perigo; `titulo`             | eleitor já votou |
+| `<x-cartao>`             | Bloco com `titulo`, `subtitulo`, slot `acoes`, `sem-padding` para tabelas | listas do admin |
+| `<x-selo>`               | Situação curta: neutro, sucesso, aviso, perigo, info, marca | "Em andamento" |
+| `<x-indicador>`          | Número de destaque com `rotulo`, `detalhe` e `progresso` (%) | comparecimento |
+| `<x-status-terminal>`    | `estado`: livre, liberado, votando, inativo; slot para ações | painel do mesário |
+| `<x-opcao-chapa>`        | Rádio grande da urna; `:neutra="true"` para branco/nulo    | urna |
+| `<x-estado-vazio>`       | Lista sem itens, com chamada para ação                     | "Nenhum eleitor" |
+
+Tabelas usam `<table class="table dt-tabela">`; números de destaque, `dt-numeros`; matrícula e UUID, `dt-mono`.
+
+**Layouts** (`resources/views/layouts/`):
+
+| Layout    | Para                          | Seções                                               |
+| --------- | ----------------------------- | ---------------------------------------------------- |
+| `app`     | Telas simples, início         | `titulo`, `conteudo`                                 |
+| `painel`  | Admin, com menu lateral       | `titulo`, `sobretitulo`, `acoes`, `menu` (item ativo), `conteudo` |
+| `urna`    | Urna em modo quiosque         | `titulo`, `topo-direita`, `conteudo`                 |
+| `base`    | Esqueleto dos três (fontes, CSS) | `corpo`, pilhas `head` e `scripts`                |
+
+**Telas de referência** (dados fictícios, a partir dos rascunhos da equipe): urna aguardando, escolha, confirmação e voto registrado; painel do mesário; resultado; login. Elas mostram como compor os componentes. As telas reais (histórias H1 a H11) devem ser construídas com os mesmos componentes.
+
+
 
 Detalhes em `FIGMA.md`.
 
 1. **Tokens** → plugin *Tokens Studio for Figma* → *Load from file* → `design/tokens/tokens.json` → *Create variables* / *Create styles*. As cores, fontes e espaços viram variáveis do arquivo.
-2. **Marca** → arraste os PNG de `design/marca/` para o arquivo.
+2. **Componentes e telas** → extensão do Chrome *html.to.design* em `http://localhost:8000/estilo` e em cada `/estilo/telas/...` → cada página vira um frame editável, com as camadas, cores e fontes. Depois, transforme cada bloco em componente do Figma com o mesmo nome do Blade.
+3. **Marca** → arraste os PNG de `design/marca/` para o arquivo.
 
 Sombras (efeitos) podem não importar pelo Tokens Studio dependendo da versão; nesse caso crie os 3 estilos de efeito à mão com os valores de `tokens.json`.

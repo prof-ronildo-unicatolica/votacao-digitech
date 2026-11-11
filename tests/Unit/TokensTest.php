@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Support\Contraste;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -47,7 +48,7 @@ class TokensTest extends TestCase
         $cores = json_decode(file_get_contents(self::JSON), true)['cor'];
         $hex = fn (string $c) => $cores[explode('.', $c)[0]][explode('.', $c)[1]]['$value'];
 
-        $contraste = self::contraste($hex($texto), $hex($fundo));
+        $contraste = Contraste::razao($hex($texto), $hex($fundo));
 
         $this->assertGreaterThanOrEqual(4.5, $contraste, sprintf('%s sobre %s: %.2f:1', $texto, $fundo, $contraste));
     }
@@ -57,24 +58,8 @@ class TokensTest extends TestCase
         $cores = json_decode(file_get_contents(self::JSON), true)['cor'];
 
         foreach (['sucesso', 'aviso', 'perigo', 'info'] as $papel) {
-            $contraste = self::contraste($cores[$papel]['texto']['$value'], $cores[$papel]['fundo']['$value']);
+            $contraste = Contraste::razao($cores[$papel]['texto']['$value'], $cores[$papel]['fundo']['$value']);
             $this->assertGreaterThanOrEqual(4.5, $contraste, "$papel: {$contraste}:1");
         }
-    }
-
-    private static function contraste(string $a, string $b): float
-    {
-        $luminancia = function (string $hex): float {
-            [$r, $g, $b] = array_map(
-                fn (string $c) => ($v = hexdec($c) / 255) <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4,
-                str_split(ltrim($hex, '#'), 2),
-            );
-
-            return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
-        };
-
-        [$claro, $escuro] = [max($luminancia($a), $luminancia($b)), min($luminancia($a), $luminancia($b))];
-
-        return ($claro + 0.05) / ($escuro + 0.05);
     }
 }
