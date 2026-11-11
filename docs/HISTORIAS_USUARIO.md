@@ -53,9 +53,11 @@ Como admin, quero cadastrar os terminais (número e local) para saber em qual co
 Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal para liberar o voto daquele eleitor.
 - [ ] Busca por matrícula mostra nome e turma antes de confirmar.
 - [ ] Bloqueia se: eleição fora do período, eleitor já votou, terminal já tem sessão aberta.
-- [ ] Sessão expira em 30 minutos; mesário pode liberar de novo se expirou.
-- [ ] Registra quem liberou (`mesario_id`).
-- [ ] Testes: liberação válida, eleitor já votou, terminal ocupado, fora do período.
+- [ ] Sessão expira em 30 minutos; mesário pode liberar de novo se expirou **ou se cancelou** (ex.: eleitor foi para o terminal errado).
+- [ ] Liberar de novo **reaproveita a mesma sessão** (atualiza situação, terminal, mesário e horários): o banco só aceita uma sessão por eleitor e eleição (`UNIQUE`). Nunca reabre sessão já `votou`.
+- [ ] Mesário pode cancelar uma sessão aberta que ainda não votou.
+- [ ] Registra quem liberou (`mesario_id`); cada liberação, re-liberação e cancelamento vai para a auditoria (H11), já que a sessão guarda só o estado atual.
+- [ ] Testes: liberação válida, eleitor já votou, terminal ocupado, fora do período, re-liberação após expirar (continua 1 linha em `sessoes_votacao`).
 
 ### H7 · Urna aguarda liberação
 Como eleitor, quero que a urna do terminal mostre "aguardando" até o mesário me liberar, e então mostre meu nome e as chapas.

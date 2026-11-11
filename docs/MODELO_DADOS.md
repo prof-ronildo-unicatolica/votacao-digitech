@@ -85,6 +85,16 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
 | (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |
 
+## Ciclo de vida da sessão (uma linha por eleitor e eleição)
+
+`UNIQUE (eleicao_id, eleitor_id)` vale para **toda** a vida da sessão, não só para o voto. Por isso:
+
+- **Liberar** cria a linha. **Re-liberar** (sessão expirada ou cancelada) faz `UPDATE` na mesma linha (situação, terminal, mesário, horários), nunca um segundo `INSERT`: o banco rejeitaria.
+- Sessão que já **votou** é final: nunca volta a aberta.
+- Como a linha guarda só o estado atual, o histórico (liberou no terminal 2, expirou, liberou no 3) fica na auditoria (H11).
+
+Situações sugeridas: `aberta` → `votou` | `expirada` | `cancelada`; `expirada`/`cancelada` → `aberta` (re-liberação).
+
 ## Registro de um voto (transação)
 
 1. Verificar que a sessão do terminal está liberada e válida (critério definido pela equipe).
