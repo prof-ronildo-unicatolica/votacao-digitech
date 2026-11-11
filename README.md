@@ -23,15 +23,18 @@ Feito em papel ou com formulários genéricos, o processo tem custos conhecidos:
 
 ### Proposta
 
-Um sistema web, simples de operar no dia da votação, com três papéis:
+Um sistema web que cobre a eleição inteira, da inscrição das chapas à apuração:
 
-| Papel       | O que faz                                                                 |
-| ----------- | ------------------------------------------------------------------------- |
-| **Admin**   | Cadastra a eleição, as chapas, os eleitores aptos e os terminais           |
-| **Mesário** | Confere a matrícula do eleitor e libera o voto em um terminal específico   |
-| **Eleitor** | Na urna do terminal liberado, escolhe a chapa (ou branco/nulo) e confirma  |
+| Papel                      | O que faz                                                                 |
+| -------------------------- | ------------------------------------------------------------------------- |
+| **Admin** (comissão)       | Cadastra a eleição com os períodos de inscrição e de votação, os cargos das chapas, os eleitores e os terminais; importa chapas por CSV e homologa as inscrições |
+| **Representante de chapa** | No período de inscrição, inscreve a chapa num formulário público: nome e a matrícula de um aluno para cada cargo (Presidente, Vice, 1º e 2º Secretário, Tesoureiro...) |
+| **Mesário**                | Confere a matrícula do eleitor e libera o voto em um terminal específico   |
+| **Eleitor**                | Na urna do terminal liberado, escolhe a chapa (ou branco/nulo) e confirma  |
 
-O fluxo reproduz a urna presencial: o eleitor não faz login; quem o identifica é o mesário, e a urna só aceita um voto por liberação. Ao fim do período, o admin vê a apuração com participação, votos por chapa, brancos e nulos.
+Cada eleição passa por duas fases com datas próprias: **inscrição** (chapas entram como pendentes e a comissão homologa) e **votação** (só chapas homologadas aparecem na urna). Todo aluno, eleitor ou candidato, é identificado pela matrícula. Fluxo completo em `docs/MODELO_DADOS.md`, "Inscrição de chapas".
+
+Na votação, o fluxo reproduz a urna presencial: o eleitor não faz login; quem o identifica é o mesário, e a urna só aceita um voto por liberação. Ao fim do período, o admin vê a apuração com participação, votos por chapa, brancos e nulos.
 
 ### Princípios que o sistema garante
 
@@ -49,19 +52,19 @@ O projeto tem dupla finalidade:
 
 ### Fora do escopo (nesta versão)
 
-Voto remoto/on-line sem mesário, biometria, integração com o sistema acadêmico e eleições com mais de um cargo por cédula. Podem virar histórias futuras.
+Voto remoto/on-line sem mesário, biometria, integração com o sistema acadêmico e voto separado por cargo (a chapa tem vários cargos, mas o eleitor vota na chapa inteira, D13). Podem virar histórias futuras.
 
 ### Roadmap
 
 Cinco sprints de duas semanas. O detalhe, por perfil, está em **[docs/ROADMAP.md](docs/ROADMAP.md)**. O trabalho é acompanhado na aba **Issues** (uma por história, com etiqueta de perfil e milestone da sprint) e no [quadro do projeto](https://github.com/users/prof-ronildo-unicatolica/projects/1).
 
-| Sprint | Objetivo                                 | Histórias      |
-| ------ | ---------------------------------------- | -------------- |
-| 0      | Ambiente, Issues, Figma, git flow        | —              |
-| 1      | Admin monta uma eleição                  | H1, H2, H3, H5 |
-| 2      | Dia da votação de ponta a ponta          | H4, H6, H7, H8 |
-| 3      | Resultado, painel da mesa e auditoria    | H9, H10, H11   |
-| 4      | Produção na Hostinger                    | H12            |
+| Sprint | Objetivo                                 | Histórias            |
+| ------ | ---------------------------------------- | -------------------- |
+| 0      | Ambiente, Issues, Figma, git flow        | —                    |
+| 1      | Admin monta a eleição                    | H1, H2, H13, H4, H5  |
+| 2      | Inscrição de chapas (vai ao ar primeiro) | H14, H15, H3         |
+| 3      | Dia da votação de ponta a ponta          | H6, H7, H8, H9       |
+| 4      | Resultado, auditoria e produção          | H10, H11, H12        |
 
 ## Stack
 
@@ -110,13 +113,17 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Abra <http://localhost:8000>. Com `APP_ENV=local`, a página **recarrega sozinha** quando você salva uma view, CSS, controller ou rota (sem Node: o layout consulta `/_dev/recarregar` a cada segundo). A página inicial mostra a conexão com o banco, a contagem de cada tabela e as chapas do seed.
+Abra <http://localhost:8000>. Com `APP_ENV=local`, a página **recarrega sozinha** quando você salva uma view, CSS, controller ou rota (sem Node: o layout consulta `/_dev/recarregar` a cada segundo). A página inicial mostra a conexão com o banco, a contagem de cada tabela e as chapas do seed com sua composição (5 cargos, 3 chapas completas).
+
+Já tinha o banco de uma versão anterior? Rode `php artisan migrate`. Se der erro de chave estrangeira (`errno: 150`), seu banco foi criado com migrations antigas: em desenvolvimento, `php artisan migrate:fresh --seed` recria tudo (apaga os dados locais).
 
 ## O que o scaffold entrega
 
 | Item                           | Onde                                          |
 | ------------------------------ | --------------------------------------------- |
-| Modelo de dados: só chaves e constraints (6 migrations) | `database/migrations/2026_09_09_*` |
+| Modelo de dados: só chaves e constraints (8 migrations, incluindo cargos e candidatos) | `database/migrations/2026_*` |
+| Modelo de CSV de chapas        | `docs/exemplos/chapas.csv`                    |
+| Modelos de `.env` (local e produção) | `.env.example`, `.env.production.example` |
 | Models Eloquent com relações   | `app/Models/`                                 |
 | Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |
 | Página inicial funcional       | `app/Http/Controllers/HomeController.php`     |
@@ -127,7 +134,7 @@ Abra <http://localhost:8000>. Com `APP_ENV=local`, a página **recarrega sozinha
 | Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
 | 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
 | Identidade visual: tokens, marca e testes de contraste | `design/`, `public/css/tokens.css`, `tests/Unit/TokensTest.php` |
-| 5 testes de integração de exemplo + 14 testes das constraints | `tests/Feature/`  |
+| 6 testes de integração de exemplo + 24 testes das constraints | `tests/Feature/`  |
 | CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
 
 As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe (ver `docs/MODELO_DADOS.md`). Usuário do seed: `mesario@digitech.local` / `mesario123` (login é a história H1).
@@ -138,7 +145,7 @@ As tabelas do domínio têm **apenas chaves e constraints**; os atributos são d
 php artisan test
 ```
 
-Esperado: `39 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Esperado: `50 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 
@@ -162,7 +169,7 @@ Esperado: `39 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), en
 ```
 app/
 ├── Http/Controllers/     ← recebem a requisição e devolvem view ou JSON
-├── Models/               ← Eleicao, Chapa, Eleitor, Terminal, SessaoVotacao, Voto, User
+├── Models/               ← Eleicao, Cargo, Chapa, Candidato, Eleitor, Terminal, SessaoVotacao, Voto, User
 └── Support/Apuracao.php  ← exemplo de classe pura (alvo de teste unitário)
 database/
 ├── migrations/           ← estrutura das tabelas (versionada)

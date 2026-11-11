@@ -15,6 +15,12 @@ class Eleitor extends Model
 
     protected $guarded = [];
 
+    /** Em que chapa/cargo o aluno concorre (no máximo uma candidatura por eleição). */
+    public function candidaturas(): HasMany
+    {
+        return $this->hasMany(Candidato::class);
+    }
+
     public function sessoes(): HasMany
     {
         return $this->hasMany(SessaoVotacao::class);

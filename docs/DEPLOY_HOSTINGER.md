@@ -27,24 +27,18 @@ cd ~/domains/SEU_DOMINIO         # ajuste ao caminho mostrado no hPanel
 git clone https://github.com/prof-ronildo-unicatolica/votacao-digitech.git app
 cd app
 composer install --no-dev --optimize-autoloader
-cp .env.example .env
+cp .env.production.example .env
 nano .env
 ```
 
-No `.env` de produção:
+O modelo `.env.production.example` já vem com os valores de produção (`APP_ENV=production`, `APP_DEBUG=false`, log diário em nível `warning`, cookies de sessão só por HTTPS e criptografados, cache em arquivo, fila `sync`). Preencha **só o que está marcado `TROCAR`**: `APP_URL`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (copiados do hPanel) e o remetente de e-mail.
 
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://SEU_DOMINIO
-DB_DATABASE=nome_do_banco
-DB_USERNAME=usuario
-DB_PASSWORD=senha
-SESSION_DRIVER=database
-CACHE_STORE=file
-QUEUE_CONNECTION=sync
-LOG_LEVEL=warning
-```
+Regras do `.env` de produção:
+
+- Nunca reaproveite o `APP_KEY` local: gere outro no servidor (comando abaixo). Trocar o `APP_KEY` depois invalida sessões abertas, então gere uma vez só.
+- `APP_DEBUG=true` em produção expõe senhas e código na tela de erro. O smoke test abaixo confere.
+- O `.env` guarda **só o que o Laravel lê**. Login do hPanel, FTP e SSH ficam num gerenciador de senhas, nunca em arquivo do projeto (linha fora do formato `CHAVE=valor` também quebra o Laravel: "Failed to parse dotenv file").
+- Homologação usa o mesmo modelo, com `APP_URL`, banco e usuário próprios.
 
 ```bash
 php artisan key:generate
@@ -98,7 +92,7 @@ cd ~/domains/SEU_DOMINIO/app && php artisan schedule:run >> /dev/null 2>&1
 
 ## Sem SSH (plano básico)
 
-1. Rode `composer install --no-dev` **localmente**, gere o `.env` de produção e as caches.
+1. Rode `composer install --no-dev` **localmente**, gere o `.env` de produção a partir de `.env.production.example` e as caches.
 2. Envie tudo (inclusive `vendor/`) via **Gerenciador de arquivos** ou FTP para `~/domains/SEU_DOMINIO/app`.
 3. Faça o ajuste de `public_html` descrito acima (versão "copiar `public/`").
 4. Rode as migrations importando o SQL: `php artisan schema:dump` local gera `database/schema/mysql-schema.sql`, importável no phpMyAdmin do hPanel.
@@ -111,7 +105,8 @@ cd ~/domains/SEU_DOMINIO/app && php artisan schedule:run >> /dev/null 2>&1
 - [ ] `/api/health` → `"banco":"ok"`.
 - [ ] Login do admin funciona.
 - [ ] `/mesario` exige login.
-- [ ] `storage/logs/laravel.log` sem erros após navegar.
+- [ ] `storage/logs/laravel-AAAA-MM-DD.log` (log diário) sem erros após navegar.
+- [ ] `php artisan about` mostra `Environment: production` e `Debug Mode: OFF`.
 
 ## Restrições da hospedagem compartilhada e como o projeto lida
 

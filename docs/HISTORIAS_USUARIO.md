@@ -9,6 +9,9 @@ Formato: **Como** [perfil], **quero** [ação] **para** [benefício]. Cada hist�
 | **Admin**   | Comissão eleitoral / professor                  | Login (`users`; como diferenciar do mesário é parte da H1) |
 | **Mesário** | Aluno ou servidor que atende na mesa            | Login (`users`)                         |
 | **Eleitor** | Aluno do colegiado                              | Não faz login: é liberado pelo mesário  |
+| **Representante de chapa** | Aluno que inscreve a chapa (é um dos candidatos) | Não faz login: usa o formulário público de inscrição, só durante o período (D14) |
+
+Todo aluno, eleitor ou candidato, é identificado pela **matrícula** (`eleitores`).
 
 ## Épico A — Configuração (Admin)
 
@@ -22,24 +25,21 @@ Como admin ou mesário, quero entrar com e-mail e senha para acessar só o que m
 - [ ] Testes: login válido, senha errada, mesário bloqueado em `/admin`.
 
 ### H2 · Cadastrar eleição
-Como admin, quero criar uma eleição com título, início e fim para controlar quando a votação está aberta.
+Como admin, quero criar uma eleição com título, **período de inscrição de chapas** e **período de votação** para controlar quando cada fase está aberta.
 - [ ] CRUD em `/admin/eleicoes`; só uma pode estar `ativa`.
-- [ ] `fim` deve ser depois de `inicio` (validação).
+- [ ] Datas obrigatórias, nesta ordem: abertura das inscrições < fim das inscrições ≤ início da votação < fim da votação (validação, com mensagem dizendo qual data está fora de ordem).
+- [ ] A tela da eleição mostra a fase atual: *aguardando inscrições*, *inscrições abertas*, *em homologação*, *votação aberta*, *encerrada*.
+- [ ] Depois que a primeira chapa se inscreve, o período de inscrição só pode ser **prorrogado** (fim mais tarde), nunca antecipado.
 - [ ] Ativar uma eleição desativa a anterior.
-- [ ] Testes: criação válida, `fim < inicio` rejeitado, ativação exclusiva.
-
-### H3 · Cadastrar chapas
-Como admin, quero cadastrar as chapas da eleição ativa com número, nome e descrição para que apareçam na urna.
-- [ ] CRUD em `/admin/chapas`; número único na eleição.
-- [ ] Não é possível excluir chapa depois que a eleição recebeu votos.
-- [ ] Testes: número duplicado rejeitado, exclusão bloqueada com votos.
+- [ ] Testes: criação válida; cada par de datas fora de ordem rejeitado; ativação exclusiva; fase calculada corretamente para uma data antes, durante e depois de cada período.
 
 ### H4 · Cadastrar eleitores (individual e CSV)
 Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, nome, turma, e-mail) para montar o eleitorado sem digitação manual.
 - [ ] CRUD em `/admin/eleitores` com busca por matrícula/nome e paginação.
 - [ ] Importação de CSV mostra quantos entraram e quais linhas falharam (e por quê).
 - [ ] Matrícula duplicada no CSV atualiza o nome, não cria outro registro.
-- [ ] Eleitor que já foi liberado em alguma eleição não pode ser excluído (o banco bloqueia; a tela explica o motivo).
+- [ ] Eleitor que já foi liberado em alguma eleição, ou que é candidato, não pode ser excluído (o banco bloqueia; a tela explica o motivo).
+- [ ] O eleitorado é importado **antes** de abrir as inscrições: os candidatos são indicados pela matrícula (H14, H15).
 - [ ] Testes: importação com 3 linhas válidas + 1 inválida.
 
 ### H5 · Cadastrar terminais
@@ -47,7 +47,49 @@ Como admin, quero cadastrar os terminais (número e local) para saber em qual co
 - [ ] CRUD em `/admin/terminais`; número único.
 - [ ] Lista mostra o estado atual: livre, liberado (com nome do eleitor) ou votando.
 
-## Épico B — Dia da votação
+## Épico B — Inscrição de chapas
+
+Fluxo e regras em `MODELO_DADOS.md`, seção "Inscrição de chapas". Decisões D13 e D14.
+
+### H13 · Definir os cargos da eleição
+Como admin, quero definir os cargos que toda chapa precisa preencher (ex.: Presidente, Vice-presidente, 1º Secretário, 2º Secretário, Tesoureiro) para que as inscrições tenham a mesma estrutura.
+- [ ] Em `/admin/eleicoes/{eleicao}/cargos`: adicionar, renomear, reordenar e remover cargos; título obrigatório e único na eleição.
+- [ ] A tela mostra "cada chapa terá N candidatos" (N = número de cargos).
+- [ ] Botão "copiar cargos de outra eleição" para não redigitar a cada semestre.
+- [ ] Depois que a primeira chapa se inscreve, os cargos ficam **bloqueados** (só leitura), com aviso explicando o porquê.
+- [ ] As inscrições não abrem sem ao menos um cargo (aviso na tela da eleição).
+- [ ] Testes: criação e reordenação; título repetido rejeitado; alteração bloqueada com chapa inscrita.
+
+### H14 · Inscrever chapa pelo formulário
+Como representante de chapa, quero inscrever minha chapa pelo sistema, dentro do período de inscrição, informando o nome da chapa e a matrícula de um candidato para cada cargo.
+- [ ] Página pública `/inscricao` (sem login) para a eleição ativa. Fora do período, mostra as datas de abertura e fim e **não** exibe o formulário.
+- [ ] O formulário tem um campo de matrícula **por cargo**, na ordem dos cargos; ao sair do campo, mostra o nome do aluno para conferência (ou "matrícula não encontrada").
+- [ ] Também pede nome da chapa e contato do responsável (e-mail/telefone: decisão da equipe).
+- [ ] Rejeita, com mensagem por campo: cargo sem candidato, matrícula inexistente, a mesma matrícula em dois cargos, aluno que já está em outra chapa da eleição, envio fora do período (checado **no servidor**, no momento do envio, não só ao abrir a página).
+- [ ] Grava chapa e candidatos na **mesma transação**, com situação `pendente` e o próximo número livre; mostra um comprovante (número da chapa, data e hora, composição).
+- [ ] `throttle` no envio (ex.: 5 por minuto por IP) e CSRF.
+- [ ] A página pública não lista as outras chapas inscritas nem dados de alunos além do nome confirmado no próprio formulário.
+- [ ] Testes: inscrição válida; antes da abertura e depois do fim rejeitadas; cargo faltando; matrícula inexistente; aluno em duas chapas; duas inscrições ao mesmo tempo recebem números diferentes.
+
+### H15 · Importar chapas por CSV
+Como admin, quero importar as chapas de um arquivo CSV para registrar inscrições recebidas por outro canal sem digitação manual.
+- [ ] Em `/admin/chapas/importar`, só durante o período de inscrição; aceita o formato de `MODELO_DADOS.md` ("Formato do CSV de chapas"), com link para baixar o modelo `docs/exemplos/chapas.csv`.
+- [ ] Mesmas regras da H14, validadas **por chapa, tudo ou nada**: uma linha ruim rejeita a chapa inteira; as demais chapas do arquivo entram.
+- [ ] Relatório ao final: chapas importadas (número e nome) e chapas rejeitadas, com linha do arquivo e motivo (ex.: "linha 7: matrícula 2024999 não cadastrada").
+- [ ] Chapas importadas entram como `pendente` e passam pela homologação (H3).
+- [ ] Testes: arquivo com 2 chapas válidas + 1 com cargo faltando (entram 2); matrícula inexistente; cargo que não existe na eleição; mesmo aluno em duas chapas do arquivo; número de chapa já existente; importação fora do período.
+
+### H3 · Homologar chapas
+Como admin (comissão eleitoral), quero analisar as chapas inscritas e homologar ou indeferir cada uma para que só chapas válidas apareçam na urna.
+- [ ] `/admin/chapas` lista as chapas da eleição com número, nome, situação (`pendente`, `homologada`, `indeferida`), origem (formulário/CSV) e a composição completa (cargo → nome e matrícula).
+- [ ] Homologar e indeferir exigem confirmação; indeferir exige **motivo**. Uma chapa indeferida pode voltar para `pendente` até o início da votação.
+- [ ] A composição não pode ser editada depois do fim das inscrições (D14); antes, o admin pode corrigir um candidato, com as mesmas validações da H14.
+- [ ] Só chapas `homologadas` aparecem na urna e na apuração. A votação não pode começar sem ao menos uma chapa homologada (aviso na tela da eleição).
+- [ ] Não é possível excluir chapa depois que a eleição recebeu votos (o banco bloqueia).
+- [ ] Toda homologação/indeferimento vai para a auditoria (H11).
+- [ ] Testes: homologar, indeferir sem motivo rejeitado, chapa pendente não aparece na urna, edição bloqueada após o fim das inscrições, exclusão bloqueada com votos.
+
+## Épico C — Dia da votação
 
 ### H6 · Liberar votação de um eleitor
 Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal para liberar o voto daquele eleitor.
@@ -62,13 +104,14 @@ Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal
 ### H7 · Urna aguarda liberação
 Como eleitor, quero que a urna do terminal mostre "aguardando" até o mesário me liberar, e então mostre meu nome e as chapas.
 - [ ] `/urna/{terminal}` consulta `/api/terminais/{id}/status` a cada 3 segundos.
-- [ ] Quando `liberada = true`, mostra nome do eleitor e as chapas da eleição ativa.
+- [ ] Quando `liberada = true`, mostra nome do eleitor e as chapas **homologadas** da eleição ativa, cada uma com sua composição (cargo → candidato) na ordem dos cargos.
 - [ ] Tela em modo quiosque: sem menu, fonte grande, botões de no mínimo 48px.
 - [ ] Testes: status muda de falso para verdadeiro após liberação.
 
 ### H8 · Votar
 Como eleitor, quero escolher uma chapa (ou branco/nulo), confirmar e ver "voto registrado" para ter certeza de que votei.
-- [ ] Seleção → tela de confirmação ("Você escolheu a chapa 2 — Movimento. Confirmar?") → registro.
+- [ ] Seleção → tela de confirmação ("Você escolheu a chapa 2 — Movimento", com a lista de candidatos. "Confirmar?") → registro.
+- [ ] O voto é na chapa inteira, não por cargo (D13).
 - [ ] Voto e encerramento da sessão na mesma transação, **reivindicando a sessão antes de gravar o voto** (ver `MODELO_DADOS.md`, "Registro de um voto").
 - [ ] Duplo clique, F5 ou duas abas não geram segundo voto.
 - [ ] A eleição do voto vem da sessão liberada, não do formulário; a chapa precisa ser dessa eleição.
@@ -81,19 +124,20 @@ Como mesário, quero ver no painel quais terminais estão livres, liberados ou v
 - [ ] Painel atualiza sozinho (polling) sem recarregar a página.
 - [ ] Mostra contagem de comparecimento (quantos já votaram / aptos), sem mostrar votos por chapa.
 
-## Épico C — Resultado e controle
+## Épico D — Resultado e controle
 
 ### H10 · Apurar resultado
 Como admin, quero ver o resultado por chapa, brancos, nulos e participação depois que a eleição encerrar.
 - [ ] Antes do `fim` da eleição, `/admin/resultado` mostra só o comparecimento.
-- [ ] Depois do `fim`: tabela + gráfico (Chart.js) + chapa vencedora + participação (%).
+- [ ] Depois do `fim`: tabela + gráfico (Chart.js) + chapa vencedora **com seus eleitos por cargo** + participação (%).
+- [ ] Só chapas homologadas entram na apuração.
 - [ ] Cálculos em `App\Support\Apuracao` (classe pura, com testes unitários).
 - [ ] Exportar CSV/PDF da ata.
 - [ ] Testes: resultado bloqueado antes do fim, correto depois.
 
 ### H11 · Auditar ações
 Como admin, quero ver um log de quem fez login, liberou sessões e alterou cadastros para dar transparência ao processo.
-- [ ] Registra: login (sucesso/falha), logout, liberação e cancelamento de sessão, CRUD de eleição/chapa/eleitor.
+- [ ] Registra: login (sucesso/falha), logout, liberação e cancelamento de sessão, CRUD de eleição/cargo/chapa/eleitor, **inscrição de chapa** (formulário ou CSV, com IP no caso do formulário), **homologação e indeferimento** (com motivo).
 - [ ] **Nunca** registra em quem alguém votou.
 - [ ] Tela `/admin/auditoria` com filtro por ação e data.
 
