@@ -6,6 +6,19 @@ Sim, há espaço e é bem-vindo: as três interfaces têm públicos e contextos 
 
 Figma tem plano **Education** gratuito para alunos e professores: <https://www.figma.com/education/>. Criar um único arquivo de equipe, "Votação DigiTech".
 
+## Ponto de partida: identidade visual pronta
+
+A paleta, a tipografia, os espaçamentos e a marca já estão definidos em **[IDENTIDADE_VISUAL.md](IDENTIDADE_VISUAL.md)**, com uma fonte única: `design/tokens/tokens.json`. Não recrie as cores à mão no Figma; importe:
+
+1. Instale o plugin **Tokens Studio for Figma** (gratuito) no arquivo da equipe.
+2. *Tokens Studio → Settings → Token Format*: **W3C DTCG**.
+3. *Tools → Load from file* → escolha `design/tokens/tokens.json`.
+4. *Styles & Variables → Create variables* (cores, espaços, raios) e *Create styles* (tipografia, sombras).
+5. Arraste os arquivos de `design/marca/` para uma página "Marca".
+6. Instale as fontes **Poppins**, **Inter** e **JetBrains Mono** (Google Fonts) na sua máquina, ou o Figma vai substituí-las.
+
+Mudou um token no Figma? Exporte com o Tokens Studio, substitua `tokens.json`, rode `php design/tokens/gerar-css.php` e abra um PR: o código acompanha.
+
 ## O que prototipar (Sprint 0)
 
 Cada tela tem uma issue com etiqueta `ui-ux`: #23 design system, #24 login, #25 admin, #26 painel do mesário, #27 urna, #28 resultado, #29 teste de usabilidade. O quadro do projeto está em <https://github.com/users/prof-ronildo-unicatolica/projects/1>.
@@ -21,7 +34,7 @@ Também: **tela de login** (H1) e um **estado de erro** genérico.
 ## Ordem de trabalho
 
 1. **Wireframe** em baixa fidelidade (caixas e texto) das telas acima. Revisar em 30 minutos com o grupo.
-2. **Tokens**: paleta (primária, sucesso, erro, neutros), tipografia, espaçamento. Esses tokens viram variáveis CSS em `resources/css` ou classes do Bootstrap.
+2. **Tokens**: já prontos (seção acima). Use as variáveis importadas; se faltar alguma, proponha no `tokens.json` por PR.
 3. **Alta fidelidade** só da urna e do painel do mesário (são as telas críticas no dia).
 4. Protótipo clicável do fluxo liberar → votar → confirmar, para testar com 3 alunos fora da equipe.
 
