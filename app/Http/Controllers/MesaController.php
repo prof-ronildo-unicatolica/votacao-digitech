@@ -11,8 +11,10 @@ use App\Models\Terminal;
 use App\Support\Auditoria;
 use App\Support\LiberacaoDeEleitor;
 use App\Support\LiberacaoRecusada;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -25,8 +27,8 @@ class MesaController extends Controller
 
     public function index(Request $request): View
     {
-        $eleicao = Eleicao::atual();
-        $terminais = Terminal::orderBy('numero')->with('sessaoEmAndamento.eleitor')->get();
+        $painel = $this->painelDados();
+        $eleicao = $painel['eleicao'];
 
         $consulta = null;
         $matricula = trim((string) $request->query('matricula'));
@@ -38,15 +40,41 @@ class MesaController extends Controller
             }
         }
 
-        return view('mesa.index', [
-            'eleicao' => $eleicao,
+        return view('mesa.index', $painel + [
             'bloqueio' => $eleicao ? LiberacaoDeEleitor::bloqueio($eleicao) : 'Não há eleição ativa. A comissão precisa ativar a eleição.',
-            'terminais' => $terminais,
             'matricula' => $matricula,
             'consulta' => $consulta,
+        ]);
+    }
+
+    /**
+     * H9 · GET /mesario/painel: o painel (indicadores e terminais) já montado, para a mesa
+     * trocar a cada 5 s sem recarregar a página, e o estado de cada terminal para o seletor
+     * do formulário. Só comparecimento: nunca votos por chapa.
+     */
+    public function painel(): JsonResponse
+    {
+        $painel = $this->painelDados();
+
+        return response()->json([
+            'indicadores' => view('mesa._indicadores', $painel)->render(),
+            'terminais_html' => view('mesa._terminais', $painel)->render(),
+            'terminais' => $painel['terminais']->map(fn (Terminal $t) => ['id' => $t->id, 'numero' => $t->numero, 'estado' => $t->estado()])->values(),
+            'atualizado_em' => now()->format('H:i:s'),
+        ]);
+    }
+
+    /** @return array{eleicao: Eleicao|null, terminais: Collection, votaram: int, aptos: int} */
+    private function painelDados(): array
+    {
+        $eleicao = Eleicao::atual();
+
+        return [
+            'eleicao' => $eleicao,
+            'terminais' => Terminal::orderBy('numero')->with('sessaoEmAndamento.eleitor')->get(),
             'votaram' => $eleicao ? $eleicao->sessoes()->where('situacao', SituacaoSessao::Votou)->count() : 0,
             'aptos' => Eleitor::count(),
-        ]);
+        ];
     }
 
     public function liberar(Request $request): RedirectResponse

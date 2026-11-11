@@ -138,9 +138,10 @@ Como eleitor, quero escolher uma chapa (ou branco/nulo), confirmar e ver "voto r
 
 ### H9 · Acompanhar a mesa
 Como mesário, quero ver no painel quais terminais estão livres, liberados ou votando para organizar a fila.
-- [ ] Painel atualiza sozinho (polling) sem recarregar a página.
-- [ ] Terminais não pareados aparecem como **inativo** e não podem ser escolhidos para liberar (D16).
-- [ ] Mostra contagem de comparecimento (quantos já votaram / aptos), sem mostrar votos por chapa.
+- [x] Painel atualiza sozinho a cada 5 segundos (`GET /mesario/painel`), sem recarregar a página: troca os indicadores e os terminais e acompanha o seletor de terminal do formulário. O que o mesário está digitando continua lá. Pausa com a aba escondida e enquanto um "Cancelar sessão" está aberto (D25).
+- [x] Terminais não pareados aparecem como **inativo** e não podem ser escolhidos para liberar (D16). Os estados são livre, liberado, votando (cédula na tela, H7) e inativo.
+- [x] Mostra contagem de comparecimento (quantos já votaram / aptos, com porcentagem), sem mostrar votos por chapa.
+- [x] Testes: estados acompanhando liberar → votando → votou; comparecimento sem nenhuma chapa no painel; inativo desabilitado no seletor; script de atualização na página; painel sem login → 401.
 
 ## Épico D — Resultado e controle
 

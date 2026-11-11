@@ -321,3 +321,16 @@ Registrada em 11/11/2026, na implementação da H8.
 - **Branco e nulo:** `votos.tipo` é `chapa` (com `chapa_id`), `branco` ou `nulo` (sem chapa). Branco e nulo contam diferente na apuração (H10). No MySQL e MariaDB, um CHECK garante a combinação. No SQLite dos testes, a regra fica na aplicação.
 - **"Voto registrado"** volta para "aguardando" em 5 segundos, por `<meta http-equiv="refresh">`, que não depende de JavaScript.
 
+## D25 — Painel da mesa: troca de trechos, não recarga
+
+Registrada em 11/11/2026, na implementação da H9.
+
+**Decisão:** a mesa busca `GET /mesario/painel` a cada 5 segundos. A resposta traz em JSON os **trechos já montados** pelo Blade (`mesa/_indicadores` e `mesa/_terminais`) e o estado de cada terminal. O script troca só esses trechos e ajusta o seletor de terminal do formulário de liberação. É diferente da urna (D23), que recarrega a página inteira.
+
+**Por quê:**
+- **Na mesa, recarregar atrapalha:** o mesário pode estar digitando uma matrícula ou com a conferência de um eleitor aberta. Na urna não há o que perder, e recarregar é mais simples e seguro.
+- **Trechos montados no servidor:** a mesma view serve à primeira carga e às atualizações. Não existe uma segunda versão do layout em JavaScript.
+- **Pausas:** com a aba escondida (`visibilitychange`), e enquanto um "Cancelar sessão" estiver aberto, para não fechá-lo no meio da confirmação.
+- **Sessão do mesário expirada:** a resposta é 401, e o script recarrega para cair no login.
+- **Só comparecimento:** nem o painel nem o JSON trazem nada por chapa.
+
