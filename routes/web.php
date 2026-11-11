@@ -14,6 +14,7 @@ use App\Http\Controllers\Dev\RecarregarController;
 use App\Http\Controllers\EstiloController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InscricaoController;
+use App\Http\Controllers\MesaController;
 use App\Http\Controllers\TerminalAtivacaoController;
 use App\Http\Controllers\UrnaController;
 use Illuminate\Support\Facades\Route;
@@ -42,8 +43,12 @@ Route::middleware('terminal')->group(function () {
 
 // Área logada: `ativo` derruba quem foi desativado; `perfil` devolve 403 a quem não pode.
 Route::middleware(['auth', 'ativo'])->group(function () {
-    // Mesário (H6, H9). O admin também entra, para acompanhar a mesa.
-    Route::view('/mesario', 'placeholders.mesario')->middleware('perfil:mesario,admin')->name('mesario');
+    // H6 · Mesa receptora (H9 acompanha). O admin também entra, para acompanhar a mesa.
+    Route::middleware('perfil:mesario,admin')->group(function () {
+        Route::get('/mesario', [MesaController::class, 'index'])->name('mesario');
+        Route::post('/mesario/liberar', [MesaController::class, 'liberar'])->name('mesario.liberar');
+        Route::post('/mesario/sessoes/{sessao}/cancelar', [MesaController::class, 'cancelar'])->name('mesario.cancelar');
+    });
 
     // H5 · Pareamento: aberto NO COMPUTADOR DA URNA. Ativar desloga este navegador (D16).
     Route::middleware('perfil:mesario,admin')->group(function () {

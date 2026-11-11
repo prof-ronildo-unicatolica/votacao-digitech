@@ -66,8 +66,7 @@ flowchart LR
     UC11 -. "«include»" .-> UC24
     UC07 -. "«include»" .-> UC24
 
-    class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC24 feito
-    class UC12 revisao
+    class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC12,UC24 feito
     class UC13 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
@@ -116,7 +115,8 @@ flowchart LR
     UC23 -. "«extend»" .-> UC22
 
     class UC01,UC14 feito
-    class UC15,UC16,UC17,UC18,UC19,UC20,UC21,UC22,UC23 afazer
+    class UC15,UC16,UC17 revisao
+    class UC18,UC19,UC20,UC21,UC22,UC23 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -133,8 +133,8 @@ flowchart LR
 | [S2 · Ativar o computador como terminal](#s2--ativar-o-computador-como-terminal-h5-d16) | H5, D16 | Implementado (PR #55) |
 | [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado (PR #58) |
 | [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado (PR #59) |
-| [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado |
-| [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6 | Planejado |
+| [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
+| [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
@@ -369,31 +369,43 @@ sequenceDiagram
 
 ### S4 · Liberar um eleitor (H6)
 
-*Planejado.* Uma linha por eleitor e eleição (`UNIQUE`): liberar de novo reaproveita a linha, nunca cria outra.
+Uma linha por eleitor e eleição (`UNIQUE`): liberar de novo reaproveita a linha, nunca cria outra. Expirada é calculada (aberta com o prazo vencido, D21).
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Me as Mesário
-    participant P as Painel do mesário
+    participant C as MesaController
+    participant L as LiberacaoDeEleitor
     participant DB as Banco
 
-    Me->>P: digita a matrícula
-    P->>DB: SELECT eleitor
-    P-->>Me: nome e turma para conferir (ou "não encontrado")
-    Me->>P: POST liberar (matrícula, terminal, CSRF)
-    P->>P: votação aberta? terminal ativado?<br/>terminal sem sessão aberta?
-    P->>DB: SELECT sessão (eleição, eleitor)
-    alt já votou
-        P-->>Me: recusa: "eleitor já votou"
+    Me->>C: GET /mesario?matricula=2024101
+    C->>L: consultar(eleição, matrícula, mesário)
+    L->>DB: SELECT eleitor e sessão (eleição, eleitor)
+    C-->>Me: nome, turma e situação, terminais livres
+    Me->>C: POST /mesario/liberar (matrícula, terminal, CSRF)
+    C->>L: liberar(eleição, matrícula, terminal, mesário)
+    L->>DB: BEGIN
+    L->>L: votação aberta? chapa homologada?<br/>mesário não é o eleitor?
+    L->>DB: SELECT terminal FOR UPDATE
+    L->>L: terminal ativado e sem sessão em andamento?
+    L->>DB: SELECT sessão do eleitor FOR UPDATE
+    alt votou, ou liberação em andamento
+        L->>DB: ROLLBACK
+        C-->>Me: recusa com o motivo (votou às 10:42, ou está no terminal 2)
     else nenhuma sessão
-        P->>DB: INSERT sessão (aberta, terminal, mesário, expira em 30 min)
-        P-->>Me: "Terminal N liberado para Fulano"
-    else sessão expirada ou cancelada
-        P->>DB: UPDATE a MESMA linha (aberta, terminal, mesário, horários)
-        P-->>Me: "Terminal N liberado para Fulano"
+        L->>DB: INSERT sessão (aberta, terminal, mesário, expira em 30 min)
+        L->>DB: COMMIT
+        C-->>Me: "Terminal 1 liberado para Maria (vale até as 10:30)"
+    else expirada ou cancelada
+        L->>DB: UPDATE a MESMA linha (aberta, terminal, mesário, horários)
+        L->>DB: COMMIT
+        C-->>Me: "Terminal 1 liberado para Maria"
     end
-    P->>DB: auditoria: liberação (H11)
+    Me->>C: POST cancelar sessão
+    C->>L: cancelar(sessão)
+    L->>DB: UPDATE situacao = cancelada WHERE situacao = aberta
+    Note over L,DB: se o eleitor votou no mesmo instante, nenhuma linha muda e a tela avisa.<br/>Auditoria de cada liberação e cancelamento: H11
 ```
 
 ### S5 · Urna aguarda e o eleitor vota (H7, H8)
