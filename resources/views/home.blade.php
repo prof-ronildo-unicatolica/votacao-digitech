@@ -36,8 +36,6 @@
     <p class="small text-secondary mt-5">
         As tabelas têm só chaves e constraints; os atributos são definidos pela equipe (<code>docs/MODELO_DADOS.md</code>).
         Endpoints: <a href="/api/health"><code>/api/health</code></a>
-        @if ($terminal)
-            · <a href="{{ route('api.terminal.status', $terminal) }}"><code>/api/terminais/{uuid}/status</code> (terminal {{ $terminal->numero }})</a>
-        @endif
+        · <a href="{{ route('terminal.ativar') }}"><code>/terminal/ativar</code></a> (pareia este computador como urna, D16)
     </p>
 @endsection
