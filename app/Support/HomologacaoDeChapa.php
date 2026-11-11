@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\AcaoAuditoria;
 use App\Enums\FaseEleicao;
 use App\Enums\SituacaoChapa;
 use App\Models\Cargo;
@@ -40,6 +41,7 @@ class HomologacaoDeChapa
             }
 
             $this->decidir($chapa, $admin, SituacaoChapa::Homologada, null);
+            Auditoria::registrar(AcaoAuditoria::ChapaHomologada, $chapa, ['numero' => $chapa->numero], usuario: $admin);
         });
     }
 
@@ -56,6 +58,7 @@ class HomologacaoDeChapa
             }
 
             $this->decidir($chapa, $admin, SituacaoChapa::Indeferida, Str::limit($motivo, self::MOTIVO_MAX, ''));
+            Auditoria::registrar(AcaoAuditoria::ChapaIndeferida, $chapa, ['numero' => $chapa->numero, 'motivo' => $chapa->motivo_indeferimento], usuario: $admin);
         });
     }
 
@@ -67,7 +70,9 @@ class HomologacaoDeChapa
                 return;
             }
 
+            $anterior = $chapa->situacao->value;
             $this->decidir($chapa, $admin, SituacaoChapa::Pendente, null);
+            Auditoria::registrar(AcaoAuditoria::ChapaReaberta, $chapa, ['numero' => $chapa->numero, 'situacao_anterior' => $anterior], usuario: $admin);
         });
     }
 
@@ -97,6 +102,7 @@ class HomologacaoDeChapa
                 throw new InscricaoRecusada(['matricula' => $erros[$cargo->id] ?? implode(' ', $erros)]);
             }
 
+            $anterior = $chapa->candidatos->firstWhere('cargo_id', $cargo->id)?->eleitor?->matricula;
             $chapa->candidatos()->updateOrCreate(
                 ['cargo_id' => $cargo->id],
                 ['eleicao_id' => $eleicao->id, 'eleitor_id' => $alunos[$cargo->id]->id],
@@ -106,6 +112,14 @@ class HomologacaoDeChapa
             if ($voltou) {
                 $this->decidir($chapa, $admin, SituacaoChapa::Pendente, null);
             }
+
+            Auditoria::registrar(AcaoAuditoria::CandidatoTrocado, $chapa, [
+                'numero' => $chapa->numero,
+                'cargo' => $cargo->titulo,
+                'matricula_anterior' => $anterior,
+                'matricula_nova' => $alunos[$cargo->id]->matricula,
+                'voltou_para_pendente' => $voltou,
+            ], usuario: $admin);
 
             return $voltou;
         });
@@ -119,7 +133,13 @@ class HomologacaoDeChapa
                 throw new InscricaoRecusada(['geral' => "A chapa {$chapa->numero} já recebeu votos e faz parte da apuração: não pode ser excluída."]);
             }
 
+            $dados = [
+                'numero' => $chapa->numero,
+                'nome' => $chapa->nome,
+                'matriculas' => $chapa->composicao()->get()->mapWithKeys(fn ($c) => [$c->cargo->titulo => $c->eleitor->matricula])->all(),
+            ];
             $chapa->delete();
+            Auditoria::registrar(AcaoAuditoria::ChapaExcluida, $chapa, $dados);
         });
     }
 

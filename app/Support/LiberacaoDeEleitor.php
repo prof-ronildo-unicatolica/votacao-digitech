@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\AcaoAuditoria;
 use App\Enums\FaseEleicao;
 use App\Enums\SituacaoSessao;
 use App\Models\Eleicao;
@@ -67,12 +68,17 @@ class LiberacaoDeEleitor
 
                 // Re-liberação: a MESMA linha (o UNIQUE não aceitaria uma segunda).
                 if ($sessao) {
+                    $anterior = ['terminal_anterior' => $sessao->terminal->numero, 'situacao_anterior' => $sessao->situacaoAtual()->value];
                     $sessao->update($dados);
+                    Auditoria::registrar(AcaoAuditoria::SessaoReliberada, $sessao, $this->resumo($eleitor, $terminal, $sessao) + $anterior);
 
                     return $sessao->fresh(['eleitor', 'terminal']);
                 }
 
-                return SessaoVotacao::create($dados + ['eleicao_id' => $eleicao->id, 'eleitor_id' => $eleitor->id])->load(['eleitor', 'terminal']);
+                $sessao = SessaoVotacao::create($dados + ['eleicao_id' => $eleicao->id, 'eleitor_id' => $eleitor->id]);
+                Auditoria::registrar(AcaoAuditoria::SessaoLiberada, $sessao, $this->resumo($eleitor, $terminal, $sessao));
+
+                return $sessao->load(['eleitor', 'terminal']);
             });
         } catch (UniqueConstraintViolationException) {
             throw new LiberacaoRecusada('Outro mesário acabou de fazer a liberação desta matrícula. Confira o painel dos terminais.');
@@ -85,9 +91,18 @@ class LiberacaoDeEleitor
      */
     public function cancelar(SessaoVotacao $sessao): void
     {
-        $afetadas = SessaoVotacao::whereKey($sessao->getKey())
-            ->where('situacao', SituacaoSessao::Aberta)
-            ->update(['situacao' => SituacaoSessao::Cancelada, 'cancelada_em' => now()]);
+        $afetadas = DB::transaction(function () use ($sessao) {
+            $afetadas = SessaoVotacao::whereKey($sessao->getKey())
+                ->where('situacao', SituacaoSessao::Aberta)
+                ->update(['situacao' => SituacaoSessao::Cancelada, 'cancelada_em' => now()]);
+
+            if ($afetadas === 1) {
+                $sessao->load(['eleitor', 'terminal']);
+                Auditoria::registrar(AcaoAuditoria::SessaoCancelada, $sessao, ['matricula' => $sessao->eleitor->matricula, 'terminal' => $sessao->terminal->numero]);
+            }
+
+            return $afetadas;
+        });
 
         if ($afetadas !== 1) {
             $situacao = $sessao->fresh()->situacao;
@@ -134,6 +149,12 @@ class LiberacaoDeEleitor
             $eleicao->chapasNaUrna()->doesntExist() => 'Nenhuma chapa foi homologada: a urna não teria em quem votar. Fale com a comissão eleitoral.',
             default => null,
         };
+    }
+
+    /** O que vai para a auditoria de uma liberação: matrícula, terminal e prazo. Nunca a chapa. */
+    private function resumo(Eleitor $eleitor, Terminal $terminal, SessaoVotacao $sessao): array
+    {
+        return ['matricula' => $eleitor->matricula, 'terminal' => $terminal->numero, 'expira_em' => $sessao->expira_em->toIso8601String()];
     }
 
     private function eleitor(string $matricula): Eleitor

@@ -264,9 +264,9 @@ Registrada em 11/11/2026, na implementação da H6.
 - **Painel:** atualizar é manual por enquanto. A atualização automática é a H9, e o estado "votando" vem da urna (H7).
 - **Fora desta história:** a auditoria de cada liberação e cancelamento (H11).
 
-## D22 — Auditoria: eventos com intenção, na transação da ação, nunca o voto (planejada)
+## D22 — Auditoria: eventos com intenção, na transação da ação, nunca o voto
 
-Registrada em 11/11/2026. Plano completo em `docs/AUDITORIA.md`. Implementação na H11, em fases.
+Registrada em 11/11/2026. Plano completo em `docs/AUDITORIA.md`. Implementação na H11, em fases. **A fase 1 está implementada** (acesso, terminais, sessões, chapas).
 
 **Decisão:**
 - **Uma tabela só-acrescenta (`auditoria`)**, gravada por um único ponto (`App\Support\Auditoria::registrar`), com um catálogo fechado de ações (`App\Enums\AcaoAuditoria`).

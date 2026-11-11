@@ -2,7 +2,11 @@
 
 Este é o plano do registro de auditoria: **quem fez o quê, quando e de onde**, para a comissão eleitoral prestar contas do processo. Decisão em `DECISOES.md` (D22). A história é a H11, em `HISTORIAS_USUARIO.md`.
 
-> **Situação:** planejado. Nada aqui está implementado ainda. Várias histórias já prontas deixaram uma parte para a auditoria: o IP da inscrição (H14), o histórico de homologações (H3), as liberações e cancelamentos (H6) e a ativação de terminal (H5). Este plano diz como e quando cada uma entra.
+> **Situação:**
+> - **Fase 1 implementada:** acesso, terminais, sessões e chapas pelo formulário e pela homologação. Código em `App\Support\Auditoria`, `App\Enums\AcaoAuditoria`, `App\Models\EventoAuditoria` e `App\Listeners\AuditarAcesso`; testes em `AuditoriaTest`.
+> - **A H8** emite `sessao.votou`.
+> - **Fases 2, 3 e 4** seguem planejadas.
+> - **Antes da fase 1** não havia auditoria: o que aconteceu até ali não foi registrado, salvo a última decisão de cada chapa (D20).
 
 ## 1. Princípios
 
@@ -18,10 +22,10 @@ Este é o plano do registro de auditoria: **quem fez o quê, quando e de onde**,
 | Coluna          | Tipo               | Para quê                                                                                         |
 | --------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
 | `id`            | uuid (v7, ordenado) | Padrão do projeto (D11). A ordem de inserção acompanha o tempo                                   |
-| `ocorrido_em`   | timestamp(6)       | Quando aconteceu, em microssegundos, para ordenar eventos do mesmo segundo                       |
+| `ocorrido_em`   | timestamp(6)       | Quando aconteceu, em microssegundos, para ordenar eventos do mesmo segundo (o model grava com `$dateFormat = 'Y-m-d H:i:s.u'`: sem isso o Laravel descarta a fração) |
 | `acao`          | string(50)         | Caso de `AcaoAuditoria` (ex.: `sessao.liberada`)                                                 |
 | `user_id`       | bigint, nullable   | Quem fez (FK `users`, `nullOnDelete`). Nulo para o visitante (inscrição pública) e o sistema    |
-| `ator`          | string(255)        | Nome e perfil de quem fez, no momento (ex.: "Carlos Mendes (mesário)"), para o registro sobreviver à edição ou exclusão do usuário |
+| `ator`          | string(255)        | Nome e perfil de quem fez, no momento (ex.: "Carlos Mendes (mesário)", "Ana Lima (admin)"; "Visitante" sem login), para o registro sobreviver à edição ou exclusão do usuário |
 | `ip`            | string(45)         | IPv4 ou IPv6 (`request()->ip()`, atrás do proxy da Hostinger: `TrustProxies`)                    |
 | `eleicao_id`    | uuid, nullable     | Eleição a que o evento se refere (FK, `nullOnDelete`), para filtrar                             |
 | `alvo_tipo`     | string(50), nullable | `chapa`, `sessao`, `terminal`, `eleitor`, `cargo`, `eleicao`, `usuario`                       |
@@ -105,7 +109,8 @@ Auditoria::registrar(AcaoAuditoria::ChapaHomologada, alvo: $chapa, dados: ['nume
 - **`registrar()`** lê o usuário (`auth()->user()`) e o IP (`request()->ip()`) do contexto, monta `ator` e grava. A eleição vem do alvo (`$alvo->eleicao_id`), ou de um parâmetro quando o alvo não tem eleição.
 - **Dentro da transação da ação.** As classes de regra (`InscricaoDeChapa`, `HomologacaoDeChapa`, `LiberacaoDeEleitor`, `CargosDaEleicao`, os importadores) chamam `registrar()` antes do `COMMIT`. Fora de uma transação, o evento é gravado na hora.
 - **Tentativas recusadas** (`registrarTentativa()`): o controller grava depois que a exceção desfez a transação. Exemplo: `MesaController::liberar` pega a `LiberacaoRecusada`, registra `sessao.liberacao_recusada` e volta para a tela.
-- **Login e logout** vêm dos eventos do Laravel (`Login`, `Failed`, `Logout`, `Lockout`), ouvidos num listener `App\Listeners\AuditarAcesso`.
+- **Login e logout** vêm dos eventos do Laravel (`Login`, `Failed`, `Logout`, `Lockout`), ouvidos pelo `App\Listeners\AuditarAcesso`, registrado no `AppServiceProvider`. O motivo da falha é `usuario_inexistente`, `usuario_desativado` ou `senha_incorreta`.
+- **Ativação de terminal** é registrada **antes** do logout que ela provoca (D16), para o evento ter quem ativou.
 - **O model `EventoAuditoria`** lança exceção em `updating` e `deleting`. Não tem `$fillable` para `hash` (fase 4).
 - **Sigilo, de novo:** `Auditoria::registrar` recusa (`InvalidArgumentException`) `dados` com as chaves `chapa_id` ou `voto` quando a ação é da categoria `sessao`. O teste confere isso para todas as ações.
 

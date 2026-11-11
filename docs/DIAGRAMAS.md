@@ -114,8 +114,7 @@ flowchart LR
     UC20 -. "«include»" .-> UC21
     UC23 -. "«extend»" .-> UC22
 
-    class UC01,UC14,UC15,UC16,UC17 feito
-    class UC19 revisao
+    class UC01,UC14,UC15,UC16,UC17,UC19 feito
     class UC18,UC20,UC21,UC22,UC23 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
@@ -135,8 +134,8 @@ flowchart LR
 | [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado (PR #59) |
 | [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
-| [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Planejado (em `AUDITORIA.md`) |
-| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23 | H7 implementado; H8 planejado |
+| [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fase 1) |
+| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23 | H7 implementado (PR #64); H8 planejado |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
 
