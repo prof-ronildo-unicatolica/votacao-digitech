@@ -13,7 +13,7 @@
             'cargos' => ['Cargos', 'list-ol', null, 'H13'],
             'chapas' => ['Chapas', 'people', null, 'H3'],
             'eleitores' => ['Eleitores', 'person-vcard', 'admin.eleitores.index', null],
-            'terminais' => ['Terminais', 'display', null, 'H5'],
+            'terminais' => ['Terminais', 'display', 'admin.terminais.index', null],
         ],
         'Acompanhamento' => [
             'mesa' => ['Mesa', 'person-check', 'mesario', null],

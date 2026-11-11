@@ -162,6 +162,13 @@ Registrada em 06/11/2026, antes de implementar H5 a H8.
 - **24 horas:** cobre um dia de votação. Se a votação durar mais de um dia, o mesário reativa os terminais na abertura de cada dia, o que também serve de checagem de que cada computador está no lugar certo.
 - **Sem software nos terminais:** continua bastando um navegador em modo quiosque (README, objetivo 4).
 
+**Na implementação (H5, 11/11/2026):**
+
+- **As 24 horas valem também no servidor.** O middleware só aceita o token se `ativado_em` tiver menos de 24 horas. Um cookie copiado não dura mais que o pareamento, mesmo que alguém altere a validade dele no navegador.
+- **`Secure` segue `SESSION_SECURE_COOKIE`.** Em produção (`.env.production.example`) é `true`. No desenvolvimento local em `http://` o cookie sai sem `Secure`; senão o navegador o descartaria e a urna nunca funcionaria no XAMPP.
+- **`/api/terminais/{uuid}/status` saiu.** O status agora é `GET /urna/status`, que exige o cookie. `/api/health` continua público para o smoke test.
+- **O estado do terminal** (`Terminal::estado()`) hoje é *inativo* ou *livre*. *Liberado* e *votando* entram com a situação da sessão (H6, H7).
+
 **O que isto não resolve:** quem tem acesso físico ao computador pode tentar copiar o cookie pelas ferramentas do navegador. O modo quiosque (sem barra de endereço nem F12) e o mesário olhando a mesa são a defesa. `HttpOnly` impede que um script da página leia o cookie.
 
 **Alternativas descartadas:**

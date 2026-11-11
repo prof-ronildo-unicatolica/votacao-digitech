@@ -30,8 +30,6 @@ class HomeController extends Controller
                 'votos' => Voto::count(),
             ],
             'eleicoes' => Eleicao::withCount('cargos')->with(['chapas' => fn ($q) => $q->withCount('candidatos')])->get(),
-            // A URL da urna e da API usa o UUID do terminal (D11), não o número.
-            'terminal' => Terminal::orderBy('numero')->first(),
         ]);
     }
 }

@@ -50,22 +50,17 @@ class PaginaInicialTest extends TestCase
             ->assertJson(['banco' => 'ok']);
     }
 
-    public function test_status_do_terminal_e_acessado_pelo_uuid_e_nao_pelo_numero(): void
+    public function test_status_do_terminal_nao_e_mais_publico_na_api(): void
     {
         $terminal = Terminal::factory()->create(['numero' => 1]);
 
-        $this->getJson("/api/terminais/{$terminal->id}/status")
-            ->assertOk()
-            ->assertJson(['terminal' => 1]);
-
-        $this->getJson('/api/terminais/1/status')->assertNotFound();
+        $this->getJson("/api/terminais/{$terminal->id}/status")->assertNotFound();
+        $this->getJson('/urna/status')->assertForbidden();
     }
 
-    public function test_pagina_inicial_aponta_o_status_do_terminal_pelo_uuid(): void
+    public function test_pagina_inicial_aponta_a_ativacao_do_terminal(): void
     {
-        $terminal = Terminal::factory()->create(['numero' => 1]);
-
-        $this->get('/')->assertOk()->assertSee("/api/terminais/{$terminal->id}/status", false);
+        $this->get('/')->assertOk()->assertSee('/terminal/ativar', false);
     }
 
     public function test_painel_do_mesario_ainda_e_placeholder_com_a_identidade_visual(): void

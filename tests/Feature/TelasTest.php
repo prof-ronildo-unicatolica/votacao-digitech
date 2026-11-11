@@ -21,18 +21,20 @@ class TelasTest extends TestCase
             ->assertSee('name="_token"', false);
     }
 
-    public function test_urna_do_terminal_aguarda_liberacao(): void
+    public function test_urna_do_terminal_pareado_aguarda_liberacao(): void
     {
-        $terminal = Terminal::factory()->create(['numero' => 7]);
+        $token = Terminal::factory()->create(['numero' => 7])->ativar();
 
-        $this->get("/urna/{$terminal->id}")
+        $this->withCookie(Terminal::COOKIE, $token)->get('/urna')
             ->assertOk()
             ->assertSee('Terminal 7')
             ->assertSee('Aguardando liberação');
     }
 
-    public function test_urna_de_terminal_inexistente_da_404(): void
+    public function test_urna_nao_tem_mais_o_id_do_terminal_na_url(): void
     {
-        $this->get('/urna/00000000-0000-0000-0000-000000000000')->assertNotFound();
+        $terminal = Terminal::factory()->create();
+
+        $this->get("/urna/{$terminal->id}")->assertNotFound();
     }
 }

@@ -3,7 +3,10 @@
 @section('titulo', 'Painel do Mesário')
 
 @section('conteudo')
-    <div class="dt-cabecalho-pagina"><h1>Painel do Mesário</h1></div>
+    <div class="dt-cabecalho-pagina">
+        <h1>Painel do Mesário</h1>
+        <x-botao variante="contorno" icone="display" :href="route('terminal.ativar')">Ativar este computador como terminal</x-botao>
+    </div>
     <x-cartao>
         <x-estado-vazio icone="tools" titulo="Tela ainda não implementada">
             Histórias <strong>H6 – Liberar votação de um eleitor</strong> e <strong>H9 – Acompanhar a mesa</strong>

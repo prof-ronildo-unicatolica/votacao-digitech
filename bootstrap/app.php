@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ExigePerfil;
+use App\Http\Middleware\TerminalPareado;
 use App\Http\Middleware\UsuarioAtivo;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'perfil' => ExigePerfil::class,
             'ativo' => UsuarioAtivo::class,
+            'terminal' => TerminalPareado::class,
         ]);
 
         // Quem já está logado e abre /login vai para a página do seu perfil (H1).
