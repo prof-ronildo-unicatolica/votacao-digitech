@@ -97,7 +97,25 @@ Situações sugeridas: `aberta` → `votou` | `expirada` | `cancelada`; `expirad
 
 ## Registro de um voto (transação)
 
-1. Verificar que a sessão do terminal está liberada e válida (critério definido pela equipe).
-2. `INSERT` em `votos` (`eleicao_id`, `chapa_id` ou nulo).
-3. Marcar a sessão como votada.
-4. Tudo dentro de `DB::transaction()`. Se 3 falhar, 2 é desfeito.
+"Verificar que a sessão está aberta e depois inserir o voto" tem **condição de corrida**: com duplo clique ou duas abas, as duas requisições passam pela verificação antes de qualquer uma marcar a sessão, e entram **dois votos**. A ordem certa é **reivindicar a sessão primeiro, de forma atômica**:
+
+```php
+DB::transaction(function () use ($sessao, $chapaId) {
+    // 1. Reivindica a sessão: só UMA requisição consegue mudar 'aberta' para 'votou'.
+    $afetadas = SessaoVotacao::whereKey($sessao->id)
+        ->where('situacao', 'aberta')            // nomes de colunas: decisão da equipe
+        ->where('expira_em', '>', now())
+        ->update(['situacao' => 'votou', 'votou_em' => now()]);
+
+    if ($afetadas !== 1) {
+        throw new SessaoIndisponivel();          // já votou, expirou ou foi cancelada
+    }
+
+    // 2. Grava o voto. eleicao_id vem da SESSÃO, nunca do formulário.
+    Voto::create(['eleicao_id' => $sessao->eleicao_id, 'chapa_id' => $chapaId]);
+});
+```
+
+- Se o passo 2 falhar (ex.: chapa de outra eleição, rejeitada pela FK composta), o passo 1 é desfeito.
+- O `UPDATE ... WHERE situacao = 'aberta'` é atômico no MySQL e no SQLite; não depende de `lockForUpdate()`.
+- **Sigilo também fora do banco:** não registre a chapa escolhida em log, auditoria, sessão HTTP ou flash junto com o eleitor/sessão. O que vai para a auditoria é "sessão X votou", nunca em quem.
