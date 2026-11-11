@@ -5,15 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EleitorRequest;
 use App\Models\Eleitor;
-use App\Support\ImportadorEleitores;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use InvalidArgumentException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-/** Admin monta o eleitorado: um a um ou por CSV (H4). */
+/** Admin monta o eleitorado um a um (H4). A importação por CSV fica em ImportacaoEleitoresController. */
 class EleitorController extends Controller
 {
     public function index(Request $request): View
@@ -70,32 +67,5 @@ class EleitorController extends Controller
         }
 
         return redirect()->route('admin.eleitores.index')->with('status', "{$eleitor->nome} foi excluído.");
-    }
-
-    public function importarForm(): View
-    {
-        return view('admin.eleitores.importar', ['relatorio' => session('importacao')]);
-    }
-
-    public function importar(Request $request, ImportadorEleitores $importador): RedirectResponse
-    {
-        $request->validate(
-            ['arquivo' => ['required', 'file', 'mimes:csv,txt', 'max:2048']],
-            ['arquivo.mimes' => 'Envie um arquivo .csv (no Excel: Salvar como → CSV UTF-8).'],
-            ['arquivo' => 'arquivo'],
-        );
-
-        try {
-            $relatorio = $importador->importar($request->file('arquivo')->get());
-        } catch (InvalidArgumentException $e) {
-            return back()->withErrors(['arquivo' => $e->getMessage()]);
-        }
-
-        return redirect()->route('admin.eleitores.importar')->with('importacao', $relatorio);
-    }
-
-    public function modelo(): BinaryFileResponse
-    {
-        return response()->download(base_path('docs/exemplos/eleitores.csv'), 'eleitores-modelo.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

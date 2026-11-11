@@ -36,11 +36,13 @@ Como admin, quero criar uma eleição com título, **período de inscrição de 
 ### H4 · Cadastrar eleitores (individual e CSV)
 Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, nome, turma, e-mail) para montar o eleitorado sem digitação manual.
 - [x] CRUD em `/admin/eleitores` com busca por matrícula/nome e paginação.
-- [x] Importação de CSV mostra quantos entraram e quais linhas falharam (e por quê).
-- [x] Matrícula duplicada no CSV atualiza o nome, não cria outro registro.
+- [x] Importação de CSV em `/admin/eleitores/importar`, no fluxo da D19 (o mesmo das chapas, H15): **enviar não grava**; a conferência mostra os **campos com erro** (linha e coluna), os cadastros **novos**, os que **vão mudar** (antes → depois) e os nomes padronizados; o admin **cancela** (rollback), **ignora as linhas com erro** ou **confirma**. A confirmação é uma transação só e desfaz tudo se o cadastro mudou desde a conferência.
+- [x] Matrícula que já existe no cadastro atualiza o nome, não cria outro registro (turma e e-mail vazios no arquivo não apagam). Matrícula **repetida dentro do arquivo** marca todas as linhas (a comissão decide qual vale).
+- [x] Integridade: matrícula sem espaços no meio, no formato de `EleitorRegras`, com aviso para notação científica do Excel; nome padronizado (CAIXA ALTA → "Maria das Graças"); e-mail em minúsculas; colunas desconhecidas são ignoradas e listadas.
+- [x] Relatório ao final: cadastrados, atualizados, sem alteração e linhas ignoradas (linha e motivo).
 - [x] Eleitor que já foi liberado em alguma eleição, ou que é candidato, não pode ser excluído (o banco bloqueia; a tela explica o motivo).
 - [x] O eleitorado é importado **antes** de abrir as inscrições: os candidatos são indicados pela matrícula (H14, H15).
-- [x] Testes: importação com 3 linhas válidas + 1 inválida.
+- [x] Testes com arquivos em `tests/Fixtures/eleitores`: **limpo** (também com BOM e Windows-1252, e o modelo para baixar), **alterado** (apelidos no cabeçalho, coluna extra, vírgula, CRLF, linhas em branco, CAIXA ALTA, espaços, nome entre aspas) e **mal formatados** (sem cabeçalho, só cabeçalho, vazio, `.xlsx` renomeado, separador tab, colunas a mais); linhas válidas + inválidas; cancelar, ignorar, confirmar; rollback quando o cadastro muda durante a conferência.
 
 ### H5 · Cadastrar terminais
 Como admin, quero cadastrar os terminais (número e local) para saber em qual computador cada eleitor será liberado.

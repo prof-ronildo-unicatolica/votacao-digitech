@@ -5,7 +5,7 @@ description: Padrão de ingestão de CSV do votacao-digitech (leitura tolerante,
 
 # Importação de CSV
 
-Referência: H15 (`App\Support\ImportadorChapas`, `ImportacaoChapasController`, decisão D19). O CSV de eleitores (H4, `ImportadorEleitores`) é mais antigo e grava direto; ao mexer nele, considere migrar para este padrão.
+Referências (decisão D19): chapas, H15 (`ImportadorChapas`, `ImportacaoChapasController`, `admin/chapas/conferir`) e eleitores, H4 (`ImportadorEleitores`, `ImportacaoEleitoresController`, `admin/eleitores/conferir`). **Toda importação segue este fluxo**: nenhuma grava direto.
 
 ## Leitura: `App\Support\LeitorCsv`
 
@@ -19,13 +19,22 @@ Sempre leia por ele, nunca com `fgetcsv` solto:
 ## Nomes: `App\Support\Nomes`
 
 - `chave()` para comparar ("VICE PRESIDENTE" = "Vice-presidente").
+- `formatar($texto, siglas: false)` para nome de pessoa ("JOSÉ LUZ" → "José Luz"; com siglas, "LUZ" ficaria em maiúsculas).
 - `formatar()` para gravar: tira espaços sobrando, "1o"/"1°" vira "1º", e arruma maiúsculas e minúsculas só quando o texto veio todo em maiúsculas ou todo em minúsculas (conectivos em minúscula, sigla curta mantida). Texto misto é respeitado.
 - **Mostre cada ajuste na conferência**: o admin precisa ver o que vai ser gravado.
+
+## Peças compartilhadas
+
+- `LeitorCsv` e `Nomes` (leitura e nomes, acima).
+- `ArquivoEmConferencia('importacao_<assunto>')`: guarda o arquivo em `storage/app/private/importacoes` até a decisão; `guardar`, `dados`, `conteudo`, `descartar`.
+- `ArquivoInvalido` (lista de erros do arquivo inteiro), `ImportacaoDesatualizada` (rollback por mudança), `ImportacaoRecusada`.
+- `<x-decisao-importacao>`: o cartão "O que fazer?" com cancelar, ignorar e confirmar (`item`/`itens` femininos: linha, chapa).
+- CSS `.dt-tabela-importacao`, `.dt-celula-erro`, `.dt-linha-erro-detalhe` (o motivo quebra linha no celular).
 
 ## Fluxo: conferir antes de gravar
 
 1. **Enviar:** valida o upload (`mimes:csv,txt`, tamanho), roda `analisar()` **sem gravar** e guarda o arquivo em `Storage::disk('local')` (`importacoes/`), com o caminho e o id da eleição na sessão. Erro do arquivo inteiro (`ArquivoInvalido`, uma lista de mensagens) volta para o upload.
-2. **Conferir:** analisa de novo (situação atual) e mostra cada linha, com **as células com erro destacadas** (`.dt-celula-erro`) e o motivo como "Linha N, coluna: motivo", em ordem de coluna.
+2. **Conferir:** analisa de novo (situação atual) e mostra cada linha (e, quando a importação atualiza cadastros, o **antes → depois** de cada campo), com **as células com erro destacadas** (`.dt-celula-erro`) e o motivo como "Linha N, coluna: motivo", em ordem de coluna.
 3. **Decidir:** cancelar (rollback: apaga o arquivo, nada foi gravado), ignorar os erros (importa só as linhas prontas) ou confirmar. Com erros, a escolha é obrigatória. O formulário manda de volta a `assinatura()` da análise.
 4. **Confirmar:** `DB::transaction` + trava (`lockForUpdate` na eleição), analisa de novo e compara a assinatura. Diferente, período fechado ou `UniqueConstraintViolationException` significam **desfazer tudo** e voltar para a conferência com aviso. Igual, grava e apaga o arquivo.
 5. **Relatório:** o que entrou, o que ficou de fora (linha e motivo) e o que foi criado.

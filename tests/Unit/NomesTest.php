@@ -33,6 +33,13 @@ class NomesTest extends TestCase
         $this->assertSame($esperado, Nomes::formatar($entrada));
     }
 
+    public function test_nome_de_pessoa_sem_regra_de_sigla(): void
+    {
+        $this->assertSame('José Luz', Nomes::formatar('JOSÉ LUZ', siglas: false));
+        $this->assertSame('Maria das Graças Sá', Nomes::formatar('MARIA DAS GRAÇAS SÁ', siglas: false));
+        $this->assertSame('Bruno Carvalho dos Santos', Nomes::formatar('  bruno   carvalho dos santos ', siglas: false));
+    }
+
     public function test_chave_ignora_acento_maiuscula_espaco_e_pontuacao(): void
     {
         $this->assertSame(Nomes::chave('Vice-presidente'), Nomes::chave('VICE PRESIDENTE'));

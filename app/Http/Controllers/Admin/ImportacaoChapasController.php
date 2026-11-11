@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\FaseEleicao;
 use App\Http\Controllers\Controller;
 use App\Models\Eleicao;
+use App\Support\ArquivoEmConferencia;
 use App\Support\ArquivoInvalido;
 use App\Support\ImportacaoDesatualizada;
 use App\Support\ImportadorChapas;
@@ -12,8 +13,6 @@ use App\Support\InscricaoDeChapa;
 use App\Support\InscricaoRecusada;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -21,8 +20,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 /**
  * H15 · Importar chapas por CSV, em três passos (D19):
  *
- * 1. Enviar: o arquivo é conferido e guardado em storage/app/private/importacoes. Nada vai
- *    para o banco.
+ * 1. Enviar: o arquivo é conferido e guardado (ArquivoEmConferencia). Nada vai para o banco.
  * 2. Conferir: a tela mostra cada campo com erro (linha e coluna) e os nomes padronizados.
  *    O admin escolhe: cancelar (descarta o arquivo, nada é gravado), ignorar as chapas com
  *    erro, ou confirmar.
@@ -40,7 +38,7 @@ class ImportacaoChapasController extends Controller
         return view('admin.chapas.importar', [
             'eleicao' => $eleicao,
             'bloqueio' => $this->bloqueio($eleicao),
-            'emConferencia' => session(self::SESSAO),
+            'emConferencia' => $this->arquivo()->dados(),
             'resultado' => session('importacao_chapas_resultado'),
         ]);
     }
@@ -65,15 +63,7 @@ class ImportacaoChapasController extends Controller
             return back()->withErrors(['arquivo' => $e->erros]);
         }
 
-        $this->descartar();
-        $caminho = 'importacoes/chapas-'.Str::uuid().'.csv';
-        Storage::disk('local')->put($caminho, $conteudo);
-
-        session([self::SESSAO => [
-            'arquivo' => $caminho,
-            'nome' => $request->file('arquivo')->getClientOriginalName(),
-            'eleicao_id' => $eleicao->id,
-        ]]);
+        $this->arquivo()->guardar($conteudo, $request->file('arquivo')->getClientOriginalName(), ['eleicao_id' => $eleicao->id]);
 
         return redirect()->route('admin.chapas.importar.conferir');
     }
@@ -97,7 +87,7 @@ class ImportacaoChapasController extends Controller
         return view('admin.chapas.conferir', [
             'eleicao' => $eleicao,
             'analise' => $analise,
-            'arquivo' => session(self::SESSAO.'.nome'),
+            'arquivo' => $this->arquivo()->dados()['nome'],
             'bloqueio' => $this->bloqueio($eleicao),
         ]);
     }
@@ -152,26 +142,28 @@ class ImportacaoChapasController extends Controller
         return $eleicao->fase() === FaseEleicao::InscricoesAbertas ? null : InscricaoDeChapa::mensagemForaDoPeriodo($eleicao);
     }
 
-    /** @return array{0: Eleicao|null, 1: string|null} */
+    private function arquivo(): ArquivoEmConferencia
+    {
+        return new ArquivoEmConferencia(self::SESSAO);
+    }
+
+    /** @return array{0: Eleicao|null, 1: string|null} o arquivo só vale para a eleição em que foi enviado */
     private function emConferencia(): array
     {
-        $dados = session(self::SESSAO);
+        $dados = $this->arquivo()->dados();
         $eleicao = Eleicao::atual();
 
-        if (! $dados || ! $eleicao || $eleicao->id !== $dados['eleicao_id'] || ! Storage::disk('local')->exists($dados['arquivo'])) {
+        if (! $dados || ! $eleicao || $eleicao->id !== $dados['eleicao_id']) {
             $this->descartar();
 
             return [null, null];
         }
 
-        return [$eleicao, Storage::disk('local')->get($dados['arquivo'])];
+        return [$eleicao, $this->arquivo()->conteudo()];
     }
 
     private function descartar(): void
     {
-        if ($arquivo = session(self::SESSAO.'.arquivo')) {
-            Storage::disk('local')->delete($arquivo);
-        }
-        session()->forget(self::SESSAO);
+        $this->arquivo()->descartar();
     }
 }

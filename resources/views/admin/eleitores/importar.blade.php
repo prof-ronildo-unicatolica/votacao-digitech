@@ -5,37 +5,33 @@
 @section('menu', 'eleitores')
 
 @section('conteudo')
-    @if ($relatorio)
+    @if (session('aviso'))
+        <x-alerta tipo="aviso" class="mb-4">{{ session('aviso') }}</x-alerta>
+    @endif
+
+    @if ($resultado)
         <x-cartao titulo="Resultado da importação" class="mb-4">
             <div class="row g-3 mb-3">
-                <div class="col-sm-4"><x-indicador rotulo="Cadastrados" :valor="$relatorio['criados']" /></div>
-                <div class="col-sm-4"><x-indicador rotulo="Atualizados" :valor="$relatorio['atualizados']" /></div>
-                <div class="col-sm-4"><x-indicador rotulo="Linhas com erro" :valor="$relatorio['total_falhas']" /></div>
+                <div class="col-6 col-md-3"><x-indicador rotulo="Cadastrados" :valor="$resultado['criados']" /></div>
+                <div class="col-6 col-md-3"><x-indicador rotulo="Atualizados" :valor="$resultado['atualizados']" /></div>
+                <div class="col-6 col-md-3"><x-indicador rotulo="Sem alteração" :valor="$resultado['iguais']" /></div>
+                <div class="col-6 col-md-3"><x-indicador rotulo="Linhas ignoradas" :valor="count($resultado['ignoradas'])" /></div>
             </div>
 
-            @if ($relatorio['total_falhas'] === 0)
-                <x-alerta tipo="sucesso">Todas as linhas foram importadas.</x-alerta>
-            @else
-                <x-alerta tipo="aviso" titulo="Algumas linhas não entraram" class="mb-3">
-                    As outras linhas foram gravadas. Corrija estas no arquivo e importe de novo: matrícula repetida só atualiza o cadastro.
-                </x-alerta>
-                <div class="table-responsive">
-                    <table class="table dt-tabela align-middle">
-                        <thead><tr><th>Linha</th><th>Matrícula</th><th>Motivo</th></tr></thead>
-                        <tbody>
-                            @foreach ($relatorio['falhas'] as $falha)
-                                <tr>
-                                    <td class="text-nowrap">{{ $falha['linha'] }}</td>
-                                    <td class="dt-mono text-nowrap">{{ $falha['matricula'] !== '' ? $falha['matricula'] : '—' }}</td>
-                                    <td>{{ $falha['motivo'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if ($relatorio['total_falhas'] > count($relatorio['falhas']))
-                    <p class="small text-secondary mt-2">Mostrando as primeiras {{ count($relatorio['falhas']) }} de {{ $relatorio['total_falhas'] }} linhas com erro.</p>
+            @if ($resultado['ignoradas'])
+                <h3 class="h6">Ignoradas (não foram gravadas)</h3>
+                <ul class="small mb-0">
+                    @foreach (array_slice($resultado['ignoradas'], 0, 200) as $linha)
+                        @foreach ($linha['erros'] as $erro)
+                            <li>Linha {{ $linha['linha'] }}@if ($erro['coluna']), {{ \App\Support\ImportadorEleitores::ROTULOS[$erro['coluna']] ?? $erro['coluna'] }}@endif: {{ $erro['motivo'] }}</li>
+                        @endforeach
+                    @endforeach
+                </ul>
+                @if (count($resultado['ignoradas']) > 200)
+                    <p class="small text-secondary mt-2 mb-0">Mostrando as primeiras 200 de {{ count($resultado['ignoradas']) }} linhas ignoradas.</p>
                 @endif
+            @else
+                <x-alerta tipo="sucesso">Todas as linhas do arquivo foram importadas.</x-alerta>
             @endif
 
             <x-slot:acoes>
@@ -44,23 +40,48 @@
         </x-cartao>
     @endif
 
-    <form method="POST" action="{{ route('admin.eleitores.importar.store') }}" enctype="multipart/form-data" novalidate style="max-width: 560px">
+    @if ($emConferencia)
+        <x-alerta tipo="info" class="mb-4">
+            O arquivo <strong>{{ $emConferencia['nome'] }}</strong> está esperando conferência.
+            <a href="{{ route('admin.eleitores.importar.conferir') }}">Voltar para a conferência</a>. Enviar outro arquivo descarta este.
+        </x-alerta>
+    @endif
+
+    <form method="POST" action="{{ route('admin.eleitores.importar.store') }}" enctype="multipart/form-data" novalidate style="max-width: 640px">
         @csrf
         <x-cartao class="mb-4">
             <p>
                 Uma linha por aluno, com cabeçalho <code>matricula;nome;turma;email</code>. Turma e e-mail são opcionais.
                 Separador <code>;</code> (padrão do Excel em português) ou <code>,</code>.
             </p>
+            <p>Matrícula que já existe <strong>atualiza</strong> o cadastro: o nome sempre; turma e e-mail só se vierem preenchidos.</p>
             <p class="mb-4">
                 <a href="{{ route('admin.eleitores.modelo') }}"><i class="bi bi-download" aria-hidden="true"></i> Baixar o modelo</a>
             </p>
-            <x-campo name="arquivo" type="file" label="Arquivo CSV" accept=".csv,text/csv" required
-                ajuda="Matrícula que já existe atualiza o nome (e a turma e o e-mail, se vierem preenchidos). Linhas com erro aparecem no relatório; as outras são gravadas." />
+
+            <div class="mb-2">
+                <label for="campo-arquivo" class="form-label">Arquivo CSV</label>
+                <input type="file" id="campo-arquivo" name="arquivo" accept=".csv,text/csv" required aria-describedby="campo-arquivo-ajuda"
+                    @class(['form-control', 'form-control-lg', 'is-invalid' => $errors->has('arquivo')])>
+                @if ($errors->has('arquivo'))
+                    <div class="invalid-feedback">
+                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i> O arquivo não pôde ser lido:
+                        <ul class="mb-0 mt-1">
+                            @foreach ($errors->get('arquivo') as $erro)
+                                <li>{{ $erro }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                <div id="campo-arquivo-ajuda" class="form-text">
+                    Nada é gravado ao enviar: primeiro você confere o que é novo, o que muda e o que tem erro, e só depois confirma.
+                </div>
+            </div>
         </x-cartao>
 
         <div class="d-flex gap-2">
-            <x-botao type="submit" icone="upload">Importar</x-botao>
-            <x-botao variante="contorno" :href="route('admin.eleitores.index')">Cancelar</x-botao>
+            <x-botao type="submit" icone="upload">Enviar para conferência</x-botao>
+            <x-botao variante="contorno" :href="route('admin.eleitores.index')">Voltar</x-botao>
         </div>
     </form>
 @endsection
