@@ -38,6 +38,10 @@ Route::middleware(['auth', 'ativo'])->group(function () {
         Route::post('eleicoes/{eleicao}/ativar', [EleicaoController::class, 'ativar'])->name('eleicoes.ativar');
         Route::post('eleicoes/{eleicao}/desativar', [EleicaoController::class, 'desativar'])->name('eleicoes.desativar');
 
+        // H1 · Usuários (admin e mesário)
+        Route::resource('usuarios', UsuarioController::class)->except('show');
+        Route::post('usuarios/{usuario}/ativo', [UsuarioController::class, 'alternarAtivo'])->name('usuarios.ativo');
+
         // H13 · Cargos de cada eleição. O cargo precisa ser DA eleição da URL (scopeBindings).
         Route::get('cargos', [CargoController::class, 'atalho'])->name('cargos');
         Route::scopeBindings()->prefix('eleicoes/{eleicao}/cargos')->name('eleicoes.cargos.')->group(function () {
@@ -48,10 +52,6 @@ Route::middleware(['auth', 'ativo'])->group(function () {
             Route::post('{cargo}/mover', [CargoController::class, 'mover'])->name('mover');
             Route::delete('{cargo}', [CargoController::class, 'destroy'])->name('destroy');
         });
-
-        // H1 · Usuários (admin e mesário)
-        Route::resource('usuarios', UsuarioController::class)->except('show');
-        Route::post('usuarios/{usuario}/ativo', [UsuarioController::class, 'alternarAtivo'])->name('usuarios.ativo');
     });
 });
 
