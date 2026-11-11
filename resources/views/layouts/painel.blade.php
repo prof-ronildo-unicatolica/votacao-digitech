@@ -18,7 +18,7 @@
         'Acompanhamento' => [
             'mesa' => ['Mesa', 'person-check', 'mesario', null],
             'resultado' => ['Resultado', 'bar-chart', 'admin.resultado', null],
-            'auditoria' => ['Auditoria', 'shield-check', null, 'H11'],
+            'auditoria' => ['Auditoria', 'shield-check', 'admin.auditoria', null],
         ],
         'Sistema' => [
             'usuarios' => ['Usuários', 'person-gear', 'admin.usuarios.index', null],

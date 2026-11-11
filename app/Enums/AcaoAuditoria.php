@@ -66,11 +66,44 @@ enum AcaoAuditoria: string
     // Resultado (H10). Só depois do fim da votação: antes dele não há apuração para consultar.
     case ResultadoConsultado = 'resultado.consultado';
     case AtaExportada = 'ata.exportada';
+    case AuditoriaExportada = 'auditoria.exportada';
 
     /** acesso, terminal, sessao, chapa, eleicao, cargo, eleitor, usuario, importacao, resultado ou ata: o prefixo da ação. */
     public function categoria(): string
     {
         return strstr($this->value, '.', true);
+    }
+
+    /** Grupos do filtro da tela de auditoria (fase 3). */
+    public const GRUPOS = [
+        'acesso' => 'Acesso',
+        'mesa' => 'Mesa e terminais',
+        'chapas' => 'Chapas',
+        'cadastros' => 'Cadastros',
+        'importacoes' => 'Importações',
+        'resultado' => 'Resultado e exportações',
+    ];
+
+    /** Em qual grupo do filtro a ação aparece (chave de GRUPOS). */
+    public function grupo(): string
+    {
+        return match (true) {
+            in_array($this, [self::TerminalAtivado, self::TerminalDesativado], true) => 'mesa',
+            default => match ($this->categoria()) {
+                'acesso' => 'acesso',
+                'sessao' => 'mesa',
+                'chapa' => 'chapas',
+                'importacao' => 'importacoes',
+                'resultado', 'ata', 'auditoria' => 'resultado',
+                default => 'cadastros',
+            },
+        };
+    }
+
+    /** @return list<self> */
+    public static function doGrupo(string $grupo): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $a) => $a->grupo() === $grupo));
     }
 
     public function rotulo(): string
@@ -119,6 +152,7 @@ enum AcaoAuditoria: string
             self::ImportacaoCancelada => 'Importação cancelada',
             self::ResultadoConsultado => 'Resultado consultado',
             self::AtaExportada => 'Ata exportada',
+            self::AuditoriaExportada => 'Auditoria exportada',
         };
     }
 }

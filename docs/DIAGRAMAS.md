@@ -67,7 +67,7 @@ flowchart LR
     UC07 -. "«include»" .-> UC24
 
     class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC12,UC24 feito
-    class UC13 afazer
+    class UC13 revisao
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -117,7 +117,7 @@ flowchart LR
     class UC01,UC14,UC15,UC16,UC17,UC19 feito
     class UC20,UC21 feito
     class UC18 feito
-    class UC22,UC23 revisao
+    class UC22,UC23 feito
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -138,7 +138,8 @@ flowchart LR
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
 | [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fases 1 e 2) |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23, D24 | Implementado (PRs #64 e #66) |
-| [S9 · Apurar o resultado e exportar a ata](#s9--apurar-o-resultado-e-exportar-a-ata-h10-d26) | H10, D26 | Em revisão |
+| [S9 · Apurar o resultado e exportar a ata](#s9--apurar-o-resultado-e-exportar-a-ata-h10-d26) | H10, D26 | Implementado (PR #68) |
+| [S10 · Consultar e exportar a auditoria](#s10--consultar-e-exportar-a-auditoria-h11-fase-3) | H11, D22 | Em revisão |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
 
@@ -458,7 +459,7 @@ sequenceDiagram
 
 ### S9 · Apurar o resultado e exportar a ata (H10, D26)
 
-*Em revisão.* Antes do fim da votação, só o comparecimento sai do servidor. Depois, a tela, o CSV e a ata leem os mesmos números (`ResultadoDaEleicao`), e os cálculos ficam numa classe pura (`Apuracao`).
+*Implementado (PR #68).* Antes do fim da votação, só o comparecimento sai do servidor. Depois, a tela, o CSV e a ata leem os mesmos números (`ResultadoDaEleicao`), e os cálculos ficam numa classe pura (`Apuracao`).
 
 ```mermaid
 sequenceDiagram
@@ -491,5 +492,29 @@ sequenceDiagram
         R->>DB: INSERT auditoria (ata.exportada, formato e SHA-256 do arquivo)
         R-->>A: CSV para baixar ou ata A4, que o navegador salva em PDF
     end
+```
+
+### S10 · Consultar e exportar a auditoria (H11 fase 3)
+
+*Em revisão.* A tela só lê. Os filtros ficam na URL, e a tela e o CSV montam a mesma consulta (`FiltroAuditoria`).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Admin
+    participant C as AuditoriaController
+    participant F as FiltroAuditoria
+    participant DB as Banco
+
+    A->>C: GET /admin/auditoria?grupo=mesa&busca=2024101
+    C->>F: lê os filtros da URL (fora do catálogo é ignorado)
+    F->>DB: SELECT eventos filtrados, mais recentes primeiro, 50 por página
+    C-->>A: lista com hora, ação, quem fez, IP, resumo e detalhes
+    A->>C: GET /admin/auditoria/exportar.csv (mesmos filtros)
+    C->>F: mesma consulta, todas as páginas
+    F->>DB: SELECT
+    C->>C: monta o CSV e calcula o SHA-256
+    C->>DB: INSERT auditoria (auditoria.exportada, filtros e SHA-256)
+    C-->>A: arquivo CSV
 ```
 
