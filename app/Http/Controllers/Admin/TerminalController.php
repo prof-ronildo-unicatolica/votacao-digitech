@@ -15,7 +15,7 @@ class TerminalController extends Controller
     public function index(): View
     {
         return view('admin.terminais.index', [
-            'terminais' => Terminal::withCount('sessoes')->orderBy('numero')->get(),
+            'terminais' => Terminal::withCount('sessoes')->with('sessaoEmAndamento.eleitor')->orderBy('numero')->get(),
         ]);
     }
 

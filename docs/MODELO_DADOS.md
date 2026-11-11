@@ -72,6 +72,11 @@ erDiagram
         uuid eleitor_id FK
         uuid terminal_id FK
         bigint mesario_id FK "users"
+        string situacao "aberta | votou | cancelada (D21)"
+        timestamp liberada_em
+        timestamp expira_em "liberada_em + 30 min"
+        timestamp votou_em "nullable"
+        timestamp cancelada_em "nullable"
     }
     VOTOS {
         uuid id PK
@@ -135,7 +140,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
 | ~~`eleitores`~~   | **Respondido na H4 (D17):** `nome`, `turma` (opcional) e `email` (opcional). Cadastro único de alunos, apto em **toda** eleição: sem tabela `eleicao_eleitor`. Candidato precisa estar cadastrado em `eleitores` | H4       |
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
-| `sessoes_votacao` | Situação (aberta/votou/expirada/cancelada), horários de liberação, expiração e voto                   | H6, H8   |
+| ~~`sessoes_votacao`~~ | **Respondido na H6 (D21):** `situacao` (`aberta` → `votou` \| `cancelada`, `App\Enums\SituacaoSessao`), `liberada_em`, `expira_em`, `votou_em`, `cancelada_em`. "Expirada" não é gravada: é `aberta` com `expira_em` no passado. A H8 marca `votou` (ver "Registro de um voto") | H6, H8 |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
 | (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |
 
@@ -223,7 +228,7 @@ Validação **por chapa, tudo ou nada**: se qualquer célula de uma chapa falhar
 - Sessão que já **votou** é final: nunca volta a aberta.
 - Como a linha guarda só o estado atual, o histórico (liberou no terminal 2, expirou, liberou no 3) fica na auditoria (H11).
 
-Situações sugeridas: `aberta` → `votou` | `expirada` | `cancelada`; `expirada`/`cancelada` → `aberta` (re-liberação).
+Situações (H6, D21, `App\Enums\SituacaoSessao`): `aberta` → `votou` | `cancelada`; `cancelada` → `aberta` (re-liberação). **Expirada não é gravada**: é uma sessão `aberta` com `expira_em` no passado (`SessaoVotacao::situacaoAtual()`), então nenhuma tarefa agendada precisa varrer o banco, e a re-liberação aceita expirada e cancelada. "Em andamento" (terminal ocupado, eleitor pode votar) = `aberta` e `expira_em > agora` (`scopeEmAndamento`): é a condição que a urna (H7) e o voto (H8) usam.
 
 ## Registro de um voto (transação)
 

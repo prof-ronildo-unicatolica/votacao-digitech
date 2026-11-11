@@ -35,6 +35,9 @@
                                 <td class="text-nowrap">
                                     @if ($estado === 'livre')
                                         <x-selo tipo="sucesso" icone="check-circle-fill">Livre</x-selo>
+                                    @elseif ($estado === 'liberado')
+                                        <x-selo tipo="marca" icone="unlock-fill">Liberado</x-selo>
+                                        <div class="small text-secondary">{{ $terminal->sessaoEmAndamento->eleitor->nome }}</div>
                                     @else
                                         <x-selo icone="dash-circle">Inativo</x-selo>
                                     @endif
@@ -73,7 +76,7 @@
         @endif
     </x-cartao>
     <p class="small text-secondary mt-3">
-        Os estados <em>liberado</em> e <em>votando</em> aparecem quando o mesário liberar eleitores (H6).
+        <em>Liberado</em>: o mesário liberou um eleitor e ele ainda não votou (H6). O estado <em>votando</em> vem com a urna (H7).
         Terminal que já recebeu eleitores faz parte da ata e não pode ser excluído: desative.
     </p>
 @endsection

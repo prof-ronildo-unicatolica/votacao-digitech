@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -80,13 +81,23 @@ class Terminal extends Model
         return $this->ativado_em?->copy()->addHours(self::VALIDADE_HORAS);
     }
 
+    /** A sessão aberta e dentro do prazo neste terminal, se houver (H6). */
+    public function sessaoEmAndamento(): HasOne
+    {
+        return $this->hasOne(SessaoVotacao::class)->emAndamento(); // no máximo uma: a liberação trava o terminal
+    }
+
     /**
-     * Estado mostrado ao admin e ao mesário (componente x-status-terminal).
-     * Hoje: inativo ou livre. "Liberado" e "votando" dependem da situação da sessão (H6, H7).
+     * Estado mostrado ao admin e ao mesário (componente x-status-terminal): inativo (não
+     * pareado), liberado (tem sessão em andamento) ou livre. "Votando" depende da urna (H7).
      */
     public function estado(): string
     {
-        return $this->estaAtivado() ? 'livre' : 'inativo';
+        if (! $this->estaAtivado()) {
+            return 'inativo';
+        }
+
+        return $this->sessaoEmAndamento ? 'liberado' : 'livre';
     }
 
     private static function hash(string $token): string

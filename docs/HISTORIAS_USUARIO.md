@@ -47,7 +47,7 @@ Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, no
 ### H5 · Cadastrar terminais
 Como admin, quero cadastrar os terminais (número e local) para saber em qual computador cada eleitor será liberado.
 - [x] CRUD em `/admin/terminais`; número único.
-- [ ] Lista mostra o estado atual: inativo (não pareado), livre, liberado (com nome do eleitor) ou votando. *Inativo e livre prontos; liberado e votando dependem da situação da sessão (H6).*
+- [x] Lista mostra o estado atual: inativo (não pareado), livre, liberado (com nome do eleitor) ou votando. *Inativo, livre e liberado prontos (H6); votando depende da urna (H7).*
 - [x] **Pareamento (D16):** em `/terminal/ativar`, admin ou mesário logado no computador da urna escolhe qual terminal aquele computador é. O servidor grava o hash de um token em `terminais.token_hash` (e `ativado_em`), envia o token num cookie `terminal` (criptografado, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas), faz logout desse navegador e redireciona para `/urna`.
 - [x] Ativar o mesmo terminal em outro computador invalida o anterior. O admin pode desativar um terminal (apaga o hash).
 - [x] Testes: ativação grava só o hash (o token não aparece no banco); reativação invalida o cookie antigo; usuário é deslogado após ativar; visitante sem login não acessa `/terminal/ativar`.
@@ -106,13 +106,14 @@ Como admin (comissão eleitoral), quero analisar as chapas inscritas e homologar
 
 ### H6 · Liberar votação de um eleitor
 Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal para liberar o voto daquele eleitor.
-- [ ] Busca por matrícula mostra nome e turma antes de confirmar.
-- [ ] Bloqueia se: eleição fora do período, eleitor já votou, terminal já tem sessão aberta, terminal não está ativado (D16).
-- [ ] Sessão expira em 30 minutos; mesário pode liberar de novo se expirou **ou se cancelou** (ex.: eleitor foi para o terminal errado).
-- [ ] Liberar de novo **reaproveita a mesma sessão** (atualiza situação, terminal, mesário e horários): o banco só aceita uma sessão por eleitor e eleição (`UNIQUE`). Nunca reabre sessão já `votou`.
-- [ ] Mesário pode cancelar uma sessão aberta que ainda não votou.
-- [ ] Registra quem liberou (`mesario_id`); cada liberação, re-liberação e cancelamento vai para a auditoria (H11), já que a sessão guarda só o estado atual.
-- [ ] Testes: liberação válida, eleitor já votou, terminal ocupado, terminal inativo, fora do período, re-liberação após expirar (continua 1 linha em `sessoes_votacao`).
+- [x] Em `/mesario`, a busca por matrícula mostra nome e turma (e a situação da sessão, se houver) antes de confirmar; só então aparecem o terminal e o botão "Liberar". O admin também entra.
+- [x] Bloqueia se: eleição fora do período de votação (antes ou depois), nenhuma chapa homologada (D20), eleitor já votou, eleitor com liberação em andamento em outro terminal, terminal já tem sessão aberta, terminal não está ativado ou com pareamento vencido (D16), e o mesário tentando liberar o próprio voto (D19, `users.matricula`).
+- [x] Sessão expira em 30 minutos (sem tarefa agendada: aberta com prazo vencido **é** expirada, D21); o mesário libera de novo se expirou **ou se cancelou**.
+- [x] Liberar de novo **reaproveita a mesma sessão** (atualiza situação, terminal, mesário e horários): o banco só aceita uma sessão por eleitor e eleição (`UNIQUE`). Nunca reabre sessão já `votou`.
+- [x] Mesário pode cancelar uma sessão aberta que ainda não votou (com confirmação). O cancelamento é atômico: se o eleitor votar no mesmo instante, ele não acontece.
+- [ ] Registra quem liberou (`mesario_id`) ✔; cada liberação, re-liberação e cancelamento vai para a auditoria (H11). *A auditoria é da H11: a sessão guarda só o estado atual.*
+- [x] Painel dos terminais: livre, liberado (nome e minutos restantes, com "Cancelar sessão") e inativo; comparecimento e horário de encerramento. *Atualização automática e o estado "votando" são da H9 e da H7.*
+- [x] Testes: liberação válida, eleitor já votou, terminal ocupado, terminal inativo (e pareamento vencido), fora do período, sem chapa homologada, re-liberação após expirar (continua 1 linha em `sessoes_votacao`), cancelar e liberar de novo, não cancela quem votou, eleitor em outro terminal, mesário não libera o próprio voto.
 
 ### H7 · Urna aguarda liberação
 Como eleitor, quero que a urna do terminal mostre "aguardando" até o mesário me liberar, e então mostre meu nome e as chapas.

@@ -248,3 +248,19 @@ Registrada em 11/11/2026, na implementação da H3.
 - **Quem decidiu:** `analisada_por_id` (nullable, `nullOnDelete`) e `analisada_em` guardam a última decisão. O histórico (homologou, reabriu, indeferiu) é da auditoria (H11).
 - **Confirmação sem JavaScript:** cada ação abre um painel (`<details>`) com o botão "Confirmar". Um clique sozinho não decide nada.
 
+## D21 — Sessão de votação: expiração calculada, travas e o mesário fora do próprio voto
+
+Registrada em 11/11/2026, na implementação da H6.
+
+**Decisão:** as regras ficam em `App\Support\LiberacaoDeEleitor`, usada pela mesa (`MesaController`).
+
+- **Situação gravada:** `aberta`, `votou` ou `cancelada`. **Expirada é calculada**: uma sessão `aberta` com `expira_em` no passado. Sem tarefa agendada (cron) para "expirar" sessões, não há janela em que o banco diga "aberta" e o relógio diga "vencida". A urna (H7) e o voto (H8) usam o mesmo critério (`emAndamento`).
+- **Uma linha por eleitor e eleição:** a re-liberação (expirada ou cancelada) faz `UPDATE` na mesma linha. `votou` é final.
+- **Travas:** a liberação trava a linha do **terminal** (`lockForUpdate`), então dois mesários não liberam o mesmo terminal ao mesmo tempo. Trava também a **sessão do eleitor**, se existir, para o mesmo eleitor não ir para dois terminais. Na primeira liberação simultânea do mesmo eleitor, o `UNIQUE (eleicao_id, eleitor_id)` decide, e a tela explica.
+- **Cancelar é atômico:** `UPDATE ... WHERE situacao = 'aberta'`. Se o eleitor votou no mesmo instante, o cancelamento não acontece.
+- **Bloqueios antes de liberar:** votação aberta pelas datas, ao menos uma chapa homologada (D20), terminal ativado (D16) e livre, eleitor sem voto e sem liberação em andamento.
+- **O mesário não libera o próprio voto:** se `users.matricula` (D19) é a matrícula digitada, outro mesário precisa liberar.
+- **Conferir antes de liberar:** a busca (`GET /mesario?matricula=`) só mostra nome, turma e situação. Liberar é um `POST` separado, com o terminal escolhido.
+- **Painel:** atualizar é manual por enquanto. A atualização automática é a H9, e o estado "votando" vem da urna (H7).
+- **Fora desta história:** a auditoria de cada liberação e cancelamento (H11).
+
