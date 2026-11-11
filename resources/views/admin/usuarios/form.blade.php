@@ -14,6 +14,8 @@
         <x-cartao class="mb-4">
             <x-campo name="name" label="Nome" :value="$usuario->name" required autofocus autocomplete="off" />
             <x-campo name="email" type="email" label="E-mail" :value="$usuario->email" required autocomplete="off" />
+            <x-campo name="matricula" label="Matrícula (se também for aluno)" :value="$usuario->matricula" autocomplete="off"
+                ajuda="Para mesário ou admin que está no eleitorado. Com a matrícula, ele não pode ser inscrito como candidato (D19)." />
 
             @php($perfilAtual = old('perfil', $usuario->perfil?->value))
             <div class="mb-4">

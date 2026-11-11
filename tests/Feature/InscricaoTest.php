@@ -9,6 +9,7 @@ use App\Models\Cargo;
 use App\Models\Chapa;
 use App\Models\Eleicao;
 use App\Models\Eleitor;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -195,5 +196,17 @@ class InscricaoTest extends TestCase
         $this->flushSession();
 
         $this->get('/inscricao')->assertOk()->assertDontSee('Movimento Estudantil')->assertDontSee('Aluno 1');
+    }
+
+    public function test_mesario_ou_admin_com_matricula_nao_pode_ser_candidato(): void
+    {
+        User::factory()->create(['perfil' => 'mesario', 'matricula' => '2024102']);
+        User::factory()->admin()->create(['matricula' => '2024103']);
+
+        $this->post('/inscricao', $this->dados())->assertSessionHasErrors([
+            $this->campo(1) => 'Aluno 2 é mesário e não pode ser candidato: quem libera votos não concorre.',
+            $this->campo(2) => 'Aluno 3 faz parte da comissão eleitoral (admin) e não pode ser candidato.',
+        ]);
+        $this->assertSame(0, Chapa::count());
     }
 }

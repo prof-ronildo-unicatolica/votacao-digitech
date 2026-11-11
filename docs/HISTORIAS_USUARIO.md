@@ -60,7 +60,7 @@ Como admin, quero definir os cargos que toda chapa precisa preencher (ex.: Presi
 - [x] A tela mostra "cada chapa terá N candidatos" (N = número de cargos).
 - [x] Botão "copiar cargos de outra eleição" para não redigitar a cada semestre.
 - [x] Depois que a primeira chapa se inscreve, os cargos ficam **bloqueados** (só leitura), com aviso explicando o porquê.
-- [x] As inscrições não abrem sem ao menos um cargo (aviso na tela da eleição). *O formulário (H14) e o CSV (H15) também precisam recusar a inscrição sem cargos.*
+- [x] As inscrições não abrem sem ao menos um cargo (aviso na tela da eleição). *O formulário (H14) recusa a inscrição sem cargos; no CSV (H15), o cabeçalho cria os cargos quando a eleição ainda não tem (D19).*
 - [x] Testes: criação e reordenação; título repetido rejeitado; alteração bloqueada com chapa inscrita.
 
 ### H14 · Inscrever chapa pelo formulário
@@ -68,6 +68,7 @@ Como representante de chapa, quero inscrever minha chapa pelo sistema, dentro do
 - [x] Página pública `/inscricao` (sem login) para a eleição ativa. Fora do período, mostra as datas de abertura e fim e **não** exibe o formulário.
 - [x] O formulário tem um campo de matrícula **por cargo**, na ordem dos cargos; ao sair do campo, mostra o nome do aluno para conferência (ou "matrícula não encontrada").
 - [x] Também pede nome da chapa e contato do responsável (e-mail obrigatório e telefone opcional, D18).
+- [x] Recusa como candidato o aluno que é mesário ou admin (usuário com essa matrícula, D19).
 - [x] Rejeita, com mensagem por campo: cargo sem candidato, matrícula inexistente, a mesma matrícula em dois cargos, aluno que já está em outra chapa da eleição, envio fora do período (checado **no servidor**, no momento do envio, não só ao abrir a página).
 - [x] Grava chapa e candidatos na **mesma transação**, travando a linha da eleição (`lockForUpdate`, como em `CargosDaEleicao`, D13), com situação `pendente` e o próximo número livre; mostra um comprovante (número da chapa, data e hora, composição).
 - [x] `throttle` no envio (ex.: 5 por minuto por IP) e CSRF.
@@ -76,11 +77,17 @@ Como representante de chapa, quero inscrever minha chapa pelo sistema, dentro do
 
 ### H15 · Importar chapas por CSV
 Como admin, quero importar as chapas de um arquivo CSV para registrar inscrições recebidas por outro canal sem digitação manual.
-- [ ] Em `/admin/chapas/importar`, só durante o período de inscrição; aceita o formato de `MODELO_DADOS.md` ("Formato do CSV de chapas"), com link para baixar o modelo `docs/exemplos/chapas.csv`.
-- [ ] Mesmas regras da H14, validadas **por chapa, tudo ou nada**: uma linha ruim rejeita a chapa inteira; as demais chapas do arquivo entram.
-- [ ] Relatório ao final: chapas importadas (número e nome) e chapas rejeitadas, com linha do arquivo e motivo (ex.: "linha 7: matrícula 2024999 não cadastrada").
-- [ ] Chapas importadas entram como `pendente` e passam pela homologação (H3).
-- [ ] Testes: arquivo com 2 chapas válidas + 1 com cargo faltando (entram 2); matrícula inexistente; cargo que não existe na eleição; mesmo aluno em duas chapas do arquivo; número de chapa já existente; importação fora do período.
+- [x] Em `/admin/chapas/importar`, só durante o período de inscrição da eleição ativa; aceita o formato de `MODELO_DADOS.md` ("Formato do CSV de chapas"): **uma linha por chapa e uma coluna por cargo**, com link para baixar o modelo `docs/exemplos/chapas.csv`.
+- [x] **O cabeçalho define os cargos (D19):** se a eleição ainda não tem cargos, as colunas os criam, na ordem do arquivo; se já tem (H13), as colunas precisam ser exatamente esses cargos (falta ou sobra de coluna recusa o arquivo).
+- [x] **Nomes conferidos e padronizados:** cargos e colunas são comparados sem acento, maiúsculas, espaços e pontuação ("VICE PRESIDENTE" = "Vice-presidente"); nomes em CAIXA ALTA ou todo em minúsculas são arrumados, e "1o"/"1°" vira "1º". A tela lista cada ajuste feito.
+- [x] **Nada é gravado ao enviar.** A tela de conferência mostra cada linha, com os **campos com erro** destacados e o motivo (linha e coluna, ex.: "Linha 7, Tesoureiro: Matrícula 2024999 não cadastrada no eleitorado").
+- [x] **Opções depois da conferência:** cancelar tudo (rollback: o arquivo é descartado, nenhuma chapa é gravada), **ignorar as chapas com erro** e importar só as prontas, e por fim **confirmar**. Com erros, a escolha é obrigatória.
+- [x] **A confirmação é uma transação só**, com a eleição travada (D13). Se algo mudou desde a conferência (uma chapa se inscreveu pelo formulário, um cargo mudou, o período fechou), **tudo é desfeito** e a conferência aparece de novo.
+- [x] Mesmas regras da H14, **por chapa, tudo ou nada**: uma célula ruim rejeita a chapa inteira; as demais chapas do arquivo podem entrar.
+- [x] **Integridade da matrícula (D19):** formato (letras, números, ponto e hífen), aluno cadastrado, um cargo só por aluno, uma chapa só por aluno na eleição (inclusive entre chapas do mesmo arquivo: as duas são marcadas), e **mesário ou admin não pode ser candidato** (vale também para o formulário da H14). Matrícula que o Excel virou notação científica ("2,02E+06") tem aviso próprio.
+- [x] Relatório ao final: chapas importadas (número e nome), chapas ignoradas com linha e motivo, e cargos criados.
+- [x] Chapas importadas entram como `pendente`, origem `csv`, e passam pela homologação (H3).
+- [x] Testes com arquivos em `tests/Fixtures/chapas`: **limpo** (também com BOM e em Windows-1252), **alterado** (vírgula, CRLF, linhas em branco, maiúsculas, espaços, colunas fora de ordem, apelidos no cabeçalho) e **mal formatados** (cabeçalho errado, coluna repetida, linha com colunas a mais, só cabeçalho, vazio, .xlsx renomeado, separador tab, número e e-mail inválidos); chapas com cargo faltando, matrícula inexistente, cargo que não existe, aluno em duas chapas do arquivo, número já existente, mesário candidato; cancelar, ignorar, confirmar e rollback quando a situação muda; importação fora do período.
 
 ### H3 · Homologar chapas
 Como admin (comissão eleitoral), quero analisar as chapas inscritas e homologar ou indeferir cada uma para que só chapas válidas apareçam na urna.

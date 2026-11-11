@@ -495,3 +495,21 @@ h1, h2, h3, h4, h5, h6,
 .dt-amostra-legenda code { color: var(--dt-tema-texto-secundario); font-size: inherit; }
 .dt-secao { margin-bottom: var(--dt-espaco-8); }
 .dt-secao > h2 { font-size: var(--dt-fonte-tamanho-2xl); padding-bottom: var(--dt-espaco-2); border-bottom: 1px solid var(--dt-tema-borda-padrao); margin-bottom: var(--dt-espaco-5); }
+
+/* Conferência de importação (H15): célula com erro e o motivo logo abaixo da linha. */
+.dt-tabela-importacao td { vertical-align: top; }
+.dt-tabela-importacao .dt-celula-erro {
+    background: var(--dt-cor-perigo-fundo);
+    color: var(--dt-cor-perigo-texto);
+    box-shadow: inset 0 -2px 0 var(--dt-cor-perigo-borda);
+}
+.dt-tabela-importacao .dt-celula-erro .text-secondary { color: var(--dt-cor-perigo-texto) !important; }
+.dt-tabela-importacao .dt-linha-erro td { border-bottom: 0; }
+.dt-tabela-importacao .dt-linha-erro-detalhe td { color: var(--dt-cor-perigo-texto); padding-top: 0; }
+/* O motivo fica preso à esquerda e quebra linha mesmo quando a tabela rola para o lado (celular). */
+.dt-tabela-importacao .dt-linha-erro-detalhe ul {
+    position: sticky;
+    left: var(--dt-espaco-4);
+    max-width: min(100%, calc(100vw - 4rem));
+    white-space: normal;
+}

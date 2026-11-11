@@ -4,13 +4,13 @@ namespace App\Support;
 
 use App\Enums\FaseEleicao;
 use App\Enums\OrigemChapa;
+use App\Enums\Perfil;
 use App\Models\Candidato;
-use App\Models\Cargo;
 use App\Models\Chapa;
 use App\Models\Eleicao;
 use App\Models\Eleitor;
+use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -55,47 +55,67 @@ class InscricaoDeChapa
 
     private function gravar(Eleicao $eleicao, string $nome, array $matriculas, ?string $contatoEmail, ?string $contatoTelefone, OrigemChapa $origem): Chapa
     {
-        $eleicao = Eleicao::whereKey($eleicao->getKey())->lockForUpdate()->firstOrFail();
-
-        // O período é conferido AQUI, no envio, e não só quando a página abriu.
-        if ($eleicao->fase() !== FaseEleicao::InscricoesAbertas) {
-            throw new InscricaoRecusada(['geral' => self::mensagemForaDoPeriodo($eleicao)]);
-        }
+        $eleicao = $this->travar($eleicao);
 
         $cargos = $eleicao->cargos()->get();
         if ($cargos->isEmpty()) {
             throw new InscricaoRecusada(['geral' => 'A comissão ainda não definiu os cargos desta eleição. A inscrição não pode ser feita.']);
         }
 
-        [$erros, $alunosPorCargo] = $this->validar($eleicao, $nome, $cargos, $matriculas);
+        [$erros, $alunos] = $this->conferir($eleicao, $nome, $cargos->pluck('titulo', 'id')->all(), $matriculas);
         if ($erros !== []) {
-            throw new InscricaoRecusada($erros);
+            $porCampo = [];
+            foreach ($erros as $chave => $mensagem) {
+                $porCampo[$chave === 'nome' ? 'nome' : "candidatos.{$chave}"] = $mensagem;
+            }
+
+            throw new InscricaoRecusada($porCampo);
         }
 
-        $chapa = $eleicao->chapas()->create([
-            'numero' => ($eleicao->chapas()->max('numero') ?? 0) + 1,
-            'nome' => $nome,
-            'origem' => $origem,
-            'contato_email' => $contatoEmail,
-            'contato_telefone' => $contatoTelefone,
-        ]);
-
-        foreach ($cargos as $cargo) {
-            $chapa->candidatos()->create([
-                'eleicao_id' => $eleicao->id,
-                'cargo_id' => $cargo->id,
-                'eleitor_id' => $alunosPorCargo[$cargo->id]->id,
-            ]);
-        }
-
-        return $chapa;
+        return $this->criar(
+            $eleicao,
+            $nome,
+            ($eleicao->chapas()->max('numero') ?? 0) + 1,
+            array_map(fn (Eleitor $aluno) => $aluno->id, $alunos),
+            $contatoEmail,
+            $contatoTelefone,
+            $origem,
+        );
     }
 
     /**
-     * @param  Collection<int, Cargo>  $cargos
-     * @return array{0: array<string, string>, 1: array<string, Eleitor>}
+     * Trava a linha da eleição até o fim da transação e confere o período NESTE momento
+     * (no envio, e não só quando a página abriu). Chamar dentro de DB::transaction.
+     *
+     * @throws InscricaoRecusada fora do período de inscrição
      */
-    private function validar(Eleicao $eleicao, string $nome, Collection $cargos, array $matriculas): array
+    public function travar(Eleicao $eleicao): Eleicao
+    {
+        $eleicao = Eleicao::whereKey($eleicao->getKey())->lockForUpdate()->firstOrFail();
+
+        if ($eleicao->fase() !== FaseEleicao::InscricoesAbertas) {
+            throw new InscricaoRecusada(['geral' => self::mensagemForaDoPeriodo($eleicao)]);
+        }
+
+        return $eleicao;
+    }
+
+    /**
+     * Regras de uma chapa (D13, D14, D19), sem gravar nada: nome preenchido e livre na eleição;
+     * um aluno cadastrado por cargo (matrícula no formato de EleitorRegras); o mesmo aluno em um
+     * cargo só; aluno fora de outra chapa; e quem é da equipe (usuário admin ou mesário com
+     * essa matrícula) não é candidato. O banco garante as duas últimas de novo: UNIQUE
+     * (eleicao_id, eleitor_id) e (chapa_id, cargo_id) em `candidatos`.
+     *
+     * Os cargos vêm como chave => título: o formulário usa o id do cargo; o CSV (H15) pode
+     * conferir cargos que ainda vão ser criados pelo cabeçalho do arquivo.
+     *
+     * @param  array<string, string>  $cargos  chave => título, na ordem da cédula
+     * @param  array<string, string|null>  $matriculas  chave do cargo => matrícula
+     * @param  bool  $comissao  mensagens para a comissão (CSV) em vez do representante (formulário)
+     * @return array{0: array<string, string>, 1: array<string, Eleitor>} erros (chave do cargo ou `nome`) e o aluno de cada cargo
+     */
+    public function conferir(Eleicao $eleicao, string $nome, array $cargos, array $matriculas, bool $comissao = false): array
     {
         $erros = [];
 
@@ -105,36 +125,77 @@ class InscricaoDeChapa
             $erros['nome'] = 'Já existe uma chapa com este nome nesta eleição.';
         }
 
-        $porCargo = $cargos->mapWithKeys(fn (Cargo $cargo) => [$cargo->id => trim((string) ($matriculas[$cargo->id] ?? ''))]);
+        $porCargo = collect($cargos)->map(fn ($titulo, $chave) => trim((string) ($matriculas[$chave] ?? '')));
         $alunos = Eleitor::whereIn('matricula', $porCargo->filter()->unique()->values())->get()->keyBy('matricula');
+        $daEquipe = User::whereIn('matricula', $porCargo->filter()->unique()->values())->pluck('perfil', 'matricula');
         $jaCandidatos = Candidato::where('eleicao_id', $eleicao->id)->whereIn('eleitor_id', $alunos->pluck('id'))->pluck('eleitor_id')->flip();
 
         $alunosPorCargo = [];
         $cargoDaMatricula = [];
 
-        foreach ($cargos as $cargo) {
-            $campo = "candidatos.{$cargo->id}";
-            $matricula = $porCargo[$cargo->id];
+        foreach ($cargos as $chave => $titulo) {
+            $matricula = $porCargo[$chave];
             $aluno = $alunos->get($matricula);
 
             if ($matricula === '') {
-                $erros[$campo] = "Informe a matrícula do candidato a {$cargo->titulo}.";
+                $erros[$chave] = "Informe a matrícula do candidato a {$titulo}.";
+            } elseif (mb_strlen($matricula) > 20 || ! preg_match(EleitorRegras::MATRICULA, $matricula)) {
+                $erros[$chave] = "Matrícula “{$matricula}” em formato inválido: use só letras, números, ponto e hífen.";
             } elseif (! $aluno) {
-                $erros[$campo] = "Matrícula {$matricula} não encontrada. Confira com a comissão se o aluno está cadastrado.";
+                $erros[$chave] = $comissao
+                    ? "Matrícula {$matricula} não cadastrada no eleitorado."
+                    : "Matrícula {$matricula} não encontrada. Confira com a comissão se o aluno está cadastrado.";
             } elseif (isset($cargoDaMatricula[$matricula])) {
-                $erros[$campo] = "{$aluno->nome} já está no cargo {$cargoDaMatricula[$matricula]} desta chapa: cada aluno ocupa um cargo só.";
+                $erros[$chave] = "{$aluno->nome} já está no cargo {$cargoDaMatricula[$matricula]} desta chapa: cada aluno ocupa um cargo só.";
+            } elseif ($daEquipe->has($matricula)) {
+                $erros[$chave] = $daEquipe[$matricula] === Perfil::Admin
+                    ? "{$aluno->nome} faz parte da comissão eleitoral (admin) e não pode ser candidato."
+                    : "{$aluno->nome} é mesário e não pode ser candidato: quem libera votos não concorre.";
             } elseif ($jaCandidatos->has($aluno->id)) {
-                $erros[$campo] = "{$aluno->nome} já está em outra chapa desta eleição.";
+                $erros[$chave] = "{$aluno->nome} já está em outra chapa desta eleição.";
             } else {
-                $alunosPorCargo[$cargo->id] = $aluno;
+                $alunosPorCargo[$chave] = $aluno;
             }
 
             if ($matricula !== '' && ! isset($cargoDaMatricula[$matricula])) {
-                $cargoDaMatricula[$matricula] = $cargo->titulo;
+                $cargoDaMatricula[$matricula] = $titulo;
             }
         }
 
         return [$erros, $alunosPorCargo];
+    }
+
+    /**
+     * Grava a chapa (pendente) e um candidato por cargo. Só depois de travar() e conferir().
+     *
+     * @param  array<string, string>  $eleitorPorCargo  id do cargo => id do eleitor
+     */
+    public function criar(
+        Eleicao $eleicao,
+        string $nome,
+        int $numero,
+        array $eleitorPorCargo,
+        ?string $contatoEmail,
+        ?string $contatoTelefone,
+        OrigemChapa $origem,
+    ): Chapa {
+        $chapa = $eleicao->chapas()->create([
+            'numero' => $numero,
+            'nome' => $nome,
+            'origem' => $origem,
+            'contato_email' => $contatoEmail,
+            'contato_telefone' => $contatoTelefone,
+        ]);
+
+        foreach ($eleitorPorCargo as $cargoId => $eleitorId) {
+            $chapa->candidatos()->create([
+                'eleicao_id' => $eleicao->id,
+                'cargo_id' => $cargoId,
+                'eleitor_id' => $eleitorId,
+            ]);
+        }
+
+        return $chapa;
     }
 
     /** Por que não dá para inscrever agora, com as datas do período. */
