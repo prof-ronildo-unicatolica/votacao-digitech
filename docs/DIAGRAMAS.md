@@ -115,8 +115,9 @@ flowchart LR
     UC23 -. "«extend»" .-> UC22
 
     class UC01,UC14,UC15,UC16,UC17,UC19 feito
-    class UC20,UC21 revisao
-    class UC18,UC22,UC23 afazer
+    class UC20,UC21 feito
+    class UC18 revisao
+    class UC22,UC23 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -136,7 +137,7 @@ flowchart LR
 | [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
 | [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fase 1) |
-| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23, D24 | Implementado (H7 na PR #64, H8) |
+| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23, D24 | Implementado (PRs #64 e #66) |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
 

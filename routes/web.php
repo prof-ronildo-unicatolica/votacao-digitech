@@ -51,6 +51,7 @@ Route::middleware(['auth', 'ativo'])->group(function () {
     // H6 · Mesa receptora (H9 acompanha). O admin também entra, para acompanhar a mesa.
     Route::middleware('perfil:mesario,admin')->group(function () {
         Route::get('/mesario', [MesaController::class, 'index'])->name('mesario');
+        Route::get('/mesario/painel', [MesaController::class, 'painel'])->name('mesario.painel'); // H9: polling
         Route::post('/mesario/liberar', [MesaController::class, 'liberar'])->name('mesario.liberar');
         Route::post('/mesario/sessoes/{sessao}/cancelar', [MesaController::class, 'cancelar'])->name('mesario.cancelar');
     });

@@ -28,17 +28,7 @@
         <x-alerta tipo="perigo" titulo="Não foi possível" class="mb-4">{{ $message }}</x-alerta>
     @enderror
 
-    @if ($eleicao)
-        <div class="row g-3 mb-5">
-            <div class="col-sm-4">
-                <x-indicador rotulo="Comparecimento" :valor="$votaram"
-                    :detalhe="'de '.$aptos.' aptos · '.($aptos ? round(100 * $votaram / $aptos) : 0).'%'"
-                    :progresso="$aptos ? 100 * $votaram / $aptos : 0" />
-            </div>
-            <div class="col-sm-4"><x-indicador rotulo="Terminais livres" :valor="$livres->count()" :detalhe="'de '.$terminais->count()" /></div>
-            <div class="col-sm-4"><x-indicador rotulo="Votação encerra" :valor="$eleicao->votacao_fecha_em?->format('H:i') ?? '—'" :detalhe="$eleicao->votacao_fecha_em?->format('d/m/Y')" /></div>
-        </div>
-    @endif
+    <div id="painel-indicadores">@include('mesa._indicadores')</div>
 
     <div class="row g-4">
         <div class="col-lg-5">
@@ -96,39 +86,48 @@
 
         <div class="col-lg-7">
             <h2 class="h5 mb-3">Terminais</h2>
-            @if ($terminais->isEmpty())
-                <x-cartao>
-                    <x-estado-vazio icone="display" titulo="Nenhum terminal cadastrado">A comissão cadastra os terminais em Admin → Terminais.</x-estado-vazio>
-                </x-cartao>
-            @else
-                <div class="row g-3">
-                    @foreach ($terminais as $terminal)
-                        @php($sessao = $terminal->sessaoEmAndamento)
-                        @php($estado = $terminal->estado())
-                        <div class="col-md-6">
-                            <x-status-terminal :numero="$terminal->numero" :estado="$estado"
-                                :detalhe="match ($estado) {
-                                    'liberado' => $sessao->eleitor->nome.' · expira em '.$sessao->minutosRestantes().' min',
-                                    'votando' => $sessao->eleitor->nome.' na cabine · expira em '.$sessao->minutosRestantes().' min',
-                                    'livre' => $terminal->local ?: 'Pronto para liberar',
-                                    default => 'Computador não ativado',
-                                }">
-                                @if (in_array($estado, ['liberado', 'votando'], true))
-                                    <details class="dt-acao mt-3">
-                                        <summary class="btn btn-perigo btn-sm"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancelar sessão</summary>
-                                        <form method="POST" action="{{ route('mesario.cancelar', $sessao) }}" class="dt-acao-painel">
-                                            @csrf
-                                            <p class="small mb-2">{{ $sessao->eleitor->nome }} ainda não votou. Cancelar libera o terminal, e a liberação pode ser feita de novo.</p>
-                                            <x-botao type="submit" variante="perigo" tamanho="pequeno">Confirmar cancelamento</x-botao>
-                                        </form>
-                                    </details>
-                                @endif
-                            </x-status-terminal>
-                        </div>
-                    @endforeach
-                </div>
-                <p class="small text-secondary mt-3">Atualize a página para ver o estado mais recente. A atualização automática é a H9.</p>
-            @endif
+            <div id="painel-terminais">@include('mesa._terminais')</div>
+            <p class="small text-secondary mt-3" id="painel-atualizado">Atualiza sozinho a cada 5 segundos.</p>
         </div>
     </div>
+    @push('scripts')
+        <script>
+            // H9 · O painel se atualiza sozinho, sem recarregar a página (o que a pessoa digitou
+            // na matrícula continua lá). Pausa com a aba escondida ou com um "Cancelar sessão" aberto.
+            (() => {
+                const url = @json(route('mesario.painel'));
+                const indicadores = document.getElementById('painel-indicadores');
+                const terminais = document.getElementById('painel-terminais');
+                const atualizado = document.getElementById('painel-atualizado');
+                const seletor = document.getElementById('campo-terminal');
+                const rotulos = { livre: 'Livre', liberado: 'Liberado', votando: 'Votando', inativo: 'Inativo' };
+
+                const atualizar = async () => {
+                    if (document.hidden || terminais.querySelector('details[open]')) return;
+                    try {
+                        const resposta = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin', cache: 'no-store' });
+                        if (resposta.status === 401 || resposta.status === 419 || resposta.redirected) return location.reload();
+                        if (! resposta.ok) return;
+                        const painel = await resposta.json();
+                        indicadores.innerHTML = painel.indicadores;
+                        terminais.innerHTML = painel.terminais_html;
+                        atualizado.textContent = 'Atualizado às ' + painel.atualizado_em + ' · atualiza sozinho a cada 5 segundos.';
+                        // O seletor de terminal do formulário acompanha os estados.
+                        if (seletor) {
+                            for (const terminal of painel.terminais) {
+                                const opcao = seletor.querySelector(`option[value="${terminal.id}"]`);
+                                if (! opcao) continue;
+                                opcao.disabled = terminal.estado !== 'livre';
+                                opcao.textContent = opcao.textContent.replace(/· [^·]+$/, '· ' + rotulos[terminal.estado]);
+                            }
+                        }
+                    } catch (erro) {
+                        // Rede instável: tenta de novo na próxima volta.
+                    }
+                };
+                setInterval(atualizar, 5000);
+                document.addEventListener('visibilitychange', () => { if (! document.hidden) atualizar(); });
+            })();
+        </script>
+    @endpush
 @endsection
