@@ -147,12 +147,12 @@ Como mesário, quero ver no painel quais terminais estão livres, liberados ou v
 
 ### H10 · Apurar resultado
 Como admin, quero ver o resultado por chapa, brancos, nulos e participação depois que a eleição encerrar.
-- [ ] Antes do `fim` da eleição, `/admin/resultado` mostra só o comparecimento.
-- [ ] Depois do `fim`: tabela + gráfico (Chart.js) + chapa vencedora **com seus eleitos por cargo** + participação (%).
-- [ ] Só chapas homologadas entram na apuração.
-- [ ] Cálculos em `App\Support\Apuracao` (classe pura, com testes unitários).
-- [ ] Exportar CSV/PDF da ata.
-- [ ] Testes: resultado bloqueado antes do fim, correto depois.
+- [x] Antes do `fim` da eleição, `/admin/resultado` mostra só o comparecimento. O CSV e a ata também são recusados (D26).
+- [x] Depois do `fim`: tabela + gráfico (Chart.js) + chapa vencedora **com seus eleitos por cargo** + participação (%). Empate no primeiro lugar não tem vencedora: a tela mostra as empatadas e a comissão desempata pelo regimento (D26).
+- [x] Só chapas homologadas entram na apuração (`chapasNaUrna`, D20). Se o total de votos não bater com o comparecimento, a tela e a ata avisam.
+- [x] Cálculos em `App\Support\Apuracao` (classe pura, com testes unitários). A busca no banco fica em `App\Support\ResultadoDaEleicao`, usada pela tela, pelo CSV e pela ata.
+- [x] Exportar CSV/PDF da ata: CSV para baixar e ata em página A4 para imprimir ou salvar em PDF pelo navegador (D26). Consultar o resultado e exportar a ata entram na auditoria (`resultado.consultado`, `ata.exportada` com o SHA-256).
+- [x] Testes: resultado bloqueado antes do fim, correto depois (`ResultadoTest`, `tests/Unit/ApuracaoTest`).
 
 ### H11 · Auditar ações
 Como admin, quero ver um log de quem fez login, liberou sessões e alterou cadastros para dar transparência ao processo.

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\EleitorController;
 use App\Http\Controllers\Admin\ImportacaoChapasController;
 use App\Http\Controllers\Admin\ImportacaoEleitoresController;
 use App\Http\Controllers\Admin\PainelController;
+use App\Http\Controllers\Admin\ResultadoController;
 use App\Http\Controllers\Admin\TerminalController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Auth\LoginController;
@@ -90,6 +91,11 @@ Route::middleware(['auth', 'ativo'])->group(function () {
             ->except('show')
             ->parameters(['terminais' => 'terminal']);
         Route::post('terminais/{terminal}/desativar', [TerminalController::class, 'desativar'])->name('terminais.desativar');
+
+        // H10 · Resultado: antes do fim da votação, só o comparecimento (D26).
+        Route::get('resultado', [ResultadoController::class, 'index'])->name('resultado');
+        Route::get('resultado/{eleicao}/ata.csv', [ResultadoController::class, 'csv'])->name('resultado.csv');
+        Route::get('resultado/{eleicao}/ata', [ResultadoController::class, 'ata'])->name('resultado.ata');
 
         // H1 · Usuários (admin e mesário)
         Route::resource('usuarios', UsuarioController::class)->except('show');
