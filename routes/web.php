@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\EleicaoController;
 use App\Http\Controllers\Admin\EleitorController;
 use App\Http\Controllers\Admin\ImportacaoChapasController;
+use App\Http\Controllers\Admin\ImportacaoEleitoresController;
 use App\Http\Controllers\Admin\PainelController;
 use App\Http\Controllers\Admin\TerminalController;
 use App\Http\Controllers\Admin\UsuarioController;
@@ -60,9 +61,14 @@ Route::middleware(['auth', 'ativo'])->group(function () {
         Route::post('eleicoes/{eleicao}/desativar', [EleicaoController::class, 'desativar'])->name('eleicoes.desativar');
 
         // H4 · Eleitores (um a um ou CSV). As rotas de importar vêm antes do resource.
-        Route::get('eleitores/importar', [EleitorController::class, 'importarForm'])->name('eleitores.importar');
-        Route::post('eleitores/importar', [EleitorController::class, 'importar'])->name('eleitores.importar.store');
-        Route::get('eleitores/modelo.csv', [EleitorController::class, 'modelo'])->name('eleitores.modelo');
+        // CSV: enviar → conferir → confirmar ou cancelar (D19), como as chapas (H15).
+        Route::prefix('eleitores/importar')->name('eleitores.importar')->controller(ImportacaoEleitoresController::class)->group(function () {
+            Route::get('/', 'create');
+            Route::post('/', 'store')->name('.store');
+            Route::get('conferir', 'conferir')->name('.conferir');
+            Route::post('confirmar', 'confirmar')->name('.confirmar');
+        });
+        Route::get('eleitores/modelo.csv', [ImportacaoEleitoresController::class, 'modelo'])->name('eleitores.modelo');
         Route::resource('eleitores', EleitorController::class)
             ->except('show')
             ->parameters(['eleitores' => 'eleitor']);

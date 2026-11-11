@@ -152,7 +152,13 @@ matricula;nome;turma;email
 | `turma`     | Opcional; até 50 caracteres                                           |
 | `email`     | Opcional; e-mail válido                                               |
 
-O cabeçalho ignora acentos, maiúsculas e hífen (`Matrícula`, `E-mail` valem). Validação **linha a linha**: linha inválida entra no relatório (linha, matrícula e motivo) e as outras são gravadas. Matrícula que já existe **atualiza** o cadastro: o nome sempre, a turma e o e-mail só se vierem preenchidos (coluna vazia não apaga o que já estava). As regras são as mesmas do formulário (`App\Support\EleitorRegras`).
+O cabeçalho ignora acentos, maiúsculas, espaços e hífen, e aceita apelidos (`Matrícula`, `RA`, `Nome do aluno`, `E-mail`). Colunas desconhecidas são ignoradas e listadas na conferência. As regras são as mesmas do formulário (`App\Support\EleitorRegras`); o nome é padronizado (`App\Support\Nomes`: "MARIA DAS GRAÇAS" → "Maria das Graças") e o e-mail vai em minúsculas.
+
+**Fluxo (D19, igual ao das chapas).** Enviar não grava nada. A conferência mostra as linhas com erro (cada campo em vermelho, com o motivo), os alunos novos, os cadastros que vão mudar (antes → depois) e os nomes ajustados. O admin cancela (rollback), ignora as linhas com erro ou confirma; a confirmação grava tudo numa transação só e desfaz tudo se o cadastro mudou desde a conferência.
+
+- Matrícula que já existe **atualiza** o cadastro: o nome sempre, a turma e o e-mail só se vierem preenchidos (coluna vazia não apaga o que já estava). Linha igual ao cadastro conta como "sem alteração".
+- Matrícula **repetida no arquivo** marca todas as linhas com erro: a comissão decide qual vale.
+- Limites: 2 MB e 5.000 linhas por arquivo.
 
 ## Inscrição de chapas (H13, H14, H15, H3)
 

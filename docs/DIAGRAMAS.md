@@ -43,7 +43,7 @@ flowchart LR
         UC09(["UC09 · Inscrever chapa pelo formulário<br/>H14"])
         UC10(["UC10 · Conferir aluno pela matrícula<br/>H14"])
         UC11(["UC11 · Importar chapas por CSV<br/>H15"])
-        UC24(["UC24 · Conferir e confirmar a importação<br/>H15"])
+        UC24(["UC24 · Conferir e confirmar a importação<br/>H4, H15"])
         UC12(["UC12 · Homologar ou indeferir chapa<br/>H3"])
         UC13(["UC13 · Consultar auditoria<br/>H11"])
     end
@@ -64,6 +64,7 @@ flowchart LR
     UC07 -. "«extend»" .-> UC06
     UC09 -. "«include»" .-> UC10
     UC11 -. "«include»" .-> UC24
+    UC07 -. "«include»" .-> UC24
 
     class UC01,UC02,UC03,UC04 feito
     class UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC24 revisao
@@ -129,10 +130,10 @@ flowchart LR
 
 | Diagrama | Histórias | Situação |
 | --- | --- | --- |
-| [S1 · Importar eleitores por CSV](#s1--importar-eleitores-por-csv-h4) | H4 | Implementado (PR #54) |
+| [S1 · Importar eleitores por CSV](#s1--importar-eleitores-por-csv-h4) | H4, D19 | Implementado (PR #54; conferência na D19) |
 | [S2 · Ativar o computador como terminal](#s2--ativar-o-computador-como-terminal-h5-d16) | H5, D16 | Implementado (PR #55) |
-| [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado |
-| [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado |
+| [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado (PR #58) |
+| [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado (PR #59) |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6 | Planejado |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
 
@@ -140,38 +141,55 @@ Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (
 
 ### S1 · Importar eleitores por CSV (H4)
 
-Cada linha vale por si: a linha com erro vai para o relatório e as outras são gravadas. Matrícula repetida atualiza, não duplica (D17).
+Mesmo fluxo das chapas (D19, S6): enviar só confere; o admin vê os campos com erro, o que é novo e o que vai mudar, e escolhe cancelar (rollback), ignorar as linhas com erro ou confirmar. Matrícula já cadastrada atualiza, não duplica (D17).
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor A as Admin
-    participant C as EleitorController
+    participant C as ImportacaoEleitoresController
     participant I as ImportadorEleitores
+    participant S as ArquivoEmConferencia
     participant DB as Banco
 
     A->>C: POST /admin/eleitores/importar (arquivo, CSRF)
-    C->>C: valida o arquivo (.csv ou .txt, até 2 MB)
-    C->>I: importar(conteúdo)
-    I->>I: remove o BOM, converte Windows-1252,<br/>detecta o separador (ponto e vírgula ou vírgula)
-    alt cabeçalho sem matricula ou nome
-        I-->>C: InvalidArgumentException
-        C-->>A: volta com erro no campo "arquivo" (nada gravado)
-    else cabeçalho válido
-        I->>DB: BEGIN
-        loop cada linha do arquivo
-            I->>I: valida com EleitorRegras
-            alt linha inválida
-                I->>I: relatório: linha, matrícula e motivo
-            else matrícula nova
-                I->>DB: INSERT eleitores
-            else matrícula já cadastrada
-                I->>DB: UPDATE nome (turma e e-mail só se preenchidos)
-            end
+    C->>I: analisar(conteúdo)
+    I->>I: LeitorCsv: BOM, Windows-1252, separador<br/>cabeçalho com apelidos, colunas extras ignoradas
+    alt arquivo inválido (sem cabeçalho, vazio, binário)
+        I-->>C: ArquivoInvalido
+        C-->>A: volta com os erros do arquivo (nada gravado)
+    else arquivo legível
+        loop cada linha
+            I->>I: limpa e valida (EleitorRegras, Nomes)
         end
-        I->>DB: COMMIT
-        I-->>C: cadastrados, atualizados, falhas
-        C-->>A: 302 /admin/eleitores/importar com o relatório
+        I->>I: matrícula repetida no arquivo marca todas
+        I->>DB: SELECT eleitores das matrículas do arquivo
+        I->>I: novo, atualizar (antes e depois) ou igual
+        C->>S: guarda o arquivo
+        C-->>A: 302 /admin/eleitores/importar/conferir
+    end
+
+    A->>C: GET conferir
+    C-->>A: linhas com erro, cadastros que mudam, novos,<br/>opções cancelar, ignorar e confirmar (com a assinatura)
+
+    alt cancelar (rollback)
+        A->>C: POST confirmar (acao=cancelar)
+        C->>S: apaga o arquivo
+        C-->>A: "nenhum aluno foi gravado"
+    else ignorar os erros ou confirmar
+        A->>C: POST confirmar (acao, assinatura)
+        C->>I: importar(conteúdo, assinatura, ignorarErros)
+        I->>DB: BEGIN
+        I->>I: analisar de novo
+        alt assinatura diferente ou UNIQUE recusado
+            I->>DB: ROLLBACK
+            C-->>A: volta para a conferência atualizada
+        else igual à conferência
+            I->>DB: INSERT dos novos e UPDATE dos que mudam
+            I->>DB: COMMIT
+            C->>S: apaga o arquivo
+            C-->>A: relatório: cadastrados, atualizados,<br/>sem alteração e ignorados
+        end
     end
 ```
 

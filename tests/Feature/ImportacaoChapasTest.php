@@ -199,7 +199,7 @@ class ImportacaoChapasTest extends TestCase
         $this->conferir($this->fixture('com-erros.csv'));
 
         $this->get('/admin/chapas/importar/conferir')
-            ->assertSee('3 chapas têm erro')
+            ->assertSee('3 chapas com erro. Escolha:')
             ->assertSee('Linha 4, Tesoureiro:</strong>', false)->assertSee('Informe a matrícula do candidato a Tesoureiro.')
             ->assertSee('Linha 5, Presidente:</strong>', false)->assertSee('Matrícula 2024999 não cadastrada no eleitorado.')
             ->assertSee('virou notação científica no Excel')
