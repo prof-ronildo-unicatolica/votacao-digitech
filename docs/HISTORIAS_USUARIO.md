@@ -56,12 +56,12 @@ Fluxo e regras em `MODELO_DADOS.md`, seção "Inscrição de chapas". Decisões 
 
 ### H13 · Definir os cargos da eleição
 Como admin, quero definir os cargos que toda chapa precisa preencher (ex.: Presidente, Vice-presidente, 1º Secretário, 2º Secretário, Tesoureiro) para que as inscrições tenham a mesma estrutura.
-- [ ] Em `/admin/eleicoes/{eleicao}/cargos`: adicionar, renomear, reordenar e remover cargos; título obrigatório e único na eleição.
-- [ ] A tela mostra "cada chapa terá N candidatos" (N = número de cargos).
-- [ ] Botão "copiar cargos de outra eleição" para não redigitar a cada semestre.
-- [ ] Depois que a primeira chapa se inscreve, os cargos ficam **bloqueados** (só leitura), com aviso explicando o porquê.
-- [ ] As inscrições não abrem sem ao menos um cargo (aviso na tela da eleição).
-- [ ] Testes: criação e reordenação; título repetido rejeitado; alteração bloqueada com chapa inscrita.
+- [x] Em `/admin/eleicoes/{eleicao}/cargos`: adicionar, renomear, reordenar e remover cargos; título obrigatório e único na eleição.
+- [x] A tela mostra "cada chapa terá N candidatos" (N = número de cargos).
+- [x] Botão "copiar cargos de outra eleição" para não redigitar a cada semestre.
+- [x] Depois que a primeira chapa se inscreve, os cargos ficam **bloqueados** (só leitura), com aviso explicando o porquê.
+- [x] As inscrições não abrem sem ao menos um cargo (aviso na tela da eleição). *O formulário (H14) e o CSV (H15) também precisam recusar a inscrição sem cargos.*
+- [x] Testes: criação e reordenação; título repetido rejeitado; alteração bloqueada com chapa inscrita.
 
 ### H14 · Inscrever chapa pelo formulário
 Como representante de chapa, quero inscrever minha chapa pelo sistema, dentro do período de inscrição, informando o nome da chapa e a matrícula de um candidato para cada cargo.
@@ -69,7 +69,7 @@ Como representante de chapa, quero inscrever minha chapa pelo sistema, dentro do
 - [ ] O formulário tem um campo de matrícula **por cargo**, na ordem dos cargos; ao sair do campo, mostra o nome do aluno para conferência (ou "matrícula não encontrada").
 - [ ] Também pede nome da chapa e contato do responsável (e-mail/telefone: decisão da equipe).
 - [ ] Rejeita, com mensagem por campo: cargo sem candidato, matrícula inexistente, a mesma matrícula em dois cargos, aluno que já está em outra chapa da eleição, envio fora do período (checado **no servidor**, no momento do envio, não só ao abrir a página).
-- [ ] Grava chapa e candidatos na **mesma transação**, com situação `pendente` e o próximo número livre; mostra um comprovante (número da chapa, data e hora, composição).
+- [ ] Grava chapa e candidatos na **mesma transação**, travando a linha da eleição (`lockForUpdate`, como em `CargosDaEleicao`, D13), com situação `pendente` e o próximo número livre; mostra um comprovante (número da chapa, data e hora, composição).
 - [ ] `throttle` no envio (ex.: 5 por minuto por IP) e CSRF.
 - [ ] A página pública não lista as outras chapas inscritas nem dados de alunos além do nome confirmado no próprio formulário.
 - [ ] Testes: inscrição válida; antes da abertura e depois do fim rejeitadas; cargo faltando; matrícula inexistente; aluno em duas chapas; duas inscrições ao mesmo tempo recebem números diferentes.

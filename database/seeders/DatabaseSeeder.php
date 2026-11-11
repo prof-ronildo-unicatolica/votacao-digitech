@@ -50,11 +50,11 @@ class DatabaseSeeder extends Seeder
             $eleicao->ativar();
         }
 
-        // 5 cargos por chapa (ex.: Presidente, Vice, 1º Secretário, 2º Secretário, Tesoureiro).
-        // O título é atributo da equipe (H13); aqui só a ordem.
-        $cargos = collect([1, 2, 3, 4, 5])->map(
-            fn (int $ordem) => Cargo::firstOrCreate(['eleicao_id' => $eleicao->id, 'ordem' => $ordem]),
-        );
+        // 5 cargos por chapa, na ordem da cédula (H13).
+        $titulos = [1 => 'Presidente', 'Vice-presidente', '1º Secretário', '2º Secretário', 'Tesoureiro'];
+        $cargos = collect($titulos)->map(
+            fn (string $titulo, int $ordem) => Cargo::updateOrCreate(['eleicao_id' => $eleicao->id, 'ordem' => $ordem], ['titulo' => $titulo]),
+        )->values();
 
         // 3 chapas completas: um aluno diferente por cargo (matrículas 2024101 a 2024115).
         foreach ([1, 2, 3] as $numero) {

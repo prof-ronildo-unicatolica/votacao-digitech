@@ -64,8 +64,8 @@ flowchart LR
     UC09 -. "«include»" .-> UC10
 
     class UC01,UC02,UC03,UC04 feito
-    class UC06,UC07,UC08 revisao
-    class UC05,UC09,UC10,UC11,UC12,UC13 afazer
+    class UC05,UC06,UC07,UC08 revisao
+    class UC09,UC10,UC11,UC12,UC13 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500

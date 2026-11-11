@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\EleicaoController;
 use App\Http\Controllers\Admin\EleitorController;
 use App\Http\Controllers\Admin\PainelController;
@@ -67,6 +68,17 @@ Route::middleware(['auth', 'ativo'])->group(function () {
         // H1 · Usuários (admin e mesário)
         Route::resource('usuarios', UsuarioController::class)->except('show');
         Route::post('usuarios/{usuario}/ativo', [UsuarioController::class, 'alternarAtivo'])->name('usuarios.ativo');
+
+        // H13 · Cargos de cada eleição. O cargo precisa ser DA eleição da URL (scopeBindings).
+        Route::get('cargos', [CargoController::class, 'atalho'])->name('cargos');
+        Route::scopeBindings()->prefix('eleicoes/{eleicao}/cargos')->name('eleicoes.cargos.')->group(function () {
+            Route::get('/', [CargoController::class, 'index'])->name('index');
+            Route::post('/', [CargoController::class, 'store'])->name('store');
+            Route::post('copiar', [CargoController::class, 'copiar'])->name('copiar');
+            Route::put('{cargo}', [CargoController::class, 'update'])->name('update');
+            Route::post('{cargo}/mover', [CargoController::class, 'mover'])->name('mover');
+            Route::delete('{cargo}', [CargoController::class, 'destroy'])->name('destroy');
+        });
     });
 });
 

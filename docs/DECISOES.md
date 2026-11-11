@@ -105,6 +105,13 @@ Registrada em 05/11/2026, com a ampliação do escopo para a inscrição de chap
 
 **Seguindo D10:** as novas tabelas nascem só com chaves e constraints; o título do cargo e os demais atributos são da equipe (H13, H14).
 
+**Na implementação da H13 (11/11/2026):**
+
+- **Título único na eleição**, sem diferenciar maiúsculas ("Presidente" e "presidente" são o mesmo cargo): validado na aplicação e garantido por `UNIQUE (eleicao_id, titulo)`. O mesmo título pode existir em outra eleição.
+- **A ordem fica sempre 1, 2, 3... sem buracos.** Novo cargo entra no fim; as setas trocam com o vizinho; remover sobe os de baixo. A troca passa pela ordem 0 (nunca usada) para não esbarrar no `UNIQUE (eleicao_id, ordem)`.
+- **Copiar de outra eleição só com a lista vazia.** Misturar com cargos já digitados criaria títulos repetidos e uma ordem difícil de prever.
+- **Congelamento sem corrida:** toda alteração de cargos trava a linha da eleição (`lockForUpdate`) e confere, dentro da transação, se já há chapa inscrita (`App\Support\CargosDaEleicao`). **A inscrição (H14, H15) precisa travar a mesma linha** antes de gravar a chapa; assim uma chapa nunca é gravada contra uma lista de cargos que está mudando.
+
 ## D14 — Inscrição de chapas com período, formulário público, CSV e homologação
 
 **Decisão:** cada eleição tem um **período de inscrição** de chapas, anterior ao período de votação. Durante ele, a chapa se inscreve por um **formulário público** (sem login), e a comissão também pode **importar um CSV**. Toda inscrição entra **pendente**; a comissão (admin) **homologa** ou **indefere** com motivo, e só chapas homologadas vão para a urna.
