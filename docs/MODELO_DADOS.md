@@ -43,6 +43,9 @@ erDiagram
     ELEITORES {
         uuid id PK
         string matricula UK
+        string nome
+        string turma "nullable"
+        string email "nullable"
     }
     TERMINAIS {
         uuid id PK
