@@ -50,6 +50,9 @@ erDiagram
     TERMINAIS {
         uuid id PK
         smallint numero UK
+        string local "nullable"
+        char token_hash UK "SHA-256 do cookie; nullable (D16)"
+        datetime ativado_em "pareamento vale 24 h"
     }
     SESSOES_VOTACAO {
         uuid id PK
