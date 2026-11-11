@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Chapa;
 use App\Models\Eleicao;
+use App\Models\Terminal;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,5 +33,23 @@ class PaginaInicialTest extends TestCase
         $this->getJson('/api/health')
             ->assertOk()
             ->assertJson(['banco' => 'ok']);
+    }
+
+    public function test_status_do_terminal_e_acessado_pelo_uuid_e_nao_pelo_numero(): void
+    {
+        $terminal = Terminal::factory()->create(['numero' => 1]);
+
+        $this->getJson("/api/terminais/{$terminal->id}/status")
+            ->assertOk()
+            ->assertJson(['terminal' => 1]);
+
+        $this->getJson('/api/terminais/1/status')->assertNotFound();
+    }
+
+    public function test_pagina_inicial_aponta_o_status_do_terminal_pelo_uuid(): void
+    {
+        $terminal = Terminal::factory()->create(['numero' => 1]);
+
+        $this->get('/')->assertOk()->assertSee("/api/terminais/{$terminal->id}/status", false);
     }
 }
