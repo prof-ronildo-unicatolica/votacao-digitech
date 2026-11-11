@@ -154,9 +154,13 @@ Como admin, quero ver o resultado por chapa, brancos, nulos e participação dep
 
 ### H11 · Auditar ações
 Como admin, quero ver um log de quem fez login, liberou sessões e alterou cadastros para dar transparência ao processo.
-- [ ] Registra: login (sucesso/falha), logout, liberação e cancelamento de sessão, **ativação e desativação de terminal** (com IP, D16), CRUD de eleição/cargo/chapa/eleitor, **inscrição de chapa** (formulário ou CSV, com IP no caso do formulário), **homologação e indeferimento** (com motivo).
-- [ ] **Nunca** registra em quem alguém votou.
-- [ ] Tela `/admin/auditoria` com filtro por ação e data.
+Plano completo em `docs/AUDITORIA.md` (catálogo de eventos, tabela, fases), decisão D22.
+- [ ] **Fase 1 (antes da H8):** tabela `auditoria` só-acrescenta, `App\Support\Auditoria::registrar` gravando **na mesma transação** da ação, enum `AcaoAuditoria`. Registra login (sucesso, falha e bloqueio) e logout; **ativação e desativação de terminal** (com IP, D16); liberação, re-liberação, cancelamento e **tentativa recusada** de liberação (H6); **inscrição de chapa** pelo formulário (com IP, H14); **homologação, indeferimento (com motivo), reabertura, troca de candidato e exclusão** (H3).
+- [ ] **Fase 2:** CRUD de eleição, cargo, eleitor, terminal e usuário; importações de eleitores e chapas confirmadas ou canceladas (nome e SHA-256 do arquivo, contagens).
+- [ ] **Fase 3:** tela `/admin/auditoria` (só admin) com filtro por eleição, categoria, ação, usuário, período e matrícula/número; detalhes; exportação CSV; atalho "Histórico" em cada chapa.
+- [ ] **Fase 4 (opcional, antes da H12):** corrente de hashes com comando de verificação e o hash final impresso na ata; usuário do banco sem `UPDATE`/`DELETE` na tabela em produção.
+- [ ] **Nunca** registra em quem alguém votou: o voto não gera evento; `sessao.votou` (H8) não tem a chapa.
+- [ ] Testes: cada ação do catálogo gera um evento com ator, IP e alvo; ação desfeita não deixa evento; o model recusa alteração e exclusão; nenhum evento tem `chapa_id` depois de uma votação simulada; tela só para admin.
 
 ### H12 · Publicar em produção
 Como equipe, queremos o sistema no ar na Hostinger com HTTPS para realizar a eleição real.

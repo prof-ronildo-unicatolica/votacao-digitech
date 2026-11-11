@@ -264,3 +264,25 @@ Registrada em 11/11/2026, na implementação da H6.
 - **Painel:** atualizar é manual por enquanto. A atualização automática é a H9, e o estado "votando" vem da urna (H7).
 - **Fora desta história:** a auditoria de cada liberação e cancelamento (H11).
 
+## D22 — Auditoria: eventos com intenção, na transação da ação, nunca o voto (planejada)
+
+Registrada em 11/11/2026. Plano completo em `docs/AUDITORIA.md`. Implementação na H11, em fases.
+
+**Decisão:**
+- **Uma tabela só-acrescenta (`auditoria`)**, gravada por um único ponto (`App\Support\Auditoria::registrar`), com um catálogo fechado de ações (`App\Enums\AcaoAuditoria`).
+- **Cada classe de regra registra explicitamente a ação que executou** (`chapa.homologada`, `sessao.reliberada`), na **mesma transação**. Observers automáticos de model ficam de fora.
+- **Tentativas recusadas** (login errado, liberação barrada) são registradas fora da transação desfeita.
+
+**Por quê:**
+- **Na mesma transação**, não existe evento de algo que foi desfeito, nem ação sem evento.
+- **Observers** registrariam "chapa alterada" em vez de "chapa homologada", seriam disparados pelo seed e não saberiam o motivo do indeferimento.
+- **O voto não gera evento** (só `sessao.votou`, sem a chapa), porque a ordem dos eventos permitiria casar sessão e voto (D3).
+
+**Ordem:**
+- **A fase 1** (acesso, terminais, sessões e chapas) entra **antes da H8**, para o voto já nascer registrando `sessao.votou`.
+- **O que já aconteceu sem auditoria não é reconstruído.** Exceção: a última decisão de cada chapa, que já está em `analisada_por_id` e `analisada_em` (D20).
+
+**Alternativas descartadas:**
+- *Pacote pronto (ex.: `spatie/laravel-activitylog`)*: é baseado em observers, e para o sigilo do voto e para a intenção dos eventos o controle explícito é melhor. Também é uma dependência a menos para a turma entender.
+- *Só o `laravel.log`*: texto solto, sem filtro, misturado com erros. Também corre o risco de receber o corpo do `POST /urna/votar`.
+

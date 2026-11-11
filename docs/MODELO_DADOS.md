@@ -142,7 +142,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
 | ~~`sessoes_votacao`~~ | **Respondido na H6 (D21):** `situacao` (`aberta` → `votou` \| `cancelada`, `App\Enums\SituacaoSessao`), `liberada_em`, `expira_em`, `votou_em`, `cancelada_em`. "Expirada" não é gravada: é `aberta` com `expira_em` no passado. A H8 marca `votou` (ver "Registro de um voto") | H6, H8 |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
-| (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |
+| (nova) `auditoria` | **Planejada (D22):** `ocorrido_em`, `acao`, `user_id` e `ator`, `ip`, `eleicao_id`, `alvo_tipo` e `alvo_id`, `dados` (json), `hash` (opcional). Só acrescenta; nunca em quem votou. Detalhes em [`AUDITORIA.md`](AUDITORIA.md) | H11      |
 
 ### Formato do CSV de eleitores (H4)
 

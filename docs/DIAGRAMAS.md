@@ -45,7 +45,7 @@ flowchart LR
         UC11(["UC11 · Importar chapas por CSV<br/>H15"])
         UC24(["UC24 · Conferir e confirmar a importação<br/>H4, H15"])
         UC12(["UC12 · Homologar ou indeferir chapa<br/>H3"])
-        UC13(["UC13 · Consultar auditoria<br/>H11"])
+        UC13(["UC13 · Consultar auditoria<br/>H11 (plano em AUDITORIA.md)"])
     end
 
     ADM --- UC01
@@ -134,7 +134,8 @@ flowchart LR
 | [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado (PR #58) |
 | [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado (PR #59) |
 | [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
-| [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado |
+| [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
+| [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Planejado (em `AUDITORIA.md`) |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.

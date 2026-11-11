@@ -76,7 +76,7 @@ H1 login ─┬─▶ H2 eleição ─▶ H13 cargos ─┬─▶ H14 formulári
           ├─▶ H4 eleitores ─────────────┴─▶ H15 CSV chapas ─┘                 │
           └─▶ H5 terminais ───────────────────────────────────────────────────┼─▶ H6 liberar ─▶ H7 urna ─▶ H8 votar ─▶ H10 resultado
                                                                               │                                └─▶ H9 painel da mesa
-H11 auditoria: começa após H1 e cresce junto (inscrição e homologação incluídas)
+H11 auditoria (docs/AUDITORIA.md): fase 1 (acesso, terminais, sessões, chapas) antes da H8; fase 2 (cadastros, importações) em seguida; fase 3 (tela) com a H10; fase 4 (hashes) antes da H12
 H12 deploy: após H3, se as inscrições forem reais; deploy final após H8
 ```
 
