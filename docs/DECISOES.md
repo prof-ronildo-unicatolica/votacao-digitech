@@ -169,3 +169,17 @@ Registrada em 06/11/2026, antes de implementar H5 a H8.
 - *Restringir por IP:* na rede da faculdade os computadores costumam sair pelo mesmo IP público (NAT), e o IP muda entre laboratórios.
 - *Mesário logado na própria urna:* o eleitor ficaria a um clique do painel do mesário.
 - *Código digitado na urna a cada eleitor:* mais seguro contra cookie copiado, mas atrasa a fila e cria mais um ponto de erro no dia. Pode virar melhoria futura.
+
+## D17 — Eleitorado único, apto em toda eleição
+
+Registrada em 11/11/2026, na implementação da H4.
+
+**Decisão:** `eleitores` é **um cadastro só de alunos**, com `matricula`, `nome`, `turma` (opcional) e `email` (opcional). Todo aluno cadastrado é apto a votar em **qualquer** eleição. Não há tabela `eleicao_eleitor`.
+
+**Por quê:** a eleição estudantil é de todos os alunos do curso, e a lista muda pouco de um semestre para outro. Uma tabela de aptos por eleição obrigaria a reimportar ou copiar o eleitorado a cada eleição, sem ganho para o caso real. O voto duplo já é barrado por `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)`, e o candidato continua precisando estar cadastrado (`candidatos.eleitor_id`).
+
+- **O CSV atualiza, não duplica:** matrícula que já existe atualiza o nome (e a turma e o e-mail, se vierem preenchidos). Assim a comissão pode reimportar a lista do semestre sem apagar nada.
+- **Linha a linha, não tudo ou nada:** diferente das chapas (D14), uma linha de aluno com erro não invalida as outras. O relatório mostra a linha e o motivo para corrigir e importar de novo.
+- **Excluir é exceção:** eleitor que já foi liberado (está na ata) ou é candidato não pode ser excluído. O banco bloqueia (RESTRICT) e a tela explica o motivo.
+
+**Se mudar:** se um dia houver eleições para públicos diferentes (ex.: só uma turma), crie `eleicao_eleitor` e passe a checar a aptidão na liberação (H6). A migration nova não precisa mexer em `eleitores`.

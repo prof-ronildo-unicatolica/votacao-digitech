@@ -12,7 +12,7 @@
             'eleicoes' => ['Eleições', 'calendar-check', 'admin.eleicoes.index', null],
             'cargos' => ['Cargos', 'list-ol', null, 'H13'],
             'chapas' => ['Chapas', 'people', null, 'H3'],
-            'eleitores' => ['Eleitores', 'person-vcard', null, 'H4'],
+            'eleitores' => ['Eleitores', 'person-vcard', 'admin.eleitores.index', null],
             'terminais' => ['Terminais', 'display', null, 'H5'],
         ],
         'Acompanhamento' => [
