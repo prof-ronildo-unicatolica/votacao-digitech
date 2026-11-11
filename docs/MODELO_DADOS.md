@@ -83,6 +83,7 @@ erDiagram
         uuid id PK
         uuid eleicao_id FK
         uuid chapa_id FK "nullable: branco/nulo; FK (eleicao_id, chapa_id)"
+        string tipo "chapa | branco | nulo (H8, D24)"
     }
 
     AUDITORIA {
@@ -157,7 +158,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | ~~`eleitores`~~   | **Respondido na H4 (D17):** `nome`, `turma` (opcional) e `email` (opcional). Cadastro único de alunos, apto em **toda** eleição: sem tabela `eleicao_eleitor`. Candidato precisa estar cadastrado em `eleitores` | H4       |
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
 | ~~`sessoes_votacao`~~ | **Respondido na H6 (D21):** `situacao` (`aberta` → `votou` \| `cancelada`, `App\Enums\SituacaoSessao`), `liberada_em`, `expira_em`, `votou_em`, `cancelada_em`; **H7:** `exibida_em` (a cédula apareceu na urna: terminal "votando"). "Expirada" não é gravada: é `aberta` com `expira_em` no passado. A H8 marca `votou` (ver "Registro de um voto") | H6, H8 |
-| `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
+| ~~`votos`~~       | **Respondido na H8 (D24):** `tipo` (`chapa` com `chapa_id`, `branco` ou `nulo` sem chapa; CHECK no MySQL/MariaDB). **Sem horário**: quem votou e quando fica na sessão (`votou_em`), nunca no voto | H8, H10 |
 | ~~`auditoria`~~ | **Fase 1 implementada (D22):** `ocorrido_em`, `acao`, `user_id` e `ator`, `ip`, `eleicao_id`, `alvo_tipo` e `alvo_id`, `dados` (json), `hash` (opcional). Só acrescenta; nunca em quem votou. Detalhes em [`AUDITORIA.md`](AUDITORIA.md) | H11      |
 
 ### Formato do CSV de eleitores (H4)
@@ -247,6 +248,8 @@ Validação **por chapa, tudo ou nada**: se qualquer célula de uma chapa falhar
 Situações (H6, D21, `App\Enums\SituacaoSessao`): `aberta` → `votou` | `cancelada`; `cancelada` → `aberta` (re-liberação). **Expirada não é gravada**: é uma sessão `aberta` com `expira_em` no passado (`SessaoVotacao::situacaoAtual()`), então nenhuma tarefa agendada precisa varrer o banco, e a re-liberação aceita expirada e cancelada. "Em andamento" (terminal ocupado, eleitor pode votar) = `aberta` e `expira_em > agora` (`scopeEmAndamento`): é a condição que a urna (H7) e o voto (H8) usam.
 
 ## Registro de um voto (transação)
+
+**Implementado na H8** em `App\Support\RegistroDeVoto` (D24), na ordem abaixo, com duas conferências antes da reivindicação: a versão da liberação que estava na tela (D23) e a opção, que precisa estar na cédula.
 
 "Verificar que a sessão está aberta e depois inserir o voto" tem **condição de corrida**: com duplo clique ou duas abas, as duas requisições passam pela verificação antes de qualquer uma marcar a sessão, e entram **dois votos**. A ordem certa é **reivindicar a sessão primeiro, de forma atômica**:
 

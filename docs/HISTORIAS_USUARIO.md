@@ -126,15 +126,15 @@ Como eleitor, quero que a urna do terminal mostre "aguardando" até o mesário m
 
 ### H8 · Votar
 Como eleitor, quero escolher uma chapa (ou branco/nulo), confirmar e ver "voto registrado" para ter certeza de que votei.
-- [ ] Seleção → tela de confirmação ("Você escolheu a chapa 2 — Movimento", com a lista de candidatos. "Confirmar?") → registro.
-- [ ] O voto é na chapa inteira, não por cargo (D13).
-- [ ] Voto e encerramento da sessão na mesma transação, **reivindicando a sessão antes de gravar o voto** (ver `MODELO_DADOS.md`, "Registro de um voto").
-- [ ] Duplo clique, F5 ou duas abas não geram segundo voto.
-- [ ] A eleição do voto vem da sessão liberada, não do formulário; a chapa precisa ser dessa eleição.
-- [ ] O voto (`POST /urna/votar`, com CSRF) só é aceito do terminal pareado em que a sessão foi liberada; o terminal vem do cookie, nunca do formulário (D16).
-- [ ] Nada que ligue a chapa escolhida ao eleitor vai para log, auditoria ou sessão HTTP.
-- [ ] A urna volta a "aguardando" 5 segundos após confirmar.
-- [ ] Testes: voto válido, voto branco, segundo voto rejeitado, sessão expirada rejeitada, chapa de outra eleição rejeitada, voto enviado de outro terminal (ou sem cookie) rejeitado.
+- [x] Seleção → tela de confirmação ("Confirme seu voto": a chapa com a lista de candidatos, ou branco/nulo; "Corrigir" ou "Confirmar voto") → registro. A confirmação é um `POST` que não grava nada, nem na sessão HTTP (D24).
+- [x] O voto é na chapa inteira, não por cargo (D13). Branco e nulo são diferentes (`votos.tipo`, D24).
+- [x] Voto e encerramento da sessão na mesma transação, **reivindicando a sessão antes de gravar o voto** (ver `MODELO_DADOS.md`, "Registro de um voto"; `App\Support\RegistroDeVoto`).
+- [x] Duplo clique, F5 ou duas abas não geram segundo voto: o segundo envio encontra a sessão "votou" e vai para "Voto registrado", sem trocar o voto. O botão também se desabilita no primeiro clique.
+- [x] A eleição do voto vem da sessão liberada, não do formulário; a chapa precisa estar na cédula (homologada, da mesma eleição; a FK composta é a última defesa).
+- [x] O voto (`POST /urna/votar`, com CSRF) só é aceito do terminal pareado em que a sessão foi liberada; o terminal vem do cookie, nunca do formulário (D16). Além disso, o voto carrega a **versão da liberação** que estava na tela (D23): se o mesário cancelou e liberou outra pessoa no mesmo terminal, a confirmação antiga não vale.
+- [x] Nada que ligue a chapa escolhida ao eleitor vai para log, auditoria ou sessão HTTP: escolha só em `POST` (nunca na URL), sem `validate()` (que guardaria a entrada na sessão), auditoria só com `sessao.votou` (D22).
+- [x] A urna volta a "aguardando" 5 segundos após confirmar.
+- [x] Testes: voto válido, voto branco e nulo, segundo voto rejeitado, sessão expirada e cancelada rejeitadas, chapa de outra eleição ou não homologada rejeitada, voto enviado de outro terminal (ou sem cookie) rejeitado, confirmação antiga em nova liberação, eleição vinda da sessão, votação encerrada, sigilo (sessão HTTP, URL, auditoria e colunas do voto).
 
 ### H9 · Acompanhar a mesa
 Como mesário, quero ver no painel quais terminais estão livres, liberados ou votando para organizar a fila.
@@ -161,7 +161,7 @@ Plano completo em `docs/AUDITORIA.md` (catálogo de eventos, tabela, fases), dec
 - [ ] **Fase 3:** tela `/admin/auditoria` (só admin) com filtro por eleição, categoria, ação, usuário, período e matrícula/número; detalhes; exportação CSV; atalho "Histórico" em cada chapa.
 - [ ] **Fase 4 (opcional, antes da H12):** corrente de hashes com comando de verificação e o hash final impresso na ata; usuário do banco sem `UPDATE`/`DELETE` na tabela em produção.
 - [ ] **Nunca** registra em quem alguém votou: o voto não gera evento; `sessao.votou` (H8) não tem a chapa.
-- [ ] Testes: cada ação do catálogo gera um evento com ator, IP e alvo; ação desfeita não deixa evento; o model recusa alteração e exclusão; nenhum evento tem `chapa_id` depois de uma votação simulada; tela só para admin. *Fase 1 pronta (`AuditoriaTest`); a votação simulada entra com a H8 e a tela com a fase 3.*
+- [ ] Testes: cada ação do catálogo gera um evento com ator, IP e alvo; ação desfeita não deixa evento; o model recusa alteração e exclusão; nenhum evento tem `chapa_id` depois de uma votação simulada; tela só para admin. *Fase 1 pronta (`AuditoriaTest`), votação simulada pronta com a H8 (`VotoTest`, sigilo); falta a tela (fase 3).*
 
 ### H12 · Publicar em produção
 Como equipe, queremos o sistema no ar na Hostinger com HTTPS para realizar a eleição real.

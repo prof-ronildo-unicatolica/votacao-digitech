@@ -39,6 +39,11 @@ Route::get('/inscricao/aluno', [InscricaoController::class, 'aluno'])->middlewar
 Route::middleware('terminal')->group(function () {
     Route::get('/urna', UrnaController::class)->name('urna');
     Route::get('/urna/status', [UrnaController::class, 'status'])->name('urna.status');
+    // H8 · Votar: confirmar (só mostra a escolha) → votar (grava) → registrado. POST, para a
+    // escolha não ir parar em URL nem em log de acesso.
+    Route::post('/urna/confirmar', [UrnaController::class, 'confirmar'])->name('urna.confirmar');
+    Route::post('/urna/votar', [UrnaController::class, 'votar'])->name('urna.votar');
+    Route::get('/urna/registrado', [UrnaController::class, 'registrado'])->name('urna.registrado');
 });
 
 // Área logada: `ativo` derruba quem foi desativado; `perfil` devolve 403 a quem não pode.

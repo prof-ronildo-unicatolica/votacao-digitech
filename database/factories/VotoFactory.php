@@ -29,6 +29,6 @@ class VotoFactory extends Factory
     /** Voto sem chapa (branco/nulo). Ex.: Voto::factory()->semChapa()->for($eleicao)->create() */
     public function semChapa(): static
     {
-        return $this->state(fn () => ['chapa_id' => null]);
+        return $this->state(fn () => ['chapa_id' => null, 'tipo' => 'branco']);
     }
 }
