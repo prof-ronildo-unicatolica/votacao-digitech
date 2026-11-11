@@ -91,7 +91,7 @@ Fases explicadas na seção 6. "Ator" é quem aparece em `user_id` e `ator`.
 | `terminal.criado` / `.alterado` / `.excluido` | H5                  | `numero`, `local`                                                |
 | `usuario.criado` / `.alterado` / `.desativado` / `.reativado` / `.excluido` | H1 | `email`, `perfil`, campos alterados. **Sem senha** (só `senha_trocada: true`) |
 
-### Resultado (com a H10)
+### Resultado (H10, implementado)
 
 | Ação                   | Quando                         | `dados`                   |
 | ---------------------- | ------------------------------ | ------------------------- |

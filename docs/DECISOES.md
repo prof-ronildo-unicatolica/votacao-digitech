@@ -334,3 +334,25 @@ Registrada em 11/11/2026, na implementação da H9.
 - **Sessão do mesário expirada:** a resposta é 401, e o script recarrega para cair no login.
 - **Só comparecimento:** nem o painel nem o JSON trazem nada por chapa.
 
+## D26 — Resultado: só depois do fim, empate sem vencedora, ata impressa pelo navegador
+
+Registrada em 11/11/2026, na implementação da H10.
+
+**Decisão:**
+- **Antes do fim da votação**, `/admin/resultado` mostra só o comparecimento (quantos votaram, de quantos aptos). Nenhum número por chapa sai do servidor, nem na tela, nem no HTML, nem no CSV. O fim é `votacao_fecha_em`, com a mesma regra das fases (D14): às 18:00 de uma votação que fecha às 18:00, o resultado já sai.
+- **Válidos são os votos em chapa.** Branco e nulo entram no total e na participação, mas não decidem a vencedora. A tabela mostra o percentual sobre o total e sobre os válidos.
+- **Vencedora** é a chapa com mais votos válidos. **Empate no primeiro lugar não tem vencedora:** o sistema mostra as chapas empatadas e deixa espaço na ata para a comissão registrar o desempate do regimento. Sem nenhum voto em chapa, também não há vencedora.
+- **Conferência:** o total de votos deve ser igual ao número de sessões `votou`. A H8 grava os dois na mesma transação, então a diferença só aparece com erro ou com voto em chapa fora da cédula. A tela e a ata avisam, e a ata pede para conferir a auditoria.
+- **Ata em PDF pelo navegador:** a ata é uma página A4 sem menu, com o logo em uma cor e espaço para as assinaturas. O botão "Imprimir ou salvar em PDF" usa a impressão do navegador. O CSV usa `;` e BOM, para o Excel abrir com acentos.
+- **Auditoria:** `resultado.consultado` quando o admin abre a apuração (só depois do fim) e `ata.exportada` com o formato e o SHA-256 do arquivo gerado (D22).
+- **Outras eleições:** a tela abre na eleição ativa, e uma lista permite ver o resultado das anteriores.
+
+**Por quê:**
+- **Sem parcial:** um número por chapa com a urna aberta influencia quem ainda vai votar, e o admin também é mesário (D15).
+- **Empate:** o regimento é da comissão, não do sistema. Um critério inventado no código (chapa mais antiga, sorteio) decidiria uma eleição sem ninguém ter votado nele.
+- **PDF pelo navegador:** uma biblioteca de PDF (ex.: `dompdf`) seria uma dependência a mais e mais um layout para manter. Com D2 (sem Node) e a hospedagem compartilhada, a impressão do navegador já gera o PDF com as mesmas fontes da tela.
+
+**Alternativas descartadas:**
+- *Mostrar a parcial só para o admin:* o admin está na mesa durante a votação.
+- *Gerar o PDF no servidor:* fica para depois, se a comissão precisar de um arquivo com o mesmo hash toda vez.
+

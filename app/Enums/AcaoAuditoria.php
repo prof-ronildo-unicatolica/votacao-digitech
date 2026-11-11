@@ -6,6 +6,7 @@ namespace App\Enums;
  * Catálogo fechado de ações auditadas (D22, docs/AUDITORIA.md, seção 3). Ação nova = um caso
  * novo aqui, um teste e uma linha no catálogo do documento. Fase 1: acesso, terminais,
  * sessões e chapas.
+ * H10: consulta do resultado e exportação da ata.
  */
 enum AcaoAuditoria: string
 {
@@ -34,7 +35,11 @@ enum AcaoAuditoria: string
     case CandidatoTrocado = 'chapa.candidato_trocado';
     case ChapaExcluida = 'chapa.excluida';
 
-    /** acesso, terminal, sessao ou chapa: o prefixo da ação. */
+    // Resultado (H10). Só depois do fim da votação: antes dele não há apuração para consultar.
+    case ResultadoConsultado = 'resultado.consultado';
+    case AtaExportada = 'ata.exportada';
+
+    /** acesso, terminal, sessao, chapa, resultado ou ata: o prefixo da ação. */
     public function categoria(): string
     {
         return strstr($this->value, '.', true);
@@ -60,6 +65,8 @@ enum AcaoAuditoria: string
             self::ChapaReaberta => 'Análise da chapa reaberta',
             self::CandidatoTrocado => 'Candidato trocado',
             self::ChapaExcluida => 'Chapa excluída',
+            self::ResultadoConsultado => 'Resultado consultado',
+            self::AtaExportada => 'Ata exportada',
         };
     }
 }

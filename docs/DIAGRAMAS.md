@@ -116,8 +116,8 @@ flowchart LR
 
     class UC01,UC14,UC15,UC16,UC17,UC19 feito
     class UC20,UC21 feito
-    class UC18 revisao
-    class UC22,UC23 afazer
+    class UC18 feito
+    class UC22,UC23 revisao
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -138,6 +138,7 @@ flowchart LR
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
 | [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fase 1) |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23, D24 | Implementado (PRs #64 e #66) |
+| [S9 · Apurar o resultado e exportar a ata](#s9--apurar-o-resultado-e-exportar-a-ata-h10-d26) | H10, D26 | Em revisão |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
 
@@ -454,3 +455,41 @@ sequenceDiagram
     end
     Note over U,DB: nada que ligue a chapa ao eleitor vai para log, auditoria ou sessão HTTP
 ```
+
+### S9 · Apurar o resultado e exportar a ata (H10, D26)
+
+*Em revisão.* Antes do fim da votação, só o comparecimento sai do servidor. Depois, a tela, o CSV e a ata leem os mesmos números (`ResultadoDaEleicao`), e os cálculos ficam numa classe pura (`Apuracao`).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Admin
+    participant R as ResultadoController
+    participant RE as ResultadoDaEleicao
+    participant AP as Apuracao (classe pura)
+    participant DB as Banco
+
+    A->>R: GET /admin/resultado (eleição ativa ou escolhida na lista)
+    R->>RE: liberado? (fase da eleição = encerrada)
+    alt votação ainda não encerrou
+        R->>DB: conta sessões votou e eleitores aptos
+        R-->>A: só o comparecimento, sem nada por chapa
+    else encerrada
+        RE->>DB: chapas HOMOLOGADAS com a composição
+        RE->>DB: votos agrupados por tipo e chapa
+        RE->>DB: sessões votou e eleitores aptos
+        RE->>AP: votos por chapa, brancos, nulos, votaram, aptos
+        AP-->>RE: válidos, total, percentuais, vencedora ou empate, conferência
+        R->>DB: INSERT auditoria (resultado.consultado)
+        R-->>A: tabela, gráfico, vencedora com os eleitos por cargo e participação
+    end
+    A->>R: GET ata.csv ou ata (página para imprimir)
+    alt votação ainda não encerrou
+        R-->>A: volta ao resultado com o aviso de quando a ata sai
+    else encerrada
+        R->>RE: apura de novo (mesmos números da tela)
+        R->>DB: INSERT auditoria (ata.exportada, formato e SHA-256 do arquivo)
+        R-->>A: CSV para baixar ou ata A4, que o navegador salva em PDF
+    end
+```
+
