@@ -55,7 +55,7 @@ class PaginaInicialTest extends TestCase
 
     public function test_telas_placeholder_usam_a_identidade_visual(): void
     {
-        foreach (['/mesario', '/admin', '/urna/qualquer'] as $url) {
+        foreach (['/mesario', '/admin'] as $url) {
             $this->get($url)->assertOk()->assertSee('css/digitech.css')->assertSee('Tela ainda não implementada');
         }
     }

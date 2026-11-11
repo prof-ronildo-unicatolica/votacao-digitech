@@ -8,6 +8,7 @@
             <div class="nav">
                 <a @class(['nav-link', 'active' => request()->routeIs('mesario')]) href="{{ route('mesario') }}">Mesário</a>
                 <a @class(['nav-link', 'active' => request()->routeIs('admin')]) href="{{ route('admin') }}">Admin</a>
+                <a class="nav-link" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Entrar</a>
                 @unless (app()->isProduction())
                     <a @class(['nav-link', 'active' => request()->routeIs('estilo*')]) href="{{ route('estilo') }}">Estilo</a>
                 @endunless
