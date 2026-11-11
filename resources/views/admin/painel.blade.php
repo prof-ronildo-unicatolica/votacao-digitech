@@ -20,11 +20,19 @@
         <div class="row g-3">
             <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Cargos por chapa" :valor="$eleicao->cargos_count" /></div>
             <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Chapas inscritas" :valor="$eleicao->chapas_count" /></div>
+            <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Eleitores cadastrados" :valor="$eleitores" /></div>
         </div>
 
         @if ($eleicao->cargos_count === 0)
             <x-alerta tipo="aviso" titulo="Sem cargos definidos" class="mt-4">
                 As inscrições não podem abrir sem os cargos das chapas (Presidente, Vice...). A tela de cargos é a história <strong>H13</strong>.
+            </x-alerta>
+        @endif
+
+        @if ($eleitores === 0)
+            <x-alerta tipo="aviso" titulo="Eleitorado vazio" class="mt-4">
+                Importe os alunos antes de abrir as inscrições: os candidatos das chapas são indicados pela matrícula.
+                <a href="{{ route('admin.eleitores.importar') }}">Importar eleitores</a>.
             </x-alerta>
         @endif
     @else
