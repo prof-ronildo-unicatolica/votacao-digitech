@@ -286,3 +286,16 @@ Registrada em 11/11/2026. Plano completo em `docs/AUDITORIA.md`. Implementação
 - *Pacote pronto (ex.: `spatie/laravel-activitylog`)*: é baseado em observers, e para o sigilo do voto e para a intenção dos eventos o controle explícito é melhor. Também é uma dependência a menos para a turma entender.
 - *Só o `laravel.log`*: texto solto, sem filtro, misturado com erros. Também corre o risco de receber o corpo do `POST /urna/votar`.
 
+## D23 — Urna montada no servidor, polling só para saber quando recarregar
+
+Registrada em 11/11/2026, na implementação da H7.
+
+**Decisão:** `/urna` devolve a tela pronta, "aguardando" ou a cédula, montada pelo Blade com os dados da sessão em andamento deste terminal. Um script pequeno consulta `/urna/status` a cada 3 segundos. O status traz só `liberada` e uma `versao`: um resumo do id da sessão e da hora da liberação, que não revela nada do eleitor. Quando a versão muda em relação à que está na tela, o script **recarrega a página**. Com resposta 403, também recarrega e mostra "não ativado".
+
+**Por quê:**
+- **Nada de dado pessoal no polling.** O status nunca leva nome nem matrícula: a cédula com o nome só sai na resposta de `/urna`, que passa pelo mesmo middleware do cookie (D16).
+- **Uma fonte de verdade.** As mesmas regras decidem o que a tela mostra, tanto na primeira carga quanto depois da mudança: sessão em andamento (D21), eleição ativa, votação aberta e chapas homologadas (D20). Não existe uma segunda versão das regras em JavaScript.
+- **A versão, e não só o "liberada".** Se o mesário cancelar e liberar outra pessoa no mesmo terminal entre duas consultas, `liberada` continua verdadeiro, mas a versão muda e a tela troca de eleitor.
+- **"Votando".** Ao montar a cédula, a sessão grava `exibida_em`, uma vez só. É o que separa "liberado, o eleitor ainda não chegou" de "a cédula está na tela", no painel da mesa.
+- **Sem framework de front:** combina com D2 (sem Node), e o script cabe num arquivo parcial (`urna/_monitor.blade.php`). Na vitrine `/estilo`, ele não roda.
+

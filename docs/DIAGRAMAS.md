@@ -114,9 +114,9 @@ flowchart LR
     UC20 -. "«include»" .-> UC21
     UC23 -. "«extend»" .-> UC22
 
-    class UC01,UC14 feito
-    class UC15,UC16,UC17 revisao
-    class UC18,UC19,UC20,UC21,UC22,UC23 afazer
+    class UC01,UC14,UC15,UC16,UC17 feito
+    class UC19 revisao
+    class UC18,UC20,UC21,UC22,UC23 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -136,7 +136,7 @@ flowchart LR
 | [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
 | [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Planejado (em `AUDITORIA.md`) |
-| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
+| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23 | H7 implementado; H8 planejado |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
 
@@ -411,7 +411,7 @@ sequenceDiagram
 
 ### S5 · Urna aguarda e o eleitor vota (H7, H8)
 
-*Planejado.* O ponto crítico é a ordem da transação: **reivindicar a sessão antes de gravar o voto**. Assim duplo clique, F5 ou duas abas não geram dois votos (`MODELO_DADOS.md`, "Registro de um voto").
+*A espera (H7) está implementada; o voto (H8) é planejado.* A urna é montada no servidor; o polling só detecta a mudança e recarrega (D23). O ponto crítico do voto é a ordem da transação: **reivindicar a sessão antes de gravar o voto**. Assim duplo clique, F5 ou duas abas não geram dois votos (`MODELO_DADOS.md`, "Registro de um voto").
 
 ```mermaid
 sequenceDiagram
@@ -421,12 +421,15 @@ sequenceDiagram
     participant U as UrnaController
     participant DB as Banco
 
-    loop a cada 3 segundos
+    loop a cada 3 segundos (H7)
         N->>U: GET /urna/status (cookie do terminal)
-        U->>DB: sessão aberta e não expirada deste terminal?
-        U-->>N: livre, ou liberado com o nome do eleitor
+        U->>DB: sessão em andamento deste terminal, eleição ativa, votação aberta?
+        U-->>N: liberada (sim ou não) e a versão da liberação, sem o nome
+        Note over N: versão diferente da que está na tela: recarrega
     end
-    N-->>E: nome do eleitor e chapas HOMOLOGADAS,<br/>cada uma com seus candidatos por cargo
+    N->>U: GET /urna
+    U->>DB: UPDATE sessão SET exibida_em = agora (terminal passa a "votando")
+    U-->>N: cédula com o nome do eleitor e as chapas HOMOLOGADAS,<br/>cada uma com seus candidatos por cargo, mais branco e nulo
     E->>N: escolhe a chapa (ou branco/nulo)
     N-->>E: "Você escolheu a chapa 2. Confirmar?"
     E->>N: Confirmar

@@ -60,6 +60,7 @@ class LiberacaoDeEleitor
                     'situacao' => SituacaoSessao::Aberta,
                     'liberada_em' => now(),
                     'expira_em' => now()->addMinutes(SessaoVotacao::VALIDADE_MINUTOS),
+                    'exibida_em' => null,
                     'votou_em' => null,
                     'cancelada_em' => null,
                 ];
