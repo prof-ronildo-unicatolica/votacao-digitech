@@ -16,6 +16,7 @@ class CargoFactory extends Factory
         return [
             'eleicao_id' => Eleicao::factory(),
             'ordem' => fake()->unique()->numberBetween(1, 99),
+            'titulo' => fn (array $atributos) => "Cargo {$atributos['ordem']}",
         ];
     }
 }

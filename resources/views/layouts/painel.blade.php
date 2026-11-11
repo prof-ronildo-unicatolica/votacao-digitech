@@ -10,7 +10,7 @@
         'Eleição' => [
             'painel' => ['Início', 'house', 'admin.painel', null],
             'eleicoes' => ['Eleições', 'calendar-check', 'admin.eleicoes.index', null],
-            'cargos' => ['Cargos', 'list-ol', null, 'H13'],
+            'cargos' => ['Cargos', 'list-ol', 'admin.cargos', null],
             'chapas' => ['Chapas', 'people', null, 'H3'],
             'eleitores' => ['Eleitores', 'person-vcard', 'admin.eleitores.index', null],
             'terminais' => ['Terminais', 'display', null, 'H5'],

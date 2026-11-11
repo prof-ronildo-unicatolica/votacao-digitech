@@ -14,7 +14,7 @@ class EleicaoController extends Controller
     public function index(): View
     {
         return view('admin.eleicoes.index', [
-            'eleicoes' => Eleicao::withCount('chapas')->orderByDesc('votacao_abre_em')->paginate(20),
+            'eleicoes' => Eleicao::withCount(['chapas', 'cargos'])->orderByDesc('votacao_abre_em')->paginate(20),
         ]);
     }
 
