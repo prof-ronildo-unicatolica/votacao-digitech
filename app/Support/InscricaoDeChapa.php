@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\AcaoAuditoria;
 use App\Enums\FaseEleicao;
 use App\Enums\OrigemChapa;
 use App\Enums\Perfil;
@@ -72,7 +73,7 @@ class InscricaoDeChapa
             throw new InscricaoRecusada($porCampo);
         }
 
-        return $this->criar(
+        $chapa = $this->criar(
             $eleicao,
             $nome,
             ($eleicao->chapas()->max('numero') ?? 0) + 1,
@@ -81,6 +82,17 @@ class InscricaoDeChapa
             $contatoTelefone,
             $origem,
         );
+
+        // H11 (D22): inscrição pública fica registrada com o IP. O CSV é auditado na fase 2.
+        if ($origem === OrigemChapa::Formulario) {
+            Auditoria::registrar(AcaoAuditoria::ChapaInscrita, $chapa, [
+                'numero' => $chapa->numero,
+                'nome' => $chapa->nome,
+                'matriculas' => collect($cargos)->mapWithKeys(fn ($cargo) => [$cargo->titulo => $alunos[$cargo->id]->matricula])->all(),
+            ]);
+        }
+
+        return $chapa;
     }
 
     /**

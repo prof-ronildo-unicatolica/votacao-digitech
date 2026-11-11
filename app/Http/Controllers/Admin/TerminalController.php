@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AcaoAuditoria;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TerminalRequest;
 use App\Models\Terminal;
+use App\Support\Auditoria;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /** Admin cadastra os terminais e desativa pareamentos (H5). Ativar é no computador da urna. */
@@ -48,7 +51,10 @@ class TerminalController extends Controller
     /** Apaga o hash: o computador pareado perde o acesso na próxima consulta da urna. */
     public function desativar(Terminal $terminal): RedirectResponse
     {
-        $terminal->desativar();
+        DB::transaction(function () use ($terminal) {
+            $terminal->desativar();
+            Auditoria::registrar(AcaoAuditoria::TerminalDesativado, $terminal, ['numero' => $terminal->numero]);
+        });
 
         return back()->with('status', "Terminal {$terminal->numero} desativado. O computador precisa ser ativado de novo para votar.");
     }

@@ -99,7 +99,7 @@ Como admin (comissão eleitoral), quero analisar as chapas inscritas e homologar
 - [x] Só chapas `homologadas` aparecem na urna e na apuração: `Eleicao::chapasNaUrna()` é a consulta única para H7, H8 e H10 (D20). A página inicial pública também mostra só as homologadas. *O voto (H8) ainda precisa recusar chapa fora dessa lista.*
 - [x] A votação não pode começar sem ao menos uma chapa homologada: aviso no painel, na lista de eleições e na lista de chapas. *O bloqueio de fato fica na liberação (H6) e na urna (H7).*
 - [x] Não é possível excluir chapa depois que a eleição recebeu votos (o banco bloqueia e a tela explica). A exclusão só existe até a votação abrir.
-- [ ] Toda homologação/indeferimento vai para a auditoria (H11). *Por enquanto a chapa guarda quem decidiu por último e quando (`analisada_por_id`, `analisada_em`); o histórico completo é da H11.*
+- [x] Toda homologação, indeferimento (com motivo), reabertura, troca de candidato e exclusão vai para a auditoria (H11 fase 1). A chapa também guarda quem decidiu por último (`analisada_por_id`, `analisada_em`).
 - [x] Testes: homologar, indeferir sem motivo rejeitado, reabrir até a votação, chapa pendente fora da urna, correção de candidato com as regras da H14, edição bloqueada após o fim das inscrições, exclusão bloqueada com votos, avisos, acesso negado ao mesário.
 
 ## Épico C — Dia da votação
@@ -111,7 +111,7 @@ Como mesário, quero digitar a matrícula, conferir o nome e escolher o terminal
 - [x] Sessão expira em 30 minutos (sem tarefa agendada: aberta com prazo vencido **é** expirada, D21); o mesário libera de novo se expirou **ou se cancelou**.
 - [x] Liberar de novo **reaproveita a mesma sessão** (atualiza situação, terminal, mesário e horários): o banco só aceita uma sessão por eleitor e eleição (`UNIQUE`). Nunca reabre sessão já `votou`.
 - [x] Mesário pode cancelar uma sessão aberta que ainda não votou (com confirmação). O cancelamento é atômico: se o eleitor votar no mesmo instante, ele não acontece.
-- [ ] Registra quem liberou (`mesario_id`) ✔; cada liberação, re-liberação e cancelamento vai para a auditoria (H11). *A auditoria é da H11: a sessão guarda só o estado atual.*
+- [x] Registra quem liberou (`mesario_id`); cada liberação, re-liberação (com o terminal e a situação anteriores), cancelamento e **tentativa recusada** vai para a auditoria (H11 fase 1). A sessão guarda só o estado atual; o histórico está na auditoria.
 - [x] Painel dos terminais: livre, liberado (nome e minutos restantes, com "Cancelar sessão") e inativo; comparecimento e horário de encerramento. *Atualização automática e o estado "votando" são da H9 e da H7.*
 - [x] Testes: liberação válida, eleitor já votou, terminal ocupado, terminal inativo (e pareamento vencido), fora do período, sem chapa homologada, re-liberação após expirar (continua 1 linha em `sessoes_votacao`), cancelar e liberar de novo, não cancela quem votou, eleitor em outro terminal, mesário não libera o próprio voto.
 
@@ -156,12 +156,12 @@ Como admin, quero ver o resultado por chapa, brancos, nulos e participação dep
 ### H11 · Auditar ações
 Como admin, quero ver um log de quem fez login, liberou sessões e alterou cadastros para dar transparência ao processo.
 Plano completo em `docs/AUDITORIA.md` (catálogo de eventos, tabela, fases), decisão D22.
-- [ ] **Fase 1 (antes da H8):** tabela `auditoria` só-acrescenta, `App\Support\Auditoria::registrar` gravando **na mesma transação** da ação, enum `AcaoAuditoria`. Registra login (sucesso, falha e bloqueio) e logout; **ativação e desativação de terminal** (com IP, D16); liberação, re-liberação, cancelamento e **tentativa recusada** de liberação (H6); **inscrição de chapa** pelo formulário (com IP, H14); **homologação, indeferimento (com motivo), reabertura, troca de candidato e exclusão** (H3).
+- [x] **Fase 1 (antes da H8):** tabela `auditoria` só-acrescenta, `App\Support\Auditoria::registrar` gravando **na mesma transação** da ação, enum `AcaoAuditoria`. Registra login (sucesso, falha e bloqueio) e logout; **ativação e desativação de terminal** (com IP, D16); liberação, re-liberação, cancelamento e **tentativa recusada** de liberação (H6); **inscrição de chapa** pelo formulário (com IP, H14); **homologação, indeferimento (com motivo), reabertura, troca de candidato e exclusão** (H3).
 - [ ] **Fase 2:** CRUD de eleição, cargo, eleitor, terminal e usuário; importações de eleitores e chapas confirmadas ou canceladas (nome e SHA-256 do arquivo, contagens).
 - [ ] **Fase 3:** tela `/admin/auditoria` (só admin) com filtro por eleição, categoria, ação, usuário, período e matrícula/número; detalhes; exportação CSV; atalho "Histórico" em cada chapa.
 - [ ] **Fase 4 (opcional, antes da H12):** corrente de hashes com comando de verificação e o hash final impresso na ata; usuário do banco sem `UPDATE`/`DELETE` na tabela em produção.
 - [ ] **Nunca** registra em quem alguém votou: o voto não gera evento; `sessao.votou` (H8) não tem a chapa.
-- [ ] Testes: cada ação do catálogo gera um evento com ator, IP e alvo; ação desfeita não deixa evento; o model recusa alteração e exclusão; nenhum evento tem `chapa_id` depois de uma votação simulada; tela só para admin.
+- [ ] Testes: cada ação do catálogo gera um evento com ator, IP e alvo; ação desfeita não deixa evento; o model recusa alteração e exclusão; nenhum evento tem `chapa_id` depois de uma votação simulada; tela só para admin. *Fase 1 pronta (`AuditoriaTest`); a votação simulada entra com a H8 e a tela com a fase 3.*
 
 ### H12 · Publicar em produção
 Como equipe, queremos o sistema no ar na Hostinger com HTTPS para realizar a eleição real.

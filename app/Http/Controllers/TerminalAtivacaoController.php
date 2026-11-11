@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AcaoAuditoria;
 use App\Models\Terminal;
+use App\Support\Auditoria;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -28,7 +31,15 @@ class TerminalAtivacaoController extends Controller
             ['terminal_id' => 'terminal'],
         );
 
-        $token = Terminal::findOrFail($dados['terminal_id'])->ativar();
+        // Auditado ANTES do logout, para o evento ter quem ativou (D16, D22).
+        $token = DB::transaction(function () use ($dados) {
+            $terminal = Terminal::whereKey($dados['terminal_id'])->lockForUpdate()->firstOrFail();
+            $substituiu = $terminal->estaAtivado();
+            $token = $terminal->ativar();
+            Auditoria::registrar(AcaoAuditoria::TerminalAtivado, $terminal, ['numero' => $terminal->numero, 'substituiu_outro_computador' => $substituiu]);
+
+            return $token;
+        });
 
         Auth::guard('web')->logout();
         $request->session()->invalidate();

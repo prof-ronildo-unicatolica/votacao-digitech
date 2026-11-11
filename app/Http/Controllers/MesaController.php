@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AcaoAuditoria;
 use App\Enums\SituacaoSessao;
 use App\Models\Eleicao;
 use App\Models\Eleitor;
 use App\Models\SessaoVotacao;
 use App\Models\Terminal;
+use App\Support\Auditoria;
 use App\Support\LiberacaoDeEleitor;
 use App\Support\LiberacaoRecusada;
 use Illuminate\Http\RedirectResponse;
@@ -63,6 +65,13 @@ class MesaController extends Controller
         try {
             $sessao = $this->liberacao->liberar($eleicao, $dados['matricula'], $terminal, $request->user());
         } catch (LiberacaoRecusada $e) {
+            // A transação foi desfeita, mas a tentativa aconteceu (D22): ex. liberar quem já votou.
+            Auditoria::registrarTentativa(AcaoAuditoria::LiberacaoRecusada, [
+                'matricula' => preg_replace('/\s+/', '', $dados['matricula']),
+                'terminal' => $terminal->numero,
+                'motivo' => $e->getMessage(),
+            ], $eleicao->id);
+
             return $this->voltar($dados['matricula'])->withErrors(['geral' => $e->getMessage()]);
         }
 

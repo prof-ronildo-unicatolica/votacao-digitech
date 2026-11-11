@@ -85,6 +85,19 @@ erDiagram
         uuid chapa_id FK "nullable: branco/nulo; FK (eleicao_id, chapa_id)"
     }
 
+    AUDITORIA {
+        uuid id PK
+        timestamp ocorrido_em "precisão de microssegundos"
+        string acao "App/Enums/AcaoAuditoria"
+        bigint user_id FK "users, nullable"
+        string ator "nome e perfil no momento"
+        string ip
+        uuid eleicao_id FK "nullable"
+        string alvo_tipo "chapa, sessao, terminal..."
+        string alvo_id "sem FK"
+        json dados "nunca a chapa de um voto"
+    }
+
     ELEICOES ||--o{ CHAPAS : "possui"
     ELEICOES ||--o{ CARGOS : "define"
     CHAPAS   ||--o{ CANDIDATOS : "e composta por"
@@ -97,6 +110,8 @@ erDiagram
     TERMINAIS ||--o{ SESSOES_VOTACAO : "hospeda"
     USERS    ||--o{ SESSOES_VOTACAO : "mesario libera"
     USERS    |o--o{ CHAPAS : "analisa (H3)"
+    USERS    |o--o{ AUDITORIA : "faz (H11)"
+    ELEICOES |o--o{ AUDITORIA : "contexto"
 ```
 
 Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). O voto também não aponta para `CANDIDATOS`: vota-se na chapa inteira (D13). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama, **exceto em `votos`, que não tem timestamps**.
@@ -143,7 +158,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
 | ~~`sessoes_votacao`~~ | **Respondido na H6 (D21):** `situacao` (`aberta` → `votou` \| `cancelada`, `App\Enums\SituacaoSessao`), `liberada_em`, `expira_em`, `votou_em`, `cancelada_em`; **H7:** `exibida_em` (a cédula apareceu na urna: terminal "votando"). "Expirada" não é gravada: é `aberta` com `expira_em` no passado. A H8 marca `votou` (ver "Registro de um voto") | H6, H8 |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
-| (nova) `auditoria` | **Planejada (D22):** `ocorrido_em`, `acao`, `user_id` e `ator`, `ip`, `eleicao_id`, `alvo_tipo` e `alvo_id`, `dados` (json), `hash` (opcional). Só acrescenta; nunca em quem votou. Detalhes em [`AUDITORIA.md`](AUDITORIA.md) | H11      |
+| ~~`auditoria`~~ | **Fase 1 implementada (D22):** `ocorrido_em`, `acao`, `user_id` e `ator`, `ip`, `eleicao_id`, `alvo_tipo` e `alvo_id`, `dados` (json), `hash` (opcional). Só acrescenta; nunca em quem votou. Detalhes em [`AUDITORIA.md`](AUDITORIA.md) | H11      |
 
 ### Formato do CSV de eleitores (H4)
 
