@@ -43,6 +43,7 @@ flowchart LR
         UC09(["UC09 · Inscrever chapa pelo formulário<br/>H14"])
         UC10(["UC10 · Conferir aluno pela matrícula<br/>H14"])
         UC11(["UC11 · Importar chapas por CSV<br/>H15"])
+        UC24(["UC24 · Conferir e confirmar a importação<br/>H15"])
         UC12(["UC12 · Homologar ou indeferir chapa<br/>H3"])
         UC13(["UC13 · Consultar auditoria<br/>H11"])
     end
@@ -62,10 +63,11 @@ flowchart LR
 
     UC07 -. "«extend»" .-> UC06
     UC09 -. "«include»" .-> UC10
+    UC11 -. "«include»" .-> UC24
 
     class UC01,UC02,UC03,UC04 feito
-    class UC05,UC06,UC07,UC08,UC09,UC10 revisao
-    class UC11,UC12,UC13 afazer
+    class UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC24 revisao
+    class UC12,UC13 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -130,6 +132,7 @@ flowchart LR
 | [S1 · Importar eleitores por CSV](#s1--importar-eleitores-por-csv-h4) | H4 | Implementado (PR #54) |
 | [S2 · Ativar o computador como terminal](#s2--ativar-o-computador-como-terminal-h5-d16) | H5, D16 | Implementado (PR #55) |
 | [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado |
+| [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6 | Planejado |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
 
@@ -246,6 +249,71 @@ sequenceDiagram
             end
             I-->>F: chapa
             F-->>R: 302 /inscricao/comprovante (o id fica na sessão de quem inscreveu)
+        end
+    end
+```
+
+### S6 · Importar chapas por CSV (H15, D19)
+
+Enviar só confere. O admin vê cada campo com erro e escolhe cancelar (rollback), ignorar as chapas com erro ou confirmar. A confirmação grava numa transação só e desfaz tudo se a situação mudou desde a conferência.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Admin
+    participant C as ImportacaoChapasController
+    participant I as ImportadorChapas
+    participant R as InscricaoDeChapa
+    participant S as Storage e sessão
+    participant DB as Banco
+
+    A->>C: POST /admin/chapas/importar (arquivo, CSRF)
+    C->>I: analisar(eleição, conteúdo)
+    I->>I: LeitorCsv: BOM, Windows-1252, separador
+    I->>I: cabeçalho: colunas da chapa e colunas de cargo,<br/>nomes comparados e padronizados (Nomes)
+    alt cabeçalho ou arquivo inválido
+        I-->>C: ArquivoInvalido (lista de erros)
+        C-->>A: volta com os erros do arquivo (nada gravado)
+    else arquivo legível
+        loop cada linha (uma chapa)
+            I->>R: conferir(nome, cargos, matrículas)
+            R->>DB: SELECT eleitores, users, candidatos
+            R-->>I: erros por cargo ou nome
+        end
+        I->>I: repetidos no arquivo marcam as duas chapas
+        C->>S: guarda o arquivo e o id da eleição
+        C-->>A: 302 /admin/chapas/importar/conferir
+    end
+
+    A->>C: GET conferir
+    C->>I: analisar de novo (situação atual)
+    C-->>A: linhas com os campos com erro, ajustes de nome,<br/>opções cancelar, ignorar e confirmar (com a assinatura)
+
+    alt cancelar (rollback)
+        A->>C: POST confirmar (acao=cancelar)
+        C->>S: apaga o arquivo
+        C-->>A: "nenhuma chapa foi gravada"
+    else ignorar os erros ou confirmar
+        A->>C: POST confirmar (acao, assinatura)
+        C->>I: importar(conteúdo, assinatura, ignorarErros)
+        I->>DB: BEGIN
+        I->>R: travar(eleição)
+        R->>DB: SELECT eleicoes FOR UPDATE e confere o período
+        I->>I: analisar de novo, com a trava
+        alt assinatura diferente, período fechado ou UNIQUE recusado
+            I->>DB: ROLLBACK
+            C-->>A: volta para a conferência atualizada
+        else igual à conferência
+            opt eleição sem cargos
+                I->>DB: INSERT cargos (ordem das colunas)
+            end
+            loop cada chapa pronta
+                I->>R: criar(número do arquivo, origem csv)
+                R->>DB: INSERT chapas (pendente) e candidatos
+            end
+            I->>DB: COMMIT
+            C->>S: apaga o arquivo
+            C-->>A: relatório: importadas, ignoradas e cargos criados
         end
     end
 ```

@@ -122,7 +122,8 @@ Já tinha o banco de uma versão anterior? Rode `php artisan migrate`. Se der er
 | Item                           | Onde                                          |
 | ------------------------------ | --------------------------------------------- |
 | Modelo de dados: só chaves e constraints (8 migrations, incluindo cargos e candidatos) | `database/migrations/2026_*` |
-| Modelo de CSV de chapas        | `docs/exemplos/chapas.csv`                    |
+| Modelo de CSV de chapas (uma linha por chapa, uma coluna por cargo, H15) | `docs/exemplos/chapas.csv` |
+| Skills do Claude Code: roteiro de história e padrão de importação CSV | `.claude/skills/` |
 | Modelos de `.env` (local e produção) | `.env.example`, `.env.production.example` |
 | Models Eloquent com relações   | `app/Models/`                                 |
 | Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |

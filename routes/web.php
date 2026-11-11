@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\EleicaoController;
 use App\Http\Controllers\Admin\EleitorController;
+use App\Http\Controllers\Admin\ImportacaoChapasController;
 use App\Http\Controllers\Admin\PainelController;
 use App\Http\Controllers\Admin\TerminalController;
 use App\Http\Controllers\Admin\UsuarioController;
@@ -86,6 +87,15 @@ Route::middleware(['auth', 'ativo'])->group(function () {
             Route::post('{cargo}/mover', [CargoController::class, 'mover'])->name('mover');
             Route::delete('{cargo}', [CargoController::class, 'destroy'])->name('destroy');
         });
+
+        // H15 · Importar chapas por CSV: enviar → conferir → confirmar ou cancelar (D19).
+        Route::prefix('chapas/importar')->name('chapas.importar')->controller(ImportacaoChapasController::class)->group(function () {
+            Route::get('/', 'create');
+            Route::post('/', 'store')->name('.store');
+            Route::get('conferir', 'conferir')->name('.conferir');
+            Route::post('confirmar', 'confirmar')->name('.confirmar');
+        });
+        Route::get('chapas/modelo.csv', [ImportacaoChapasController::class, 'modelo'])->name('chapas.modelo');
     });
 });
 

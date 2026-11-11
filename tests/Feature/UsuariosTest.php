@@ -3,6 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\Perfil;
+use App\Models\Candidato;
+use App\Models\Cargo;
+use App\Models\Chapa;
+use App\Models\Eleicao;
+use App\Models\Eleitor;
 use App\Models\SessaoVotacao;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -110,5 +115,51 @@ class UsuariosTest extends TestCase
         User::factory()->desativado()->create(['name' => 'Fulano Desativado']);
 
         $this->get('/admin/usuarios')->assertOk()->assertSee('Fulano Desativado')->assertSee('Desativado')->assertSee('(você)');
+    }
+
+    private function mesario(array $dados = []): array
+    {
+        return $dados + [
+            'name' => 'Aluno Mesário',
+            'email' => 'aluno.mesario@digitech.local',
+            'perfil' => 'mesario',
+            'password' => 'senha-forte',
+            'password_confirmation' => 'senha-forte',
+        ];
+    }
+
+    public function test_mesario_que_e_aluno_guarda_a_matricula(): void
+    {
+        Eleitor::factory()->create(['matricula' => '2024101']);
+
+        $this->post('/admin/usuarios', $this->mesario(['matricula' => ' 2024101 ']))->assertRedirect('/admin/usuarios');
+        $this->assertSame('2024101', User::where('email', 'aluno.mesario@digitech.local')->value('matricula'));
+
+        // Em branco: não é aluno.
+        $this->post('/admin/usuarios', $this->mesario(['email' => 'outro@digitech.local', 'matricula' => '']))->assertRedirect('/admin/usuarios');
+        $this->assertNull(User::where('email', 'outro@digitech.local')->value('matricula'));
+    }
+
+    public function test_matricula_do_usuario_precisa_existir_e_ser_unica(): void
+    {
+        Eleitor::factory()->create(['matricula' => '2024101']);
+        User::factory()->create(['matricula' => '2024101']);
+
+        $this->post('/admin/usuarios', $this->mesario(['matricula' => '2024999']))
+            ->assertSessionHasErrors(['matricula' => 'Esta matrícula não está no eleitorado. Deixe em branco se a pessoa não for aluno.']);
+        $this->post('/admin/usuarios', $this->mesario(['matricula' => '2024101']))
+            ->assertSessionHasErrors(['matricula' => 'Esta matrícula já está em outro usuário.']);
+    }
+
+    public function test_candidato_da_eleicao_atual_nao_vira_mesario(): void
+    {
+        $eleicao = Eleicao::factory()->inscricoesAbertas()->ativa()->create();
+        $chapa = Chapa::factory()->for($eleicao)->create(['numero' => 7]);
+        $cargo = Cargo::factory()->for($eleicao)->create();
+        $aluno = Eleitor::factory()->create(['matricula' => '2024101']);
+        Candidato::create(['eleicao_id' => $eleicao->id, 'chapa_id' => $chapa->id, 'cargo_id' => $cargo->id, 'eleitor_id' => $aluno->id]);
+
+        $this->post('/admin/usuarios', $this->mesario(['matricula' => '2024101']))
+            ->assertSessionHasErrors(['matricula' => 'Este aluno é candidato na chapa 7 da eleição atual: candidato não pode ser mesário nem admin.']);
     }
 }

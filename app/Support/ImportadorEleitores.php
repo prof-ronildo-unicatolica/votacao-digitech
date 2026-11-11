@@ -14,7 +14,7 @@ use InvalidArgumentException;
  * - Cabeçalho obrigatório com `matricula` e `nome`; `turma` e `email` são opcionais.
  *   Acentos, maiúsculas e hífen no cabeçalho são ignorados ("Matrícula", "E-mail").
  * - Separador `;` (Excel em português) ou `,`, detectado pelo cabeçalho.
- * - UTF-8, com ou sem BOM. Arquivo salvo pelo Excel em Windows-1252 também é aceito.
+ * - UTF-8, com ou sem BOM. Arquivo salvo pelo Excel em Windows-1252 também é aceito (LeitorCsv).
  * - Cada linha vale por si: linha inválida entra no relatório e as outras são gravadas.
  * - Matrícula que já existe ATUALIZA o cadastro (nome; turma e e-mail se vierem preenchidos).
  */
@@ -30,7 +30,7 @@ class ImportadorEleitores
      */
     public function importar(string $conteudo): array
     {
-        $linhas = $this->ler($conteudo);
+        $linhas = LeitorCsv::linhas($conteudo);
         $cabecalho = $this->colunas(array_shift($linhas) ?? []);
 
         $relatorio = ['criados' => 0, 'atualizados' => 0, 'total_falhas' => 0, 'falhas' => []];
@@ -39,7 +39,7 @@ class ImportadorEleitores
             foreach ($linhas as $indice => $campos) {
                 $numeroLinha = $indice + 2; // +1 do cabeçalho, +1 porque a planilha começa em 1
 
-                if (implode('', array_map('trim', $campos)) === '') {
+                if (LeitorCsv::vazia($campos)) {
                     continue;
                 }
 
@@ -74,31 +74,6 @@ class ImportadorEleitores
         return $relatorio;
     }
 
-    /** @return list<list<string>> */
-    private function ler(string $conteudo): array
-    {
-        $conteudo = preg_replace('/^\xEF\xBB\xBF/', '', $conteudo);
-
-        if (! mb_check_encoding($conteudo, 'UTF-8')) {
-            $conteudo = mb_convert_encoding($conteudo, 'UTF-8', 'Windows-1252');
-        }
-
-        $primeiraLinha = strtok($conteudo, "\r\n") ?: '';
-        $separador = substr_count($primeiraLinha, ';') >= substr_count($primeiraLinha, ',') ? ';' : ',';
-
-        $stream = fopen('php://temp', 'r+');
-        fwrite($stream, $conteudo);
-        rewind($stream);
-
-        $linhas = [];
-        while (($campos = fgetcsv($stream, null, $separador, '"', '')) !== false) {
-            $linhas[] = array_map(fn ($campo) => (string) $campo, $campos);
-        }
-        fclose($stream);
-
-        return $linhas;
-    }
-
     /**
      * Posição de cada coluna conhecida no cabeçalho. Colunas desconhecidas são ignoradas.
      *
@@ -106,24 +81,11 @@ class ImportadorEleitores
      */
     private function colunas(array $cabecalho): array
     {
-        $conhecidas = ['matricula', 'nome', 'turma', 'email'];
-        $colunas = [];
-
-        foreach ($cabecalho as $posicao => $titulo) {
-            $normalizado = preg_replace('/[^a-z]/', '', Str::lower(Str::ascii((string) $titulo)));
-            if (in_array($normalizado, $conhecidas, true) && ! in_array($normalizado, $colunas, true)) {
-                $colunas[$posicao] = $normalizado;
-            }
-        }
-
-        $faltando = array_diff(['matricula', 'nome'], $colunas);
-        if ($faltando !== []) {
-            throw new InvalidArgumentException(
-                'O cabeçalho precisa ter as colunas matricula e nome (faltou: '.implode(', ', $faltando).'). Baixe o modelo para conferir o formato.'
-            );
-        }
-
-        return $colunas;
+        return LeitorCsv::colunas(
+            $cabecalho,
+            ['matricula' => [], 'nome' => [], 'turma' => [], 'email' => []],
+            ['matricula', 'nome'],
+        );
     }
 
     /** Primeira mensagem de erro de cada campo, ou null se a linha é válida. */

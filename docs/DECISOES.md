@@ -213,3 +213,21 @@ Registrada em 11/11/2026, na implementação da H14.
 - **Limite de envios:** 5 por minuto por IP (`throttle:inscricao`). Os envios com erro também contam, porque o objetivo é barrar quem manda inscrições em massa.
 
 **Fora desta história:** o IP de quem inscreveu vai para a auditoria (H11); a lista e a homologação das chapas são a H3.
+
+## D19 — Importação de chapas: conferir antes de gravar, cabeçalho cria cargos, equipe não concorre
+
+Registrada em 11/11/2026, na implementação da H15.
+
+**Decisão:** o CSV de chapas é gravado em **duas etapas**. Enviar só confere (`App\Support\ImportadorChapas::analisar`) e guarda o arquivo em `storage/app/private/importacoes`; a tela mostra cada campo com erro. O admin escolhe **cancelar** (rollback: nada foi gravado e o arquivo é descartado), **ignorar as chapas com erro** ou **confirmar**. A confirmação (`importar`) roda numa transação só, com a eleição travada, e confere de novo: se a assinatura da análise mudou (uma chapa se inscreveu pelo formulário, um aluno foi excluído, um cargo mudou), **desfaz tudo** e mostra a conferência atualizada.
+
+- **Uma linha por chapa, uma coluna por cargo** (e não uma linha por candidato, como no rascunho anterior). A planilha que a comissão recebe já costuma ser assim, e uma chapa incompleta aparece como célula vazia, fácil de ver.
+- **O cabeçalho cria os cargos** quando a eleição ainda não tem nenhum. Se já tem, as colunas são conferidas com eles: a importação não renomeia nem acrescenta cargo de eleição que já tem (isso é a tela da H13, com as travas dela).
+- **Nomes comparados por chave** (sem acento, maiúsculas, espaços e pontuação) e **padronizados** quando vêm todos em maiúsculas ou todos em minúsculas. Texto que já mistura os dois ("DCE Livre") é respeitado. Cada ajuste aparece na conferência, para o admin ver antes de confirmar.
+- **Mesmas regras da H14**: o importador usa `InscricaoDeChapa::conferir`, `travar` e `criar`. O número da chapa vem do arquivo (no formulário, é o próximo livre).
+- **Aluno repetido entre chapas do arquivo marca as duas.** Escolher "a primeira linha ganha" seria arbitrário; a comissão decide.
+- **Quem trabalha na eleição não concorre.** `users.matricula` (opcional, única, precisa existir em `eleitores`) liga o mesário ou admin que é aluno ao cadastro dele. A inscrição (formulário e CSV) recusa esse aluno como candidato, e o cadastro de usuário recusa matrícula de quem já é candidato na eleição atual. Mesário desativado continua contando: ele pode ser reativado.
+- **Integridade da matrícula:** formato de `EleitorRegras::MATRICULA`, espaços no meio removidos ("2024 101"), e aviso próprio para notação científica do Excel ("2,02E+06").
+- **Limites:** arquivo de até 1 MB, 500 chapas e 20 cargos.
+
+**Por quê:** importar direto (como o CSV de eleitores, H4) grava metade do arquivo quando a outra metade tem erro, e a comissão não tem como desfazer. Conferir primeiro deixa o admin decidir com tudo à vista, e a transação única garante que o que ele viu é o que foi gravado.
+

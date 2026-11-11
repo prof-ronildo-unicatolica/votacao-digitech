@@ -13,6 +13,7 @@ erDiagram
     USERS {
         bigint id PK
         string email UK
+        string matricula "UK, nullable: mesário ou admin que é aluno (D19)"
         string perfil "admin | mesario"
         boolean ativo
     }
@@ -123,7 +124,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 
 | Tabela            | O que falta decidir                                                                                   | História |
 | ----------------- | ----------------------------------------------------------------------------------------------------- | -------- |
-| ~~`users`~~       | **Respondido na H1 (D15):** coluna `perfil` (`admin`/`mesario`, enum `App\Enums\Perfil`) e `ativo` (desativar sem apagar) | H1       |
+| ~~`users`~~       | **Respondido na H1 (D15):** coluna `perfil` (`admin`/`mesario`, enum `App\Enums\Perfil`) e `ativo` (desativar sem apagar). **H15 (D19):** `matricula` (opcional, única) para quem trabalha na eleição e é aluno: essa pessoa não pode ser candidata | H1, H15  |
 | ~~`eleicoes`~~    | **Respondido na H2 (D15):** `titulo`, `inscricao_abre_em`, `inscricao_fecha_em`, `votacao_abre_em`, `votacao_fecha_em` e `ativa` (TRUE ou NULL, com UNIQUE). A fase é calculada pelas datas (`App\Enums\FaseEleicao`) | H2       |
 | ~~`cargos`~~      | **Respondido na H13 (D13):** `titulo`, único na eleição (`UNIQUE (eleicao_id, titulo)`). A **quantidade de candidatos por chapa** é o número de cargos da eleição | H13      |
 | `chapas`          | **Respondido na H14 (D18):** `nome` (único na eleição), `situacao` (`pendente` → `homologada` \| `indeferida`, `App\Enums\SituacaoChapa`), `origem` (`formulario` \| `csv`), `contato_email` e `contato_telefone`. **Falta (H3):** motivo do indeferimento. Descrição e foto: a equipe decide se entram | H3, H14, H15 |
@@ -172,6 +173,7 @@ Regras:
 - **Cargos primeiro.** Os cargos são definidos antes de abrir as inscrições e **não mudam depois que a primeira chapa se inscreve**: mudar a lista deixaria chapas já inscritas incompletas. A tela de cargos (H13) e a inscrição (H14, H15) travam a linha da eleição na transação, para as duas coisas não acontecerem ao mesmo tempo.
 - **Chapa completa ou nada.** Uma chapa só é gravada com **um candidato para cada cargo** da eleição, na mesma transação (chapa + todos os candidatos). Isso a aplicação garante; o banco garante que não há **dois** candidatos no mesmo cargo nem o mesmo aluno em duas chapas.
 - **Candidato é aluno.** Cada candidato é indicado pela **matrícula**, que precisa existir em `eleitores` (por isso o eleitorado, H4, é importado antes de abrir as inscrições).
+- **Quem trabalha na eleição não concorre (D19).** Aluno cuja matrícula está num usuário (mesário ou admin) não pode ser candidato; e candidato da eleição atual não pode virar mesário nem admin.
 - **Dentro do período.** Formulário (H14) e CSV (H15) só gravam entre a abertura e o fim das inscrições. Fora dele, o formulário mostra as datas e não aceita envio.
 - **Toda inscrição entra `pendente`.** A comissão eleitoral (admin) homologa ou indefere com motivo (H3). Só chapas **homologadas** aparecem na urna e na apuração.
 - **Número da chapa.** Atribuído na inscrição (o próximo livre na eleição). Duas inscrições simultâneas podem tentar o mesmo número: o `UNIQUE (eleicao_id, numero)` rejeita uma e a aplicação tenta o próximo.
@@ -179,22 +181,29 @@ Regras:
 
 ### Formato do CSV de chapas (H15)
 
-Uma linha por **candidato**; as linhas de uma mesma chapa repetem o número e o nome. Separador `;` (padrão do Excel em português), UTF-8, com cabeçalho. Exemplo completo em [`docs/exemplos/chapas.csv`](exemplos/chapas.csv).
+Uma linha por **chapa** e uma coluna por **cargo**, com a matrícula do candidato. Separador `;` (padrão do Excel em português) ou `,`, UTF-8 (Windows-1252 também é aceito), com cabeçalho. Exemplo completo em [`docs/exemplos/chapas.csv`](exemplos/chapas.csv).
 
 ```csv
-numero_chapa;nome_chapa;cargo;matricula
-1;Movimento Estudantil;Presidente;2024101
-1;Movimento Estudantil;Vice-presidente;2024102
+numero_chapa;nome_chapa;Presidente;Vice-presidente;Tesoureiro;contato_email;contato_telefone
+1;Movimento Estudantil;2024101;2024102;2024103;movimento@aluno.edu.br;(88) 99999-0001
 ```
 
-| Coluna         | Regra                                                                        |
-| -------------- | ---------------------------------------------------------------------------- |
-| `numero_chapa` | Inteiro; agrupa as linhas da mesma chapa; não pode já existir na eleição     |
-| `nome_chapa`   | Igual em todas as linhas da chapa                                            |
-| `cargo`        | Título de um cargo **desta** eleição (sem diferenciar maiúsculas/minúsculas) |
-| `matricula`    | Aluno cadastrado em `eleitores`; não pode estar em outra chapa da eleição    |
+| Coluna             | Regra                                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `numero_chapa`     | Inteiro a partir de 1 ("01" e o "1,0" do Excel valem 1); não pode repetir no arquivo nem já existir na eleição |
+| `nome_chapa`       | Obrigatório, até 100 caracteres; não pode repetir no arquivo nem já existir na eleição                 |
+| uma coluna por cargo | O título da coluna é o cargo; a célula é a matrícula do candidato (aluno cadastrado, fora de outra chapa, que não seja mesário nem admin) |
+| `contato_email`    | Opcional                                                                                               |
+| `contato_telefone` | Opcional                                                                                               |
 
-Validação **por chapa, tudo ou nada**: se qualquer linha de uma chapa falhar (cargo faltando, cargo repetido, matrícula inexistente, aluno já em outra chapa), **a chapa inteira** é rejeitada e o relatório diz a linha e o motivo. As outras chapas do arquivo entram normalmente, como `pendente`.
+**Cabeçalho.** Acentos, maiúsculas, espaços, hífen e sublinhado são ignorados, e há apelidos: `numero`, `Número da chapa`, `nome`, `Nome da chapa`, `email`, `telefone`, `celular`. Qualquer outra coluna com título é um **cargo**:
+
+- **Eleição sem cargos:** o cabeçalho cria os cargos, na ordem das colunas, com o nome padronizado (`App\Support\Nomes`: "VICE-PRESIDENTE" → "Vice-presidente", "1o secretário" → "1º Secretário").
+- **Eleição com cargos (H13):** as colunas precisam ser exatamente esses cargos, em qualquer ordem. "VICE PRESIDENTE" é aceito como "Vice-presidente". Coluna que falta ou sobra recusa o arquivo inteiro.
+
+**Fluxo (D19).** Enviar não grava nada. A conferência mostra cada campo com erro (linha e coluna) e os nomes ajustados. O admin cancela (rollback: nada é gravado), ignora as chapas com erro ou confirma. A confirmação grava as chapas prontas numa transação só e, se o resultado mudou desde a conferência, desfaz tudo.
+
+Validação **por chapa, tudo ou nada**: se qualquer célula de uma chapa falhar, **a chapa inteira** fica de fora. Aluno em duas chapas do mesmo arquivo marca **as duas** (a comissão decide qual corrigir). As chapas importadas entram como `pendente`, com origem `csv`.
 
 ## Ciclo de vida da sessão (uma linha por eleitor e eleição)
 

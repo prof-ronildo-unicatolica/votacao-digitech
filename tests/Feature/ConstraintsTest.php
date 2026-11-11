@@ -9,8 +9,10 @@ use App\Models\Eleicao;
 use App\Models\Eleitor;
 use App\Models\SessaoVotacao;
 use App\Models\Terminal;
+use App\Models\User;
 use App\Models\Voto;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -286,5 +288,13 @@ class ConstraintsTest extends TestCase
 
         $this->assertNull($eleicao->getRawOriginal('ativa'));
         $this->assertFalse($eleicao->ativa);
+    }
+
+    public function test_matricula_de_usuario_e_unica(): void
+    {
+        User::factory()->create(['matricula' => '2024101']);
+
+        $this->expectException(UniqueConstraintViolationException::class);
+        User::factory()->create(['matricula' => '2024101']);
     }
 }
