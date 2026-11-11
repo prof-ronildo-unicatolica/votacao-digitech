@@ -9,3 +9,6 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Fixtures de importação: bytes exatos (CRLF, BOM, Windows-1252 fazem parte do teste).
+tests/Fixtures/** -text
