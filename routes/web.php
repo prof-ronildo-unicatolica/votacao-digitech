@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Dev\RecarregarController;
 use App\Http\Controllers\EstiloController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InscricaoController;
 use App\Http\Controllers\TerminalAtivacaoController;
 use App\Http\Controllers\UrnaController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 });
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+// H14 · Inscrição pública de chapa (sem login), só no período de inscrição da eleição ativa.
+Route::get('/inscricao', [InscricaoController::class, 'create'])->name('inscricao');
+Route::post('/inscricao', [InscricaoController::class, 'store'])->middleware('throttle:inscricao')->name('inscricao.store');
+Route::get('/inscricao/comprovante', [InscricaoController::class, 'comprovante'])->name('inscricao.comprovante');
+Route::get('/inscricao/aluno', [InscricaoController::class, 'aluno'])->middleware('throttle:inscricao-consulta')->name('inscricao.aluno');
 
 // Urna (H7/H8): o eleitor não faz login. Sem ID na URL: o terminal vem do cookie de
 // pareamento, conferido pelo middleware `terminal` (D16). Grupo `web`, que lê cookies.

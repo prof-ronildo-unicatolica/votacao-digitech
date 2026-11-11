@@ -64,8 +64,8 @@ flowchart LR
     UC09 -. "«include»" .-> UC10
 
     class UC01,UC02,UC03,UC04 feito
-    class UC05,UC06,UC07,UC08 revisao
-    class UC09,UC10,UC11,UC12,UC13 afazer
+    class UC05,UC06,UC07,UC08,UC09,UC10 revisao
+    class UC11,UC12,UC13 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -129,7 +129,7 @@ flowchart LR
 | --- | --- | --- |
 | [S1 · Importar eleitores por CSV](#s1--importar-eleitores-por-csv-h4) | H4 | Implementado (PR #54) |
 | [S2 · Ativar o computador como terminal](#s2--ativar-o-computador-como-terminal-h5-d16) | H5, D16 | Implementado (PR #55) |
-| [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Planejado |
+| [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6 | Planejado |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
 
@@ -207,13 +207,14 @@ sequenceDiagram
 
 ### S3 · Inscrever chapa pelo formulário (H14)
 
-*Planejado.* Página pública, sem login. Chapa e candidatos entram juntos ou não entram (D14).
+Página pública, sem login. Chapa e candidatos entram juntos ou não entram (D14). As regras ficam em `App\Support\InscricaoDeChapa`, reaproveitadas pelo CSV (H15, D18).
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor R as Representante de chapa
-    participant F as Inscrição (/inscricao)
+    participant F as InscricaoController
+    participant I as InscricaoDeChapa
     participant DB as Banco
 
     R->>F: GET /inscricao
@@ -223,24 +224,28 @@ sequenceDiagram
     else inscrições abertas
         F-->>R: formulário com um campo de matrícula por cargo
         loop ao sair de cada campo de matrícula
-            R->>F: consulta a matrícula
+            R->>F: GET /inscricao/aluno?matricula= (até 30 por minuto por IP)
             F->>DB: SELECT nome FROM eleitores
-            F-->>R: nome do aluno ou "matrícula não encontrada"
+            F-->>R: só o nome do aluno, ou "matrícula não encontrada"
         end
         R->>F: POST /inscricao (nome da chapa, contato, matrículas, CSRF)
         Note over F: throttle: 5 envios por minuto por IP
-        F->>F: confere o período NO SERVIDOR e valida:<br/>cargo vazio, matrícula inexistente ou repetida,<br/>aluno já em outra chapa
+        F->>I: inscrever(eleição, nome, matrículas, contato, formulário)
+        I->>DB: BEGIN e trava a linha da eleição (FOR UPDATE)
+        I->>I: confere o período NO SERVIDOR e valida:<br/>cargo vazio, matrícula inexistente ou repetida,<br/>aluno já em outra chapa, nome repetido
         alt inválido
+            I->>DB: ROLLBACK
+            I-->>F: InscricaoRecusada (uma mensagem por campo)
             F-->>R: volta com o erro em cada campo
         else válido
-            F->>DB: BEGIN
-            F->>DB: INSERT chapas (próximo número livre, situação pendente)
-            F->>DB: INSERT candidatos (um por cargo)
-            opt outra inscrição pegou o mesmo número (UNIQUE eleicao_id, numero)
-                F->>DB: tenta o próximo número
+            I->>DB: INSERT chapas (próximo número livre, situação pendente)
+            I->>DB: INSERT candidatos (um por cargo)
+            I->>DB: COMMIT
+            opt o banco recusou por UNIQUE (número, nome ou aluno)
+                I->>I: tenta de novo, até 3 vezes
             end
-            F->>DB: COMMIT
-            F-->>R: comprovante (número, data e hora, composição)
+            I-->>F: chapa
+            F-->>R: 302 /inscricao/comprovante (o id fica na sessão de quem inscreveu)
         end
     end
 ```

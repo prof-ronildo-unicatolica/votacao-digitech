@@ -16,6 +16,8 @@ class ChapaFactory extends Factory
         return [
             'eleicao_id' => Eleicao::factory(),
             'numero' => fake()->unique()->numberBetween(1, 99),
+            'nome' => fn (array $atributos) => "Chapa {$atributos['numero']}",
+            'contato_email' => fake()->safeEmail(),
         ];
     }
 }
