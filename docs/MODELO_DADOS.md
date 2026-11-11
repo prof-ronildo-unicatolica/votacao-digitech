@@ -6,6 +6,8 @@ Banco: MySQL/MariaDB, charset `utf8mb4`. Estrutura versionada em `database/migra
 
 ## Diagrama entidade-relacionamento (o que existe hoje)
 
+Casos de uso e diagramas de sequência: [`DIAGRAMAS.md`](DIAGRAMAS.md).
+
 ```mermaid
 erDiagram
     USERS {
