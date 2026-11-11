@@ -29,6 +29,11 @@ erDiagram
         uuid id PK
         uuid eleicao_id FK
         smallint numero "UK (eleicao_id, numero)"
+        string nome "UK (eleicao_id, nome)"
+        string situacao "pendente | homologada | indeferida"
+        string origem "formulario | csv"
+        string contato_email
+        string contato_telefone "nullable"
     }
     CARGOS {
         uuid id PK
@@ -91,6 +96,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `votos` sem `created_at`/`updated_at` e com `id` UUID v4 | Sigilo do voto: não dá para cruzar ordem/horário com `sessoes_votacao` | `ConstraintsTest` |
 | `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)` | Um eleitor tem **uma** sessão por eleição: sem voto duplo               | `ConstraintsTest` |
 | `chapas UNIQUE (eleicao_id, numero)`              | Número de chapa único dentro da eleição; pode repetir em outra eleição  | `ConstraintsTest` |
+| `chapas UNIQUE (eleicao_id, nome)`                | Duas chapas da mesma eleição não têm o mesmo nome (o eleitor não as confunde) | `ConstraintsTest` |
 | `eleicoes.ativa UNIQUE`, com TRUE ou NULL (nunca FALSE) | **Só uma eleição ativa**: o índice único aceita vários NULL e um único TRUE (D15) | `ConstraintsTest` |
 | `eleitores.matricula UNIQUE`                      | Um cadastro por matrícula. Todo aluno, eleitor ou candidato, é identificado por ela | —                |
 | `cargos UNIQUE (eleicao_id, ordem)`               | Cada eleição tem sua lista de cargos, sem duas posições iguais na cédula | `ConstraintsTest` |
@@ -117,7 +123,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | ~~`users`~~       | **Respondido na H1 (D15):** coluna `perfil` (`admin`/`mesario`, enum `App\Enums\Perfil`) e `ativo` (desativar sem apagar) | H1       |
 | ~~`eleicoes`~~    | **Respondido na H2 (D15):** `titulo`, `inscricao_abre_em`, `inscricao_fecha_em`, `votacao_abre_em`, `votacao_fecha_em` e `ativa` (TRUE ou NULL, com UNIQUE). A fase é calculada pelas datas (`App\Enums\FaseEleicao`) | H2       |
 | ~~`cargos`~~      | **Respondido na H13 (D13):** `titulo`, único na eleição (`UNIQUE (eleicao_id, titulo)`). A **quantidade de candidatos por chapa** é o número de cargos da eleição | H13      |
-| `chapas`          | Nome, descrição, foto; **situação** da inscrição (`pendente` → `homologada` \| `indeferida`), motivo do indeferimento, contato do responsável, origem (formulário ou CSV) | H3, H14, H15 |
+| `chapas`          | **Respondido na H14 (D18):** `nome` (único na eleição), `situacao` (`pendente` → `homologada` \| `indeferida`, `App\Enums\SituacaoChapa`), `origem` (`formulario` \| `csv`), `contato_email` e `contato_telefone`. **Falta (H3):** motivo do indeferimento. Descrição e foto: a equipe decide se entram | H3, H14, H15 |
 | `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
 | ~~`eleitores`~~   | **Respondido na H4 (D17):** `nome`, `turma` (opcional) e `email` (opcional). Cadastro único de alunos, apto em **toda** eleição: sem tabela `eleicao_eleitor`. Candidato precisa estar cadastrado em `eleitores` | H4       |
 | `terminais`       | Nome/local. **Já decidido (D16):** `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` | H5       |

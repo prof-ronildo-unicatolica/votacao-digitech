@@ -65,14 +65,14 @@ Como admin, quero definir os cargos que toda chapa precisa preencher (ex.: Presi
 
 ### H14 · Inscrever chapa pelo formulário
 Como representante de chapa, quero inscrever minha chapa pelo sistema, dentro do período de inscrição, informando o nome da chapa e a matrícula de um candidato para cada cargo.
-- [ ] Página pública `/inscricao` (sem login) para a eleição ativa. Fora do período, mostra as datas de abertura e fim e **não** exibe o formulário.
-- [ ] O formulário tem um campo de matrícula **por cargo**, na ordem dos cargos; ao sair do campo, mostra o nome do aluno para conferência (ou "matrícula não encontrada").
-- [ ] Também pede nome da chapa e contato do responsável (e-mail/telefone: decisão da equipe).
-- [ ] Rejeita, com mensagem por campo: cargo sem candidato, matrícula inexistente, a mesma matrícula em dois cargos, aluno que já está em outra chapa da eleição, envio fora do período (checado **no servidor**, no momento do envio, não só ao abrir a página).
-- [ ] Grava chapa e candidatos na **mesma transação**, travando a linha da eleição (`lockForUpdate`, como em `CargosDaEleicao`, D13), com situação `pendente` e o próximo número livre; mostra um comprovante (número da chapa, data e hora, composição).
-- [ ] `throttle` no envio (ex.: 5 por minuto por IP) e CSRF.
-- [ ] A página pública não lista as outras chapas inscritas nem dados de alunos além do nome confirmado no próprio formulário.
-- [ ] Testes: inscrição válida; antes da abertura e depois do fim rejeitadas; cargo faltando; matrícula inexistente; aluno em duas chapas; duas inscrições ao mesmo tempo recebem números diferentes.
+- [x] Página pública `/inscricao` (sem login) para a eleição ativa. Fora do período, mostra as datas de abertura e fim e **não** exibe o formulário.
+- [x] O formulário tem um campo de matrícula **por cargo**, na ordem dos cargos; ao sair do campo, mostra o nome do aluno para conferência (ou "matrícula não encontrada").
+- [x] Também pede nome da chapa e contato do responsável (e-mail obrigatório e telefone opcional, D18).
+- [x] Rejeita, com mensagem por campo: cargo sem candidato, matrícula inexistente, a mesma matrícula em dois cargos, aluno que já está em outra chapa da eleição, envio fora do período (checado **no servidor**, no momento do envio, não só ao abrir a página).
+- [x] Grava chapa e candidatos na **mesma transação**, travando a linha da eleição (`lockForUpdate`, como em `CargosDaEleicao`, D13), com situação `pendente` e o próximo número livre; mostra um comprovante (número da chapa, data e hora, composição).
+- [x] `throttle` no envio (ex.: 5 por minuto por IP) e CSRF.
+- [x] A página pública não lista as outras chapas inscritas nem dados de alunos além do nome confirmado no próprio formulário.
+- [x] Testes: inscrição válida; antes da abertura e depois do fim rejeitadas; cargo faltando; matrícula inexistente; aluno em duas chapas; duas inscrições ao mesmo tempo recebem números diferentes.
 
 ### H15 · Importar chapas por CSV
 Como admin, quero importar as chapas de um arquivo CSV para registrar inscrições recebidas por outro canal sem digitação manual.

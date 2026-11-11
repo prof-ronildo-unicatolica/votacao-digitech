@@ -190,3 +190,19 @@ Registrada em 11/11/2026, na implementação da H4.
 - **Excluir é exceção:** eleitor que já foi liberado (está na ata) ou é candidato não pode ser excluído. O banco bloqueia (RESTRICT) e a tela explica o motivo.
 
 **Se mudar:** se um dia houver eleições para públicos diferentes (ex.: só uma turma), crie `eleicao_eleitor` e passe a checar a aptidão na liberação (H6). A migration nova não precisa mexer em `eleitores`.
+
+## D18 — Inscrição pública: regras num lugar só, contato e nome da chapa
+
+Registrada em 11/11/2026, na implementação da H14.
+
+**Decisão:** as regras da inscrição ficam em **uma classe**, `App\Support\InscricaoDeChapa`, usada pelo formulário público (H14) e pelo CSV da comissão (H15). Ela recebe a eleição, o nome da chapa, a matrícula de cada cargo e o contato, e grava tudo ou nada. Quando recusa, devolve uma mensagem por campo (`geral`, `nome`, `candidatos.{cargo_id}`): o formulário mostra cada uma no campo dela, e o CSV pode traduzir para a linha do arquivo.
+
+- **Período conferido no envio, dentro da transação.** A transação trava a linha da eleição (a mesma trava da tela de cargos, D13) e só então confere a fase. Uma página aberta às 17:59 e enviada às 18:01 é recusada.
+- **Número da chapa:** o próximo livre (`max + 1`). Com a trava, duas inscrições ao mesmo tempo esperam uma pela outra. Se o banco ainda assim recusar por `UNIQUE`, a inscrição tenta de novo (até 3 vezes); na nova volta, a validação enxerga o que a outra gravou.
+- **Contato do responsável:** e-mail obrigatório e telefone opcional. Não aparecem em nenhuma página pública, nem no comprovante.
+- **Nome da chapa único na eleição** (sem diferenciar maiúsculas), com `UNIQUE (eleicao_id, nome)`. Duas chapas com o mesmo nome confundiriam o eleitor na urna.
+- **Comprovante só na sessão de quem inscreveu.** O id da chapa fica na sessão HTTP do navegador, não na URL: não existe link público que mostre a composição de uma chapa pendente.
+- **Conferência do nome pela matrícula** (`GET /inscricao/aluno`): devolve só o nome, só com as inscrições abertas, e no máximo 30 consultas por minuto por IP. Sem isso, a página permitiria varrer o cadastro de alunos.
+- **Limite de envios:** 5 por minuto por IP (`throttle:inscricao`). Os envios com erro também contam, porque o objetivo é barrar quem manda inscrições em massa.
+
+**Fora desta história:** o IP de quem inscreveu vai para a auditoria (H11); a lista e a homologação das chapas são a H3.

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\Perfil;
+use App\Enums\SituacaoChapa;
 use App\Models\Candidato;
 use App\Models\Cargo;
 use App\Models\Chapa;
@@ -58,7 +59,12 @@ class DatabaseSeeder extends Seeder
 
         // 3 chapas completas: um aluno diferente por cargo (matrículas 2024101 a 2024115).
         foreach ([1, 2, 3] as $numero) {
-            $chapa = Chapa::firstOrCreate(['eleicao_id' => $eleicao->id, 'numero' => $numero]);
+            // Chapas 1 e 2 homologadas, 3 pendente (para testar a homologação, H3).
+            $chapa = Chapa::firstOrCreate(['eleicao_id' => $eleicao->id, 'numero' => $numero], [
+                'nome' => ['', 'Movimento Estudantil', 'Renova DigiTech', 'Voz do Aluno'][$numero],
+                'situacao' => $numero < 3 ? SituacaoChapa::Homologada : SituacaoChapa::Pendente,
+                'contato_email' => "chapa{$numero}@aluno.digitech.local",
+            ]);
 
             foreach ($cargos as $cargo) {
                 $matricula = (string) (2024100 + ($numero - 1) * $cargos->count() + $cargo->ordem);

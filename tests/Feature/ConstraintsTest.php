@@ -160,6 +160,16 @@ class ConstraintsTest extends TestCase
         Cargo::factory()->for($cargo->eleicao)->create(['ordem' => 1]);
     }
 
+    public function test_nome_da_chapa_e_unico_por_eleicao(): void
+    {
+        $chapa = Chapa::factory()->create(['nome' => 'Movimento']);
+
+        Chapa::factory()->create(['nome' => 'Movimento']); // outra eleição: permitido
+
+        $this->expectException(QueryException::class);
+        Chapa::factory()->for($chapa->eleicao)->create(['nome' => 'Movimento']);
+    }
+
     public function test_titulo_do_cargo_e_unico_por_eleicao(): void
     {
         $cargo = Cargo::factory()->create(['titulo' => 'Presidente']);
