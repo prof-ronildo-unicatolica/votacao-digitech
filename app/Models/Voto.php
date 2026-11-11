@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TipoVoto;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,13 @@ class Voto extends Model
 
     /** Sem created_at/updated_at: o horário do voto permitiria cruzar com sessoes_votacao. */
     public $timestamps = false;
+
+    protected $attributes = ['tipo' => 'chapa'];
+
+    protected function casts(): array
+    {
+        return ['tipo' => TipoVoto::class];
+    }
 
     /**
      * UUID v4 ALEATÓRIO. O padrão do HasUuids é ordenado por tempo (v7), o que

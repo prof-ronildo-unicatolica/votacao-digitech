@@ -4,7 +4,7 @@ Este é o plano do registro de auditoria: **quem fez o quê, quando e de onde**,
 
 > **Situação:**
 > - **Fase 1 implementada:** acesso, terminais, sessões e chapas pelo formulário e pela homologação. Código em `App\Support\Auditoria`, `App\Enums\AcaoAuditoria`, `App\Models\EventoAuditoria` e `App\Listeners\AuditarAcesso`; testes em `AuditoriaTest`.
-> - **A H8** emite `sessao.votou`.
+> - **A H8** emite `sessao.votou`, só com o terminal: nunca a chapa (D24).
 > - **Fases 2, 3 e 4** seguem planejadas.
 > - **Antes da fase 1** não havia auditoria: o que aconteceu até ali não foi registrado, salvo a última decisão de cada chapa (D20).
 

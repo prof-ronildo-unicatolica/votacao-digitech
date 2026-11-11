@@ -5,6 +5,9 @@
 @section('topo-direita', 'Terminal '.$terminal->numero)
 
 @section('conteudo')
+    @if (session('aviso'))
+        <div class="dt-urna-aviso" role="alert"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> {{ session('aviso') }}</div>
+    @endif
     <div class="dt-urna-espera" role="status" aria-live="polite">
         <img src="{{ asset('img/marca/unicatolica-simbolo-laranja.png') }}" alt="">
         <h1>Aguardando liberação</h1>

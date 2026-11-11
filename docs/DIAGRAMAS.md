@@ -115,7 +115,8 @@ flowchart LR
     UC23 -. "«extend»" .-> UC22
 
     class UC01,UC14,UC15,UC16,UC17,UC19 feito
-    class UC18,UC20,UC21,UC22,UC23 afazer
+    class UC20,UC21 revisao
+    class UC18,UC22,UC23 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -135,7 +136,7 @@ flowchart LR
 | [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado (PR #61) |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6, D21 | Implementado (PR #62) |
 | [S8 · Registrar um evento de auditoria](AUDITORIA.md#4-como-o-código-registra) | H11, D22 | Implementado (fase 1) |
-| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23 | H7 implementado (PR #64); H8 planejado |
+| [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8, D23, D24 | Implementado (H7 na PR #64, H8) |
 
 Nos planejados, nomes de colunas como `situacao` e `expira_em` são sugestões (`MODELO_DADOS.md`): a equipe decide na história.
 
@@ -410,7 +411,7 @@ sequenceDiagram
 
 ### S5 · Urna aguarda e o eleitor vota (H7, H8)
 
-*A espera (H7) está implementada; o voto (H8) é planejado.* A urna é montada no servidor; o polling só detecta a mudança e recarrega (D23). O ponto crítico do voto é a ordem da transação: **reivindicar a sessão antes de gravar o voto**. Assim duplo clique, F5 ou duas abas não geram dois votos (`MODELO_DADOS.md`, "Registro de um voto").
+*Implementado (H7 e H8).* A urna é montada no servidor; o polling só detecta a mudança e recarrega (D23). A confirmação não grava nada (D24). O ponto crítico do voto é a ordem da transação: **reivindicar a sessão antes de gravar o voto**. Assim duplo clique, F5 ou duas abas não geram dois votos (`MODELO_DADOS.md`, "Registro de um voto").
 
 ```mermaid
 sequenceDiagram
@@ -430,16 +431,21 @@ sequenceDiagram
     U->>DB: UPDATE sessão SET exibida_em = agora (terminal passa a "votando")
     U-->>N: cédula com o nome do eleitor e as chapas HOMOLOGADAS,<br/>cada uma com seus candidatos por cargo, mais branco e nulo
     E->>N: escolhe a chapa (ou branco/nulo)
-    N-->>E: "Você escolheu a chapa 2. Confirmar?"
-    E->>N: Confirmar
-    N->>U: POST /urna/votar (chapa, CSRF, cookie)
+    N->>U: POST /urna/confirmar (escolha, versão, CSRF, cookie)
+    U-->>N: "Confirme seu voto" (nada gravado, nem na sessão HTTP)
+    E->>N: Confirmar voto
+    N->>U: POST /urna/votar (escolha, versão, CSRF, cookie)
     U->>DB: BEGIN
+    U->>DB: sessão deste terminal com a versão da tela, opção na cédula?
     U->>DB: UPDATE sessão SET situacao = votou<br/>WHERE terminal = o do cookie AND situacao = aberta<br/>AND expira_em > agora
-    alt 0 linhas (segundo clique, expirou ou foi cancelada)
+    alt sessão já votou (duplo clique, F5)
+        U-->>N: "Voto registrado" de novo, sem segundo voto
+    else 0 linhas (expirou ou foi cancelada)
         U->>DB: ROLLBACK
         U-->>N: recusa, e a urna volta a "aguardando"
     else 1 linha
-        U->>DB: INSERT votos (eleicao_id DA SESSÃO, chapa_id)
+        U->>DB: INSERT votos (eleicao_id DA SESSÃO, chapa_id, tipo)
+        U->>DB: INSERT auditoria (sessao.votou, sem a chapa)
         Note over DB: o voto não tem eleitor, terminal nem horário (D3).<br/>Chapa de outra eleição: a FK composta rejeita e tudo é desfeito
         U->>DB: COMMIT
         U-->>N: "Voto registrado"

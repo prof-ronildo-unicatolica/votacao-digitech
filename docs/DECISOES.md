@@ -299,3 +299,25 @@ Registrada em 11/11/2026, na implementação da H7.
 - **"Votando".** Ao montar a cédula, a sessão grava `exibida_em`, uma vez só. É o que separa "liberado, o eleitor ainda não chegou" de "a cédula está na tela", no painel da mesa.
 - **Sem framework de front:** combina com D2 (sem Node), e o script cabe num arquivo parcial (`urna/_monitor.blade.php`). Na vitrine `/estilo`, ele não roda.
 
+## D24 — Voto: confirmar sem guardar, versão da liberação, branco diferente de nulo
+
+Registrada em 11/11/2026, na implementação da H8.
+
+**Decisão:**
+- **Três passos, dois POSTs.** Cédula → `POST /urna/confirmar` → `POST /urna/votar` → "Voto registrado".
+  - A confirmação só mostra a escolha num formulário com campos ocultos (`escolha` e `versao`). Ela não grava nada: nem banco, nem sessão HTTP, nem flash.
+  - A escolha nunca vai na URL, porque URLs vão para o log de acesso do servidor (Apache/Hostinger) com horário e IP.
+- **Sem `validate()` no voto:** um erro de validação guardaria a entrada (a chapa) na sessão HTTP com `old()`. Escolha inválida vira `VotoRecusado`, com uma mensagem que não cita a escolha.
+- **Ordem da transação** (`App\Support\RegistroDeVoto`):
+  1. localizar a sessão **deste terminal** (cookie) cuja **versão** é a da tela (D23);
+  2. conferir a opção na cédula (`chapasNaUrna`, branco ou nulo);
+  3. **reivindicar** a sessão (`UPDATE ... WHERE situacao = 'aberta' AND expira_em > agora`);
+  4. inserir o voto com a eleição **da sessão**;
+  5. auditar `sessao.votou` sem a chapa (D22).
+
+  Qualquer falha desfaz tudo.
+- **Duplo envio:** se a sessão daquela versão já votou, a resposta é "Voto registrado" de novo, sem segundo voto e sem trocar o primeiro. Assim, um duplo clique não mostra ao eleitor um erro sobre um voto que deu certo.
+- **Versão da liberação:** se o mesário cancela a sessão da Maria e libera o João no mesmo terminal, uma tela de confirmação da Maria esquecida aberta não vota pelo João.
+- **Branco e nulo:** `votos.tipo` é `chapa` (com `chapa_id`), `branco` ou `nulo` (sem chapa). Branco e nulo contam diferente na apuração (H10). No MySQL e MariaDB, um CHECK garante a combinação. No SQLite dos testes, a regra fica na aplicação.
+- **"Voto registrado"** volta para "aguardando" em 5 segundos, por `<meta http-equiv="refresh">`, que não depende de JavaScript.
+

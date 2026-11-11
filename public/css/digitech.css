@@ -527,3 +527,15 @@ h1, h2, h3, h4, h5, h6,
     max-width: 420px;
 }
 .nav-pills { --bs-nav-pills-link-active-bg: var(--dt-cor-laranja-700); --bs-nav-link-color: var(--dt-cor-laranja-700); --bs-nav-link-hover-color: var(--dt-cor-laranja-700); }
+
+/* Urna (H8): opção escolhida na confirmação e aviso quando o voto não foi registrado. */
+.dt-opcao--escolhida { cursor: default; border-color: var(--dt-tema-acao-primaria); background: var(--dt-tema-superficie-destaque); box-shadow: 0 0 0 2px var(--dt-tema-acao-primaria); }
+.dt-urna-palco:has(.dt-urna-aviso) { flex-direction: column; gap: var(--dt-espaco-6); }
+.dt-urna-aviso {
+    max-width: 760px;
+    padding: var(--dt-espaco-4) var(--dt-espaco-5);
+    border-radius: var(--dt-raio-md);
+    background: var(--dt-cor-perigo-fundo);
+    color: var(--dt-cor-perigo-texto);
+    font-size: var(--dt-fonte-tamanho-xl);
+}
