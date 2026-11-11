@@ -232,3 +232,19 @@ Registrada em 11/11/2026, na implementação da H15.
 **Por quê:** importar direto (como o CSV de eleitores, H4) grava metade do arquivo quando a outra metade tem erro, e a comissão não tem como desfazer. Conferir primeiro deixa o admin decidir com tudo à vista, e a transação única garante que o que ele viu é o que foi gravado.
 
 **Estendida ao CSV de eleitores (H4), em 11/11/2026.** O importador de eleitores, que gravava as linhas válidas na hora, passou para o mesmo fluxo: enviar → conferir → cancelar, ignorar as linhas com erro ou confirmar, com transação única e assinatura. A conferência mostra também o que **vai mudar** em quem já está cadastrado (antes → depois). Matrícula repetida no arquivo, que antes valia pela última linha, agora marca todas as linhas. As peças são compartilhadas: `LeitorCsv`, `Nomes` (com `siglas: false` para nome de pessoa), `ArquivoEmConferencia` (arquivo guardado até a decisão) e o componente `x-decisao-importacao`. **Toda importação nova segue este fluxo** (skill `.claude/skills/importacao-csv`).
+
+## D20 — Homologação: decisão reversível até a votação, urna só com homologadas
+
+Registrada em 11/11/2026, na implementação da H3.
+
+**Decisão:** as regras ficam em `App\Support\HomologacaoDeChapa`, que trava a linha da eleição como a inscrição e os cargos (D13) e confere a fase dentro da transação.
+
+- **Transições:** `pendente` → `homologada` ou `indeferida` (com motivo de pelo menos 10 caracteres). Para mudar uma decisão, a comissão **reabre a análise** (volta para `pendente`) e decide de novo. Assim, cada decisão é um ato explícito, e não um clique que troca uma situação pela outra.
+- **Até quando:** a situação muda durante as inscrições e a homologação, e para quando a **votação abre**. Depois disso, a urna já mostra as chapas, e mudar o que o eleitor vê no meio da votação seria injusto.
+- **Composição:** o admin troca um candidato só com as inscrições abertas (D14), pelas regras da H14 (`InscricaoDeChapa::conferir` com `propria`, para a chapa não conflitar consigo mesma). Trocar o candidato de uma chapa **homologada** a devolve para `pendente`: a comissão homologou outra composição.
+- **Urna e apuração:** `Eleicao::chapasNaUrna()` (só homologadas, pelo número) é a única consulta para listar chapas na urna (H7), validar o voto (H8) e apurar (H10). A página inicial pública também passou a mostrar só homologadas.
+- **Votação sem chapa homologada:** a H3 avisa no painel, na lista de eleições e na lista de chapas. O bloqueio fica na liberação do eleitor (H6) e na urna (H7), que devem recusar abrir sem chapas.
+- **Excluir:** só até a votação abrir. Com votos, o banco recusa (`votos.chapa_id` RESTRICT) e a tela explica. Para recusar uma inscrição, o caminho é indeferir, porque o motivo fica registrado.
+- **Quem decidiu:** `analisada_por_id` (nullable, `nullOnDelete`) e `analisada_em` guardam a última decisão. O histórico (homologou, reabriu, indeferiu) é da auditoria (H11).
+- **Confirmação sem JavaScript:** cada ação abre um painel (`<details>`) com o botão "Confirmar". Um clique sozinho não decide nada.
+

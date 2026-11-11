@@ -19,23 +19,27 @@ class PaginaInicialTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_pagina_inicial_lista_as_chapas_de_cada_eleicao(): void
+    public function test_pagina_inicial_lista_so_as_chapas_homologadas(): void
     {
         $eleicao = Eleicao::factory()->create();
-        Chapa::factory()->for($eleicao)->create(['numero' => 10]);
-        Chapa::factory()->for($eleicao)->create(['numero' => 20]);
+        Chapa::factory()->for($eleicao)->homologada()->create(['numero' => 10]);
+        Chapa::factory()->for($eleicao)->homologada()->create(['numero' => 20]);
+        Chapa::factory()->for($eleicao)->create(['numero' => 30]);
+        Chapa::factory()->for($eleicao)->indeferida()->create(['numero' => 40]);
 
         $this->get('/')
             ->assertOk()
             ->assertSee($eleicao->id)
-            ->assertSeeInOrder(['Chapa <strong>10</strong>', 'Chapa <strong>20</strong>'], false);
+            ->assertSeeInOrder(['Chapa <strong>10</strong>', 'Chapa <strong>20</strong>'], false)
+            ->assertDontSee('Chapa <strong>30</strong>', false)
+            ->assertDontSee('Chapa <strong>40</strong>', false);
     }
 
     public function test_pagina_inicial_mostra_a_composicao_de_cada_chapa(): void
     {
         $eleicao = Eleicao::factory()->create();
         $cargos = Cargo::factory()->count(5)->for($eleicao)->create();
-        $chapa = Chapa::factory()->for($eleicao)->create(['numero' => 10]);
+        $chapa = Chapa::factory()->for($eleicao)->homologada()->create(['numero' => 10]);
         foreach ($cargos->take(3) as $cargo) {
             Candidato::factory()->for($chapa)->for($cargo)->create();
         }

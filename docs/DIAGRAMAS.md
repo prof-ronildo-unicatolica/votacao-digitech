@@ -66,9 +66,9 @@ flowchart LR
     UC11 -. "«include»" .-> UC24
     UC07 -. "«include»" .-> UC24
 
-    class UC01,UC02,UC03,UC04 feito
-    class UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC24 revisao
-    class UC12,UC13 afazer
+    class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC24 feito
+    class UC12 revisao
+    class UC13 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
     classDef revisao fill:#fff1c2,stroke:#9a6b00,color:#4d3500
@@ -115,8 +115,7 @@ flowchart LR
     UC20 -. "«include»" .-> UC21
     UC23 -. "«extend»" .-> UC22
 
-    class UC01 feito
-    class UC14 revisao
+    class UC01,UC14 feito
     class UC15,UC16,UC17,UC18,UC19,UC20,UC21,UC22,UC23 afazer
     classDef ator fill:#2b2b2b,stroke:#2b2b2b,color:#ffffff
     classDef feito fill:#d1f2dc,stroke:#1e7a44,color:#0f3d22
@@ -134,6 +133,7 @@ flowchart LR
 | [S2 · Ativar o computador como terminal](#s2--ativar-o-computador-como-terminal-h5-d16) | H5, D16 | Implementado (PR #55) |
 | [S3 · Inscrever chapa pelo formulário](#s3--inscrever-chapa-pelo-formulário-h14) | H14 | Implementado (PR #58) |
 | [S6 · Importar chapas por CSV](#s6--importar-chapas-por-csv-h15-d19) | H15, D19 | Implementado (PR #59) |
+| [S7 · Homologar ou indeferir chapa](#s7--homologar-ou-indeferir-chapa-h3-d20) | H3, D20 | Implementado |
 | [S4 · Liberar um eleitor](#s4--liberar-um-eleitor-h6) | H6 | Planejado |
 | [S5 · Urna aguarda e o eleitor vota](#s5--urna-aguarda-e-o-eleitor-vota-h7-h8) | H7, H8 | Planejado |
 
@@ -334,6 +334,37 @@ sequenceDiagram
             C-->>A: relatório: importadas, ignoradas e cargos criados
         end
     end
+```
+
+### S7 · Homologar ou indeferir chapa (H3, D20)
+
+A decisão é explícita (painel com "Confirmar"), reversível só reabrindo a análise, e congela quando a votação abre. A urna lista só `chapasNaUrna()`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Admin
+    participant C as ChapaController
+    participant H as HomologacaoDeChapa
+    participant DB as Banco
+
+    A->>C: GET /admin/chapas (filtro por situação)
+    C-->>A: chapas com composição, situação e ações
+    A->>C: POST homologar, indeferir (motivo) ou reabrir
+    C->>H: operação(chapa, admin)
+    H->>DB: BEGIN e SELECT eleicoes FOR UPDATE
+    alt votação já abriu ou datas indefinidas
+        H->>DB: ROLLBACK
+        C-->>A: erro "as chapas não mudam mais"
+    else indeferir sem motivo ou decisão já tomada
+        H->>DB: ROLLBACK
+        C-->>A: erro no painel da chapa (reabra antes de mudar)
+    else permitido
+        H->>DB: UPDATE chapas (situação, motivo, analisada_em, analisada_por_id)
+        H->>DB: COMMIT
+        C-->>A: 302 para a chapa na lista, com a confirmação
+    end
+    Note over C,DB: trocar candidato só com inscrições abertas, regras da H14.<br/>Chapa homologada que muda de composição volta para pendente
 ```
 
 ### S4 · Liberar um eleitor (H6)

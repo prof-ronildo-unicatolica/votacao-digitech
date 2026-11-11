@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CargoController;
+use App\Http\Controllers\Admin\ChapaController;
 use App\Http\Controllers\Admin\EleicaoController;
 use App\Http\Controllers\Admin\EleitorController;
 use App\Http\Controllers\Admin\ImportacaoChapasController;
@@ -102,6 +103,14 @@ Route::middleware(['auth', 'ativo'])->group(function () {
             Route::post('confirmar', 'confirmar')->name('.confirmar');
         });
         Route::get('chapas/modelo.csv', [ImportacaoChapasController::class, 'modelo'])->name('chapas.modelo');
+
+        // H3 · Homologação. Depois das rotas de importar: "chapas/importar" não é uma chapa.
+        Route::get('chapas', [ChapaController::class, 'index'])->name('chapas.index');
+        Route::post('chapas/{chapa}/homologar', [ChapaController::class, 'homologar'])->name('chapas.homologar');
+        Route::post('chapas/{chapa}/indeferir', [ChapaController::class, 'indeferir'])->name('chapas.indeferir');
+        Route::post('chapas/{chapa}/reabrir', [ChapaController::class, 'reabrir'])->name('chapas.reabrir');
+        Route::put('chapas/{chapa}/candidatos/{cargo}', [ChapaController::class, 'trocarCandidato'])->name('chapas.candidatos.update');
+        Route::delete('chapas/{chapa}', [ChapaController::class, 'destroy'])->name('chapas.destroy');
     });
 });
 

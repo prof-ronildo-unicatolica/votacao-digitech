@@ -19,7 +19,7 @@
 
         <div class="row g-3">
             <div class="col-sm-6 col-xl-3"><a href="{{ route('admin.eleicoes.cargos.index', $eleicao) }}" class="text-reset text-decoration-none"><x-indicador rotulo="Cargos por chapa" :valor="$eleicao->cargos_count" /></a></div>
-            <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Chapas inscritas" :valor="$eleicao->chapas_count" /></div>
+            <div class="col-sm-6 col-xl-3"><a href="{{ route('admin.chapas.index') }}" class="text-reset text-decoration-none"><x-indicador rotulo="Chapas inscritas" :valor="$eleicao->chapas_count" :detalhe="$eleicao->homologadas_count.' homologadas · '.$eleicao->pendentes_count.' pendentes'" /></a></div>
             <div class="col-sm-6 col-xl-3"><x-indicador rotulo="Eleitores cadastrados" :valor="$eleitores" /></div>
         </div>
 
@@ -27,6 +27,13 @@
             <x-alerta tipo="aviso" titulo="Sem cargos definidos" class="mt-4">
                 As inscrições não podem abrir sem os cargos das chapas (Presidente, Vice...).
                 <a href="{{ route('admin.eleicoes.cargos.index', $eleicao) }}">Definir os cargos</a>.
+            </x-alerta>
+        @endif
+
+        @if ($eleicao->chapas_count > 0 && $eleicao->homologadas_count === 0 && in_array($fase, [\App\Enums\FaseEleicao::InscricoesAbertas, \App\Enums\FaseEleicao::EmHomologacao], true))
+            <x-alerta tipo="aviso" titulo="Nenhuma chapa homologada" class="mt-4">
+                A votação não pode começar sem ao menos uma chapa homologada: só elas aparecem na urna.
+                <a href="{{ route('admin.chapas.index', ['situacao' => 'pendente']) }}">Analisar as chapas pendentes</a>.
             </x-alerta>
         @endif
 
