@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Schema;
  * sessao_id ou mesario_id. "Quem votou" fica em sessoes_votacao; "em quem votou" fica aqui.
  * chapa_id nulo fica reservado para voto em branco/nulo (a equipe decide como representar).
  * O teste tests/Feature/ConstraintsTest.php falha se alguém quebrar essa regra.
+ *
+ * Também NÃO tem timestamps nem chave sequencial/ordenada: com created_at ou id crescente,
+ * bastaria cruzar a ORDEM/HORÁRIO dos votos com sessoes_votacao para descobrir o voto de
+ * cada eleitor. Por isso o id é UUID v4 aleatório (ver App\Models\Voto::newUniqueId).
  */
 return new class extends Migration
 {
@@ -16,10 +20,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('votos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('eleicao_id')->constrained('eleicoes')->cascadeOnDelete();
-            $table->foreignId('chapa_id')->nullable()->constrained('chapas')->nullOnDelete();
-            $table->timestamps();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('eleicao_id')->constrained('eleicoes')->cascadeOnDelete();
+            $table->foreignUuid('chapa_id')->nullable()->constrained('chapas')->nullOnDelete();
         });
     }
 

@@ -23,7 +23,7 @@ class PaginaInicialTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee("Eleição #{$eleicao->id}")
+            ->assertSee($eleicao->id)
             ->assertSeeInOrder(['Chapa <strong>10</strong>', 'Chapa <strong>20</strong>'], false);
     }
 

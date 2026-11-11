@@ -9,6 +9,7 @@ use App\Models\Voto;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -26,6 +27,23 @@ class ConstraintsTest extends TestCase
         foreach (['eleitor_id', 'terminal_id', 'sessao_id', 'sessao_votacao_id', 'mesario_id', 'user_id'] as $proibida) {
             $this->assertNotContains($proibida, $colunas, "votos.$proibida quebraria o sigilo do voto");
         }
+    }
+
+    public function test_sigilo_do_voto_tabela_votos_nao_guarda_horario(): void
+    {
+        $colunas = Schema::getColumnListing('votos');
+
+        foreach (['created_at', 'updated_at'] as $proibida) {
+            $this->assertNotContains($proibida, $colunas, "votos.$proibida permitiria cruzar o horário com sessoes_votacao");
+        }
+    }
+
+    public function test_sigilo_do_voto_id_e_uuid_v4_aleatorio(): void
+    {
+        $voto = Voto::factory()->create();
+
+        $this->assertTrue(Str::isUuid($voto->id), 'votos.id deve ser UUID');
+        $this->assertSame('4', $voto->id[14], 'votos.id deve ser UUID v4 (aleatório), não ordenado por tempo');
     }
 
     public function test_eleitor_tem_uma_unica_sessao_por_eleicao(): void

@@ -9,36 +9,36 @@ Banco: MySQL/MariaDB, charset `utf8mb4`. Estrutura versionada em `database/migra
 ```mermaid
 erDiagram
     USERS {
-        bigint id PK
+        uuid id PK
         string email UK
     }
     ELEICOES {
-        bigint id PK
+        uuid id PK
     }
     CHAPAS {
-        bigint id PK
-        bigint eleicao_id FK
+        uuid id PK
+        uuid eleicao_id FK
         smallint numero "UK (eleicao_id, numero)"
     }
     ELEITORES {
-        bigint id PK
+        uuid id PK
         string matricula UK
     }
     TERMINAIS {
-        bigint id PK
+        uuid id PK
         smallint numero UK
     }
     SESSOES_VOTACAO {
-        bigint id PK
-        bigint eleicao_id FK "UK (eleicao_id, eleitor_id)"
-        bigint eleitor_id FK
-        bigint terminal_id FK
+        uuid id PK
+        uuid eleicao_id FK "UK (eleicao_id, eleitor_id)"
+        uuid eleitor_id FK
+        uuid terminal_id FK
         bigint mesario_id FK "users, nullable"
     }
     VOTOS {
-        bigint id PK
-        bigint eleicao_id FK
-        bigint chapa_id FK "nullable: branco/nulo"
+        uuid id PK
+        uuid eleicao_id FK
+        uuid chapa_id FK "nullable: branco/nulo"
     }
 
     ELEICOES ||--o{ CHAPAS : "possui"
@@ -50,12 +50,15 @@ erDiagram
     USERS    |o--o{ SESSOES_VOTACAO : "mesario libera"
 ```
 
-Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama.
+Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SESSOES_VOTACAO`.** Isso é o sigilo do voto (`DECISOES.md`, D3). `users` tem `name`/`password` do Laravel; `created_at`/`updated_at` existem em todas as tabelas (convenção do Eloquent) e foram omitidos do diagrama, **exceto em `votos`, que não tem timestamps**.
+
+**Chaves:** as tabelas do domínio usam **UUID** (`char(36)`); `users` e as tabelas internas do Laravel continuam `bigint` (ver `DECISOES.md`, D11). Em `votos` o UUID é **v4 aleatório**; nas demais, ordenado por tempo (padrão do `HasUuids`).
 
 ## Constraints e o que cada uma garante
 
 | Constraint                                        | Regra de negócio garantida pelo banco                                   | Teste            |
 | ------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- |
+| `votos` sem `created_at`/`updated_at` e com `id` UUID v4 | Sigilo do voto: não dá para cruzar ordem/horário com `sessoes_votacao` | `ConstraintsTest` |
 | `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)` | Um eleitor tem **uma** sessão por eleição: sem voto duplo               | `ConstraintsTest` |
 | `chapas UNIQUE (eleicao_id, numero)`              | Número de chapa único dentro da eleição; pode repetir em outra eleição  | `ConstraintsTest` |
 | `eleitores.matricula UNIQUE`                      | Um cadastro por matrícula                                               | —                |

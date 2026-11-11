@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('terminais', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->unsignedSmallInteger('numero')->unique();
             $table->timestamps();
         });
