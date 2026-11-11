@@ -1,6 +1,6 @@
 {{--
-    Urna do terminal, aguardando liberação (H7). Visual pronto; a LÓGICA é a H7/H8:
-    consultar /api/terminais/{id}/status a cada 3 s e, quando liberada, mostrar as chapas
+    Urna do terminal pareado, aguardando liberação (H7). Visual pronto; a LÓGICA é a H7/H8:
+    consultar /urna/status a cada 3 s (o terminal vem do cookie, D16) e, quando liberada, mostrar as chapas
     (componente x-opcao-chapa, ver /estilo/telas/urna-escolha).
 --}}
 @extends('layouts.urna')

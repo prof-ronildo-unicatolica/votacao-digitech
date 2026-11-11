@@ -113,7 +113,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `chapas`          | Nome, descrição, foto; **situação** da inscrição (`pendente` → `homologada` \| `indeferida`), motivo do indeferimento, contato do responsável, origem (formulário ou CSV) | H3, H14, H15 |
 | `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
 | `eleitores`       | Nome, e-mail, turma; eleitor é apto em toda eleição ou precisa de tabela `eleicao_eleitor`? Candidato precisa ser eleitor apto **na mesma eleição**? | H4       |
-| `terminais`       | Nome/local. **Já decidido (D16):** `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` | H5       |
+| ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
 | `sessoes_votacao` | Situação (aberta/votou/expirada/cancelada), horários de liberação, expiração e voto                   | H6, H8   |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
 | (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |

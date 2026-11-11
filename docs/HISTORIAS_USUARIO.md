@@ -44,11 +44,11 @@ Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, no
 
 ### H5 · Cadastrar terminais
 Como admin, quero cadastrar os terminais (número e local) para saber em qual computador cada eleitor será liberado.
-- [ ] CRUD em `/admin/terminais`; número único.
-- [ ] Lista mostra o estado atual: inativo (não pareado), livre, liberado (com nome do eleitor) ou votando.
-- [ ] **Pareamento (D16):** em `/terminal/ativar`, admin ou mesário logado no computador da urna escolhe qual terminal aquele computador é. O servidor grava o hash de um token em `terminais.token_hash` (e `ativado_em`), envia o token num cookie `terminal` (criptografado, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas), faz logout desse navegador e redireciona para `/urna`.
-- [ ] Ativar o mesmo terminal em outro computador invalida o anterior. O admin pode desativar um terminal (apaga o hash).
-- [ ] Testes: ativação grava só o hash (o token não aparece no banco); reativação invalida o cookie antigo; usuário é deslogado após ativar; visitante sem login não acessa `/terminal/ativar`.
+- [x] CRUD em `/admin/terminais`; número único.
+- [ ] Lista mostra o estado atual: inativo (não pareado), livre, liberado (com nome do eleitor) ou votando. *Inativo e livre prontos; liberado e votando dependem da situação da sessão (H6).*
+- [x] **Pareamento (D16):** em `/terminal/ativar`, admin ou mesário logado no computador da urna escolhe qual terminal aquele computador é. O servidor grava o hash de um token em `terminais.token_hash` (e `ativado_em`), envia o token num cookie `terminal` (criptografado, `HttpOnly`, `Secure`, `SameSite=Strict`, 24 horas), faz logout desse navegador e redireciona para `/urna`.
+- [x] Ativar o mesmo terminal em outro computador invalida o anterior. O admin pode desativar um terminal (apaga o hash).
+- [x] Testes: ativação grava só o hash (o token não aparece no banco); reativação invalida o cookie antigo; usuário é deslogado após ativar; visitante sem login não acessa `/terminal/ativar`.
 
 ## Épico B — Inscrição de chapas
 
