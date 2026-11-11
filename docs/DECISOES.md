@@ -59,6 +59,8 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Por quê:** o modelo antigo não tinha `eleicao_id` em `chapas` e `votos`, então o sistema servia para uma única eleição e depois precisava ser zerado. Com `eleicao_id`, o próximo semestre é só cadastrar outra eleição.
 
+**Resultado é histórico:** eleição ou chapa que já recebeu votos não pode ser apagada (RESTRICT em `votos`), e o voto só pode apontar para uma chapa da mesma eleição (FK composta). Apagar continua possível para eleição/chapa sem votos, como um cadastro errado. Para "tirar do ar" uma eleição encerrada, use um atributo de situação (H2), não `DELETE`.
+
 ## D6 — Figma antes do código de tela
 
 **Decisão:** cada tela tem um protótipo no Figma aprovado antes da história entrar em desenvolvimento. Detalhes em `FIGMA.md`.

@@ -38,7 +38,7 @@ erDiagram
     VOTOS {
         uuid id PK
         uuid eleicao_id FK
-        uuid chapa_id FK "nullable: branco/nulo"
+        uuid chapa_id FK "nullable: branco/nulo; FK (eleicao_id, chapa_id)"
     }
 
     ELEICOES ||--o{ CHAPAS : "possui"
@@ -65,10 +65,11 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `terminais.numero UNIQUE`                         | Um terminal por número (a URL da urna usa o número)                     | —                |
 | `votos` sem FK para eleitor/terminal/sessão       | Sigilo do voto                                                          | `ConstraintsTest` |
 | `votos.chapa_id` nullable                         | Voto em branco/nulo possível sem chapa                                  | `ConstraintsTest` |
-| `ON DELETE CASCADE` a partir de `eleicoes`        | Apagar eleição apaga chapas, sessões e votos dela                       | `ConstraintsTest` |
+| `votos (eleicao_id, chapa_id)` → `chapas (eleicao_id, id)` | O voto só vai para uma chapa **da mesma eleição** (sem isso, um voto da eleição A poderia contar para uma chapa da eleição B) | `ConstraintsTest` |
+| `votos.eleicao_id` e `votos.chapa_id ON DELETE RESTRICT` | Eleição ou chapa que **já recebeu votos não pode ser apagada**: o resultado é histórico (D5) | `ConstraintsTest` |
+| `ON DELETE CASCADE` de `eleicoes` para `chapas` e `sessoes_votacao` | Apagar eleição **sem votos** (ex.: cadastrada errada) apaga chapas e sessões dela | `ConstraintsTest` |
 | `sessoes_votacao.terminal_id ON DELETE RESTRICT`  | Terminal com histórico de sessão não pode ser apagado                   | `ConstraintsTest` |
 | `sessoes_votacao.mesario_id ON DELETE SET NULL`   | Remover um usuário mesário não apaga a ata                              | —                |
-| `votos.chapa_id ON DELETE SET NULL`               | Remover chapa não apaga votos (vira "sem chapa"); decidir se deve ser RESTRICT | —          |
 
 ## Atributos: perguntas para a equipe responder (uma migration por resposta)
 

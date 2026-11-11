@@ -20,6 +20,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['eleicao_id', 'numero']);
+            // Alvo da FK composta de votos: garante que o voto é numa chapa DA MESMA eleição.
+            $table->unique(['eleicao_id', 'id']);
         });
     }
 
