@@ -7,6 +7,7 @@ use App\Models\Cargo;
 use App\Models\Chapa;
 use App\Models\Eleicao;
 use App\Models\Terminal;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -67,10 +68,12 @@ class PaginaInicialTest extends TestCase
         $this->get('/')->assertOk()->assertSee("/api/terminais/{$terminal->id}/status", false);
     }
 
-    public function test_telas_placeholder_usam_a_identidade_visual(): void
+    public function test_painel_do_mesario_ainda_e_placeholder_com_a_identidade_visual(): void
     {
-        foreach (['/mesario', '/admin'] as $url) {
-            $this->get($url)->assertOk()->assertSee('css/digitech.css')->assertSee('Tela ainda não implementada');
-        }
+        $this->actingAs(User::factory()->create())
+            ->get('/mesario')
+            ->assertOk()
+            ->assertSee('css/digitech.css')
+            ->assertSee('Tela ainda não implementada');
     }
 }

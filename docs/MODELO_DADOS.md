@@ -9,11 +9,19 @@ Banco: MySQL/MariaDB, charset `utf8mb4`. Estrutura versionada em `database/migra
 ```mermaid
 erDiagram
     USERS {
-        uuid id PK
+        bigint id PK
         string email UK
+        string perfil "admin | mesario"
+        boolean ativo
     }
     ELEICOES {
         uuid id PK
+        string titulo
+        datetime inscricao_abre_em
+        datetime inscricao_fecha_em
+        datetime votacao_abre_em
+        datetime votacao_fecha_em
+        boolean ativa "UK; TRUE ou NULL (D15)"
     }
     CHAPAS {
         uuid id PK
@@ -77,6 +85,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `votos` sem `created_at`/`updated_at` e com `id` UUID v4 | Sigilo do voto: não dá para cruzar ordem/horário com `sessoes_votacao` | `ConstraintsTest` |
 | `sessoes_votacao UNIQUE (eleicao_id, eleitor_id)` | Um eleitor tem **uma** sessão por eleição: sem voto duplo               | `ConstraintsTest` |
 | `chapas UNIQUE (eleicao_id, numero)`              | Número de chapa único dentro da eleição; pode repetir em outra eleição  | `ConstraintsTest` |
+| `eleicoes.ativa UNIQUE`, com TRUE ou NULL (nunca FALSE) | **Só uma eleição ativa**: o índice único aceita vários NULL e um único TRUE (D15) | `ConstraintsTest` |
 | `eleitores.matricula UNIQUE`                      | Um cadastro por matrícula. Todo aluno, eleitor ou candidato, é identificado por ela | —                |
 | `cargos UNIQUE (eleicao_id, ordem)`               | Cada eleição tem sua lista de cargos, sem duas posições iguais na cédula | `ConstraintsTest` |
 | `candidatos UNIQUE (chapa_id, cargo_id)`          | Um candidato por cargo em cada chapa                                    | `ConstraintsTest` |
@@ -84,7 +93,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `candidatos (eleicao_id, chapa_id)` → `chapas` e `(eleicao_id, cargo_id)` → `cargos` | Chapa, cargo e candidatura são da **mesma eleição** | `ConstraintsTest` |
 | `candidatos.eleitor_id` FK `ON DELETE RESTRICT`   | Candidato precisa ser aluno cadastrado; aluno que é candidato não pode ser apagado | `ConstraintsTest` |
 | `ON DELETE CASCADE` de `chapas`, `cargos` e `eleicoes` para `candidatos` | Apagar uma chapa inscrita errada (sem votos) apaga sua composição; o aluno continua cadastrado | `ConstraintsTest` |
-| `terminais.numero UNIQUE`                         | Um terminal por número (o que o mesário vê e escolhe). A URL da urna usa o **UUID** (`/urna/{id}`), não o número (D11) | —                |
+| `terminais.numero UNIQUE`                         | Um terminal por número (o que o mesário vê e escolhe). A urna não tem ID na URL: identifica o terminal pelo cookie de pareamento (D16) | —                |
 | `votos` sem FK para eleitor/terminal/sessão       | Sigilo do voto                                                          | `ConstraintsTest` |
 | `votos.chapa_id` nullable                         | Voto em branco/nulo possível sem chapa                                  | `ConstraintsTest` |
 | `votos (eleicao_id, chapa_id)` → `chapas (eleicao_id, id)` | O voto só vai para uma chapa **da mesma eleição** (sem isso, um voto da eleição A poderia contar para uma chapa da eleição B) | `ConstraintsTest` |
@@ -98,13 +107,13 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 
 | Tabela            | O que falta decidir                                                                                   | História |
 | ----------------- | ----------------------------------------------------------------------------------------------------- | -------- |
-| `users`           | Como distinguir admin de mesário? (coluna `perfil`? tabela `perfis`? pacote de permissões?) Como desativar um usuário sem apagá-lo (`ativo`?) | H1       |
-| `eleicoes`        | Título; **período de inscrição de chapas** (abertura/fim) e **período de votação** (início/fim); como marcar a eleição ativa | H2       |
+| ~~`users`~~       | **Respondido na H1 (D15):** coluna `perfil` (`admin`/`mesario`, enum `App\Enums\Perfil`) e `ativo` (desativar sem apagar) | H1       |
+| ~~`eleicoes`~~    | **Respondido na H2 (D15):** `titulo`, `inscricao_abre_em`, `inscricao_fecha_em`, `votacao_abre_em`, `votacao_fecha_em` e `ativa` (TRUE ou NULL, com UNIQUE). A fase é calculada pelas datas (`App\Enums\FaseEleicao`) | H2       |
 | `cargos`          | Título (Presidente, Vice-presidente, 1º Secretário...). A **quantidade de candidatos por chapa** é o número de cargos da eleição | H13      |
 | `chapas`          | Nome, descrição, foto; **situação** da inscrição (`pendente` → `homologada` \| `indeferida`), motivo do indeferimento, contato do responsável, origem (formulário ou CSV) | H3, H14, H15 |
 | `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
 | `eleitores`       | Nome, e-mail, turma; eleitor é apto em toda eleição ou precisa de tabela `eleicao_eleitor`? Candidato precisa ser eleitor apto **na mesma eleição**? | H4       |
-| `terminais`       | Nome/local                                                                                            | H5       |
+| `terminais`       | Nome/local. **Já decidido (D16):** `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` | H5       |
 | `sessoes_votacao` | Situação (aberta/votou/expirada/cancelada), horários de liberação, expiração e voto                   | H6, H8   |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
 | (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |
@@ -121,7 +130,7 @@ Antes da votação há uma fase de **inscrição**, com período próprio em cad
 
 Linha do tempo de uma eleição (validada na aplicação, H2):
 
-`inscricao_abre` < `inscricao_fecha` ≤ `votacao_inicio` < `votacao_fim` (nomes das colunas: decisão da equipe).
+`inscricao_abre_em` < `inscricao_fecha_em` ≤ `votacao_abre_em` < `votacao_fecha_em` (`App\Http\Requests\EleicaoRequest`). Cada período inclui o início e exclui o fim.
 
 Regras:
 

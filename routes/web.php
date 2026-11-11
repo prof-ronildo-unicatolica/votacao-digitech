@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\EleicaoController;
+use App\Http\Controllers\Admin\PainelController;
+use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Dev\RecarregarController;
 use App\Http\Controllers\EstiloController;
 use App\Http\Controllers\HomeController;
@@ -8,13 +12,36 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
-// Telas com a identidade visual; a lógica é das histórias H1 (login) e H7/H8 (urna).
-Route::view('/login', 'auth.login')->name('login');
+// H1 · Login e logout. O limite de tentativas erradas fica em App\Http\Requests\LoginRequest.
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+});
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+// Urna do terminal (H7/H8): o eleitor não faz login.
 Route::get('/urna/{terminal}', UrnaController::class)->name('urna');
 
-// Placeholders: cada tela é uma história de usuário (issue no GitHub, ver docs/HISTORIAS_USUARIO.md)
-Route::view('/mesario', 'placeholders.mesario')->name('mesario');
-Route::view('/admin', 'placeholders.admin')->name('admin');
+// Área logada: `ativo` derruba quem foi desativado; `perfil` devolve 403 a quem não pode.
+Route::middleware(['auth', 'ativo'])->group(function () {
+    // Mesário (H6, H9). O admin também entra, para acompanhar a mesa.
+    Route::view('/mesario', 'placeholders.mesario')->middleware('perfil:mesario,admin')->name('mesario');
+
+    Route::middleware('perfil:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', PainelController::class)->name('painel');
+
+        // H2 · Eleições
+        Route::resource('eleicoes', EleicaoController::class)
+            ->except('show')
+            ->parameters(['eleicoes' => 'eleicao']);
+        Route::post('eleicoes/{eleicao}/ativar', [EleicaoController::class, 'ativar'])->name('eleicoes.ativar');
+        Route::post('eleicoes/{eleicao}/desativar', [EleicaoController::class, 'desativar'])->name('eleicoes.desativar');
+
+        // H1 · Usuários (admin e mesário)
+        Route::resource('usuarios', UsuarioController::class)->except('show');
+        Route::post('usuarios/{usuario}/ativo', [UsuarioController::class, 'alternarAtivo'])->name('usuarios.ativo');
+    });
+});
 
 // Vitrine da identidade visual (docs/IDENTIDADE_VISUAL.md), com dados fictícios. Fora de produção.
 if (! app()->isProduction()) {

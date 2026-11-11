@@ -1,6 +1,6 @@
 # Decisões de arquitetura
 
-Registro das decisões tomadas em 09/09/2026 (D13 e D14 em 05/11/2026), com o porquê. Mudar uma decisão é permitido, mas exige atualizar este arquivo.
+Registro das decisões tomadas em 09/09/2026 (D13 a D15 em 05/11/2026), com o porquê. Mudar uma decisão é permitido, mas exige atualizar este arquivo.
 
 ## D1 — Um único repositório
 
@@ -48,7 +48,7 @@ Quando separar faria sentido: só se a urna precisasse rodar offline em outro di
 
 **Por quê:**
 - **Sigilo:** em `votos`, um `id` auto-incremento revela a ordem dos votos. O model `Voto` sobrescreve `newUniqueId()` para gerar UUID **v4 aleatório**. O padrão do `HasUuids` é ordenado por tempo, e vazaria a ordem do mesmo jeito.
-- **Não expor IDs previsíveis** em URLs e APIs (`/urna/{terminal}`, `/api/terminais/{terminal}/status`): não dá para "chutar" o próximo registro.
+- **Não expor IDs previsíveis** em URLs e APIs: não dá para "chutar" o próximo registro. (A urna deixou de ter o ID do terminal na URL: ela identifica o terminal por um cookie de pareamento, D16.)
 - **Prática de mercado:** a equipe aprende desde cedo a lidar com chaves não numéricas.
 
 **Custo:** índices maiores (`char(36)`) e IDs menos legíveis no DBeaver. Para identificar algo para humanos, use a chave natural (`chapas.numero`, `terminais.numero`, `eleitores.matricula`).
@@ -118,3 +118,54 @@ Registrada em 05/11/2026, com a ampliação do escopo para a inscrição de chap
 **Consequência no cronograma:** as inscrições acontecem **antes** da votação, então formulário, CSV e homologação (H13, H14, H15, H3) precisam estar em produção primeiro. O roadmap foi reordenado para isso.
 
 **Riscos e respostas:** spam no formulário público → `throttle` e homologação; aluno inscrito sem saber → a comissão pode exigir confirmação (decisão da equipe na H14, ex.: e-mail de confirmação para cada candidato); dados pessoais em página pública → a página pública só confirma o recebimento, sem listar nomes de outras chapas antes da homologação.
+
+## D15 — Perfil em coluna e "só uma eleição ativa" no banco
+
+Registrada em 05/11/2026, na implementação de H1 e H2.
+
+**Perfil:** `users.perfil` é uma coluna de texto com dois valores, `admin` e `mesario` (enum `App\Enums\Perfil`), e não uma tabela `perfis` nem um pacote de permissões. São só dois perfis, fixos, e a regra de acesso é uma linha por rota (middleware `perfil:admin`). Se um dia houver permissões finas (ex.: "mesário que também importa eleitores"), aí vale um pacote como `spatie/laravel-permission`.
+
+- **Admin também acessa `/mesario`**, para acompanhar a mesa. Mesário em `/admin` recebe 403.
+- **Desativar, não apagar:** `users.ativo = false` impede o login e derruba quem já estava logado na próxima requisição (middleware `ativo`). Quem já liberou sessões faz parte da ata e não pode ser apagado (RESTRICT).
+- **O admin não se tranca para fora:** não pode desativar, excluir nem rebaixar a si mesmo. Por isso sempre sobra pelo menos um admin ativo.
+- **Primeiro admin em produção:** `php artisan digitech:admin`, porque o seed não roda em produção. A senha é perguntada no terminal, nunca passada como opção, para não ficar no histórico.
+- **Tentativas de login:** 5 erradas por minuto para o mesmo e-mail + IP bloqueiam por 1 minuto. Só os erros contam (RateLimiter no `LoginRequest`), então quem acerta não é penalizado.
+
+**Só uma eleição ativa, garantido pelo banco:** `eleicoes.ativa` é `TRUE` ou `NULL`, nunca `FALSE`, e tem índice `UNIQUE`. MySQL, MariaDB e SQLite aceitam vários `NULL` num índice único, mas só um `TRUE`. O model `Eleicao` converte `false` em `NULL` ao gravar. Ativar uma eleição desativa a anterior na mesma transação; se duas ativações acontecerem ao mesmo tempo, o banco rejeita uma em vez de deixar duas eleições ativas.
+
+**Fase calculada, não gravada:** a fase (aguardando inscrições, inscrições abertas, em homologação, votação aberta, encerrada) sai das quatro datas (`App\Enums\FaseEleicao::em`, função pura com testes unitários). Gravar a fase numa coluna exigiria um agendador para trocá-la na hora certa, e a hospedagem compartilhada só tem cron de minuto em minuto (D8).
+
+## D16 — Terminal pareado: a urna só funciona no computador ativado
+
+Registrada em 06/11/2026, antes de implementar H5 a H8.
+
+**Problema:** a urna (`/urna/{uuid}`) e a API de status não exigem login, porque o eleitor não faz login (D4). O UUID impede que alguém **adivinhe** o endereço (D11), mas não impede que ele **vaze**: numa foto da tela, no histórico do navegador ou em um print do grupo da turma. Com o link em mãos, qualquer pessoa poderia:
+
+- abrir a urna no próprio celular e votar no lugar do eleitor que o mesário acabou de liberar para aquele terminal;
+- consultar o status e ver o nome de quem está votando.
+
+**Decisão:** cada terminal é **pareado** com um único computador antes da votação. O pareamento grava um cookie nesse navegador, e sem o cookie a urna não funciona.
+
+1. No computador da urna, um admin ou mesário faz login e abre `/terminal/ativar`. A tela lista os terminais cadastrados; ele escolhe "este computador é o terminal 3".
+2. O servidor gera um token aleatório (`Str::random(64)`), grava **só o hash** (SHA-256) em `terminais.token_hash` com a data em `terminais.ativado_em`, e envia o token num cookie `terminal` criptografado, `HttpOnly`, `Secure`, `SameSite=Strict`, válido por 24 horas.
+3. Na mesma resposta, o servidor **faz logout** do usuário nesse navegador e redireciona para `/urna`. Assim o eleitor nunca encontra uma sessão de mesário aberta na urna.
+4. A urna passa a usar rotas **sem ID na URL**, e o terminal sai do cookie: `GET /urna` (tela), `GET /urna/status` (polling) e `POST /urna/votar`. Um middleware `terminal` confere o hash do cookie com `terminais.token_hash` e coloca o terminal na requisição. Sem cookie, ou com cookie que não bate, a resposta é 403 com a tela "Este computador não está ativado como terminal. Chame o mesário."
+5. Ativar o mesmo terminal em outro computador substitui o hash: o computador anterior perde o acesso na próxima consulta. O admin também pode **desativar** um terminal (apaga o hash).
+6. O mesário só consegue liberar eleitor para terminal **ativado**. Terminal sem pareamento aparece como **inativo** no painel (estado já previsto em `IDENTIDADE_VISUAL.md`).
+7. Ativação e desativação de terminal vão para a auditoria (H11), com quem fez, quando e o IP.
+
+**Por quê assim:**
+
+- **Hash no banco, token no cookie:** quem ler o banco (backup, DBeaver) não consegue se passar por um terminal. É o mesmo princípio da senha.
+- **Sem ID na URL:** se o computador é quem diz qual terminal ele é, não sobra link para vazar. Isso substitui o `/urna/{terminal}` e o `/api/terminais/{terminal}/status` previstos em D11.
+- **Rotas no grupo `web`, não em `routes/api.php`:** o grupo `api` do Laravel não descriptografa cookies nem verifica CSRF. A urna é uma página do próprio sistema, então usa o grupo `web` com CSRF no voto.
+- **24 horas:** cobre um dia de votação. Se a votação durar mais de um dia, o mesário reativa os terminais na abertura de cada dia, o que também serve de checagem de que cada computador está no lugar certo.
+- **Sem software nos terminais:** continua bastando um navegador em modo quiosque (README, objetivo 4).
+
+**O que isto não resolve:** quem tem acesso físico ao computador pode tentar copiar o cookie pelas ferramentas do navegador. O modo quiosque (sem barra de endereço nem F12) e o mesário olhando a mesa são a defesa. `HttpOnly` impede que um script da página leia o cookie.
+
+**Alternativas descartadas:**
+
+- *Restringir por IP:* na rede da faculdade os computadores costumam sair pelo mesmo IP público (NAT), e o IP muda entre laboratórios.
+- *Mesário logado na própria urna:* o eleitor ficaria a um clique do painel do mesário.
+- *Código digitado na urna a cada eleitor:* mais seguro contra cookie copiado, mas atrasa a fila e cria mais um ponto de erro no dia. Pode virar melhoria futura.
