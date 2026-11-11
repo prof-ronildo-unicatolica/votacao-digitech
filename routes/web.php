@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Dev\RecarregarController;
 use App\Http\Controllers\EstiloController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -17,4 +18,9 @@ if (! app()->isProduction()) {
     Route::get('/estilo/telas/{tela}', [EstiloController::class, 'tela'])
         ->whereIn('tela', array_keys(EstiloController::TELAS))
         ->name('estilo.tela');
+}
+
+// Auto-refresh do navegador ao salvar arquivos (só em desenvolvimento local, sem Node).
+if (app()->isLocal()) {
+    Route::get('/_dev/recarregar', RecarregarController::class)->name('dev.recarregar');
 }
