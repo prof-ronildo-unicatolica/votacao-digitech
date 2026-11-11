@@ -35,12 +35,12 @@ Como admin, quero criar uma eleição com título, **período de inscrição de 
 
 ### H4 · Cadastrar eleitores (individual e CSV)
 Como admin, quero cadastrar eleitores um a um ou importar um CSV (matrícula, nome, turma, e-mail) para montar o eleitorado sem digitação manual.
-- [ ] CRUD em `/admin/eleitores` com busca por matrícula/nome e paginação.
-- [ ] Importação de CSV mostra quantos entraram e quais linhas falharam (e por quê).
-- [ ] Matrícula duplicada no CSV atualiza o nome, não cria outro registro.
-- [ ] Eleitor que já foi liberado em alguma eleição, ou que é candidato, não pode ser excluído (o banco bloqueia; a tela explica o motivo).
-- [ ] O eleitorado é importado **antes** de abrir as inscrições: os candidatos são indicados pela matrícula (H14, H15).
-- [ ] Testes: importação com 3 linhas válidas + 1 inválida.
+- [x] CRUD em `/admin/eleitores` com busca por matrícula/nome e paginação.
+- [x] Importação de CSV mostra quantos entraram e quais linhas falharam (e por quê).
+- [x] Matrícula duplicada no CSV atualiza o nome, não cria outro registro.
+- [x] Eleitor que já foi liberado em alguma eleição, ou que é candidato, não pode ser excluído (o banco bloqueia; a tela explica o motivo).
+- [x] O eleitorado é importado **antes** de abrir as inscrições: os candidatos são indicados pela matrícula (H14, H15).
+- [x] Testes: importação com 3 linhas válidas + 1 inválida.
 
 ### H5 · Cadastrar terminais
 Como admin, quero cadastrar os terminais (número e local) para saber em qual computador cada eleitor será liberado.

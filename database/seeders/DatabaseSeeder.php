@@ -62,7 +62,7 @@ class DatabaseSeeder extends Seeder
 
             foreach ($cargos as $cargo) {
                 $matricula = (string) (2024100 + ($numero - 1) * $cargos->count() + $cargo->ordem);
-                $aluno = Eleitor::firstOrCreate(['matricula' => $matricula]);
+                $aluno = Eleitor::firstOrCreate(['matricula' => $matricula], ['nome' => fake('pt_BR')->name(), 'turma' => 'ADS 3']);
 
                 Candidato::firstOrCreate(
                     ['chapa_id' => $chapa->id, 'cargo_id' => $cargo->id],
@@ -76,7 +76,7 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach (['2024007', '2024008', '2024009', '2024010', '2024011', '2024012'] as $matricula) {
-            Eleitor::firstOrCreate(['matricula' => $matricula]);
+            Eleitor::firstOrCreate(['matricula' => $matricula], ['nome' => fake('pt_BR')->name(), 'turma' => 'SI 2']);
         }
     }
 }

@@ -112,11 +112,30 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `cargos`          | Título (Presidente, Vice-presidente, 1º Secretário...). A **quantidade de candidatos por chapa** é o número de cargos da eleição | H13      |
 | `chapas`          | Nome, descrição, foto; **situação** da inscrição (`pendente` → `homologada` \| `indeferida`), motivo do indeferimento, contato do responsável, origem (formulário ou CSV) | H3, H14, H15 |
 | `candidatos`      | Precisa de algo além da ligação aluno-cargo-chapa? (ex.: foto). Nome e matrícula vêm de `eleitores` | H14      |
-| `eleitores`       | Nome, e-mail, turma; eleitor é apto em toda eleição ou precisa de tabela `eleicao_eleitor`? Candidato precisa ser eleitor apto **na mesma eleição**? | H4       |
+| ~~`eleitores`~~   | **Respondido na H4 (D17):** `nome`, `turma` (opcional) e `email` (opcional). Cadastro único de alunos, apto em **toda** eleição: sem tabela `eleicao_eleitor`. Candidato precisa estar cadastrado em `eleitores` | H4       |
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
 | `sessoes_votacao` | Situação (aberta/votou/expirada/cancelada), horários de liberação, expiração e voto                   | H6, H8   |
 | `votos`           | Como diferenciar branco de nulo (coluna `tipo`?), quando foi registrado (cuidado: horário exato + poucos votantes permite correlacionar com a sessão) | H8, H10 |
 | (nova) auditoria  | Quem fez o quê e quando; nunca em quem votou                                                          | H11      |
+
+### Formato do CSV de eleitores (H4)
+
+Uma linha por **aluno**, com cabeçalho. Separador `;` (padrão do Excel em português) ou `,`; UTF-8 com ou sem BOM (arquivo do Excel em Windows-1252 também é aceito). Exemplo em [`docs/exemplos/eleitores.csv`](exemplos/eleitores.csv), que também pode ser baixado na tela de importação.
+
+```csv
+matricula;nome;turma;email
+2024101;Ana Beatriz Lima;ADS 3;ana.lima@aluno.unicatolica.edu.br
+2024102;Bruno Carvalho;ADS 3;
+```
+
+| Coluna      | Regra                                                                 |
+| ----------- | --------------------------------------------------------------------- |
+| `matricula` | Obrigatória; até 20 caracteres: letras, números, ponto e hífen        |
+| `nome`      | Obrigatório; até 150 caracteres                                       |
+| `turma`     | Opcional; até 50 caracteres                                           |
+| `email`     | Opcional; e-mail válido                                               |
+
+O cabeçalho ignora acentos, maiúsculas e hífen (`Matrícula`, `E-mail` valem). Validação **linha a linha**: linha inválida entra no relatório (linha, matrícula e motivo) e as outras são gravadas. Matrícula que já existe **atualiza** o cadastro: o nome sempre, a turma e o e-mail só se vierem preenchidos (coluna vazia não apaga o que já estava). As regras são as mesmas do formulário (`App\Support\EleitorRegras`).
 
 ## Inscrição de chapas (H13, H14, H15, H3)
 

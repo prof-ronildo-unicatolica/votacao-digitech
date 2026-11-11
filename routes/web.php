@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\EleicaoController;
+use App\Http\Controllers\Admin\EleitorController;
 use App\Http\Controllers\Admin\PainelController;
 use App\Http\Controllers\Admin\TerminalController;
 use App\Http\Controllers\Admin\UsuarioController;
@@ -48,6 +49,14 @@ Route::middleware(['auth', 'ativo'])->group(function () {
             ->parameters(['eleicoes' => 'eleicao']);
         Route::post('eleicoes/{eleicao}/ativar', [EleicaoController::class, 'ativar'])->name('eleicoes.ativar');
         Route::post('eleicoes/{eleicao}/desativar', [EleicaoController::class, 'desativar'])->name('eleicoes.desativar');
+
+        // H4 · Eleitores (um a um ou CSV). As rotas de importar vêm antes do resource.
+        Route::get('eleitores/importar', [EleitorController::class, 'importarForm'])->name('eleitores.importar');
+        Route::post('eleitores/importar', [EleitorController::class, 'importar'])->name('eleitores.importar.store');
+        Route::get('eleitores/modelo.csv', [EleitorController::class, 'modelo'])->name('eleitores.modelo');
+        Route::resource('eleitores', EleitorController::class)
+            ->except('show')
+            ->parameters(['eleitores' => 'eleitor']);
 
         // H5 · Terminais. Ativar é em /terminal/ativar; aqui o admin só desativa.
         Route::resource('terminais', TerminalController::class)
