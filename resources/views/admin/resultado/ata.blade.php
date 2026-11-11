@@ -56,6 +56,7 @@
             <dt>Eleitores aptos</dt><dd>{{ $a->aptos }}</dd>
             <dt>Votaram</dt><dd>{{ $a->votaram }} ({{ $formatar($a->participacao()) }} de participação)</dd>
             <dt>Votos apurados</dt><dd>{{ $a->total }}, sendo {{ $a->validos }} válidos, {{ $a->brancos }} {{ $a->brancos === 1 ? 'branco' : 'brancos' }} e {{ $a->nulos }} {{ $a->nulos === 1 ? 'nulo' : 'nulos' }}</dd>
+            <dt>Auditoria</dt><dd>{{ $cabeca->ultima_sequencia }} eventos na corrente; último hash <span style="font-family: var(--dt-fonte-familia-mono); font-size: 8pt; word-break: break-all">{{ $cabeca->ultimo_hash ?? '—' }}</span></dd>
             <dt>Conferência</dt><dd>{{ $a->conferida() ? 'votos apurados iguais ao número de eleitores que votaram' : 'DIVERGÊNCIA: '.$a->total.' votos para '.$a->votaram.' eleitores que votaram' }}</dd>
         </dl>
 
@@ -100,6 +101,6 @@
             <div>Representante das chapas</div>
         </div>
 
-        <p class="rodape">Emitida pelo sistema de votação em {{ $emitida->format('d/m/Y \à\s H:i') }}. Números gerados a partir dos votos registrados. O voto é secreto: nenhum registro liga o eleitor à sua escolha.</p>
+        <p class="rodape">Emitida pelo sistema de votação em {{ $emitida->format('d/m/Y \à\s H:i') }}. Números gerados a partir dos votos registrados. O voto é secreto: nenhum registro liga o eleitor à sua escolha. O hash da auditoria permite conferir depois, com <code>php artisan digitech:auditoria:verificar</code>, que nenhum evento até aqui foi alterado ou apagado.</p>
     </main>
 @endsection

@@ -108,6 +108,18 @@ cd ~/domains/SEU_DOMINIO/app && php artisan schedule:run >> /dev/null 2>&1
 - [ ] `/mesario` exige login.
 - [ ] `storage/logs/laravel-AAAA-MM-DD.log` (log diário) sem erros após navegar.
 - [ ] `php artisan about` mostra `Environment: production` e `Debug Mode: OFF`.
+- [ ] `php artisan digitech:auditoria:verificar` → "A auditoria confere" (D27). Rode de novo depois da votação, antes de assinar a ata, e confira se o último hash é o mesmo impresso nela.
+
+## Auditoria só-acrescenta no banco (opcional, D27)
+
+A corrente de hashes **detecta** alteração na tabela `auditoria`. Para **impedir**, o usuário do banco da aplicação não deveria ter `UPDATE` nem `DELETE` nela. Se o painel da Hostinger permitir escolher privilégios por tabela (ou se houver acesso a `GRANT`):
+
+```sql
+-- Exemplo: o usuário da aplicação lê e acrescenta, mas não altera nem apaga a auditoria.
+REVOKE UPDATE, DELETE ON SEU_BANCO.auditoria FROM 'SEU_USUARIO'@'%';
+```
+
+As migrations precisam de um usuário com todos os privilégios: rode-as com um usuário administrativo, ou aplique o `REVOKE` depois delas. Se a hospedagem não permitir, a corrente de hashes e o hash impresso na ata continuam valendo.
 
 ## Restrições da hospedagem compartilhada e como o projeto lida
 

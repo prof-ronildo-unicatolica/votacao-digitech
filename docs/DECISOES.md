@@ -356,3 +356,22 @@ Registrada em 11/11/2026, na implementação da H10.
 - *Mostrar a parcial só para o admin:* o admin está na mesa durante a votação.
 - *Gerar o PDF no servidor:* fica para depois, se a comissão precisar de um arquivo com o mesmo hash toda vez.
 
+## D27 — Auditoria: corrente de hashes com uma linha "cabeça" e o hash na ata
+
+Registrada em 11/11/2026, na fase 4 da H11 (plano em `AUDITORIA.md`, seção 7).
+
+**Decisão:**
+- Cada evento recebe uma **posição** (`sequencia`, única) e um **hash**: `SHA-256(hash anterior | conteúdo do evento)`. Quem grava trava a linha única `auditoria_cabeca` (`FOR UPDATE`), lê o último hash, grava o evento e atualiza a cabeça, **na mesma transação da ação** (D22). Se a ação for desfeita, a cabeça volta junto.
+- **`php artisan digitech:auditoria:verificar`** recalcula a corrente e aponta o primeiro evento alterado, apagado ou inserido por fora. Sai com código 1 quando algo não confere.
+- **Âncora fora do banco:** a ata (H10) e o CSV do resultado imprimem o número de eventos e o último hash. Quem tiver acesso ao banco não consegue reescrever a corrente inteira sem que a ata assinada denuncie.
+- **`user_id` e `eleicao_id` ficam fora do hash**, porque o banco os anula ao excluir o usuário ou a eleição. O `ator` e o alvo continuam protegidos.
+- **Eventos anteriores** à corrente ficam sem posição e são aceitos pelo verificador. A corrente começa no primeiro evento depois da migration.
+
+**Por quê:**
+- **Detectar sem depender de confiança no servidor:** a comissão confere depois, com um comando, se o registro mudou.
+- **A cabeça em vez de "ler o último evento":** duas gravações ao mesmo tempo leriam o mesmo "último" e criariam dois elos com o mesmo anterior. A trava numa linha só serializa as gravações. Com algumas centenas de eventos por eleição (e um voto por vez em cada terminal), a espera é desprezível.
+
+**Limites e alternativas:**
+- *A corrente detecta, não impede.* Em produção, o ideal é o usuário do banco da aplicação não ter `UPDATE`/`DELETE` na tabela `auditoria`. Na hospedagem compartilhada isso depende do painel. Fica como passo opcional do deploy (H12).
+- *Assinatura digital por evento (chave privada no servidor):* descartada, porque quem tem o servidor tem a chave. A âncora impressa na ata resolve melhor o mesmo problema.
+
