@@ -6,6 +6,7 @@ use App\Enums\AcaoAuditoria;
 use App\Http\Controllers\Controller;
 use App\Models\Eleicao;
 use App\Support\Auditoria;
+use App\Support\CorrenteDeHashes;
 use App\Support\ResultadoDaEleicao;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,7 +64,8 @@ class ResultadoController extends Controller
             return $this->bloqueado($eleicao);
         }
 
-        $html = view('admin.resultado.ata', ['resultado' => ResultadoDaEleicao::apurar($eleicao), 'emitida' => now()])->render();
+        // A cabeça da corrente de hashes vai impressa: âncora fora do banco (D27).
+        $html = view('admin.resultado.ata', ['resultado' => ResultadoDaEleicao::apurar($eleicao), 'emitida' => now(), 'cabeca' => CorrenteDeHashes::cabeca()])->render();
         Auditoria::registrar(AcaoAuditoria::AtaExportada, $eleicao, ['formato' => 'pdf', 'sha256' => hash('sha256', $html)], $eleicao->id);
 
         return response($html);
@@ -94,6 +96,8 @@ class ResultadoController extends Controller
             ['Participação (%)', $num($a->participacao())],
             ['Votos válidos', $a->validos],
             ['Total de votos', $a->total],
+            ['Auditoria (eventos)', CorrenteDeHashes::cabeca()->ultima_sequencia],
+            ['Auditoria (último hash)', CorrenteDeHashes::cabeca()->ultimo_hash],
             ['Resultado', match (true) {
                 (bool) $vencedora => "Chapa {$vencedora->numero} · {$vencedora->nome}",
                 $a->empate() => 'Empate: '.$r->empatadas()->map(fn ($c) => "chapa {$c->numero}")->join(', ', ' e '),

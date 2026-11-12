@@ -97,6 +97,14 @@ erDiagram
         string alvo_tipo "chapa, sessao, terminal..."
         string alvo_id "sem FK"
         json dados "nunca a chapa de um voto"
+        bigint sequencia UK "posição na corrente (fase 4)"
+        char hash "SHA-256 do anterior + este (fase 4)"
+    }
+
+    AUDITORIA_CABECA {
+        tinyint id PK "sempre 1"
+        bigint ultima_sequencia
+        char ultimo_hash "impresso na ata (H10)"
     }
 
     ELEICOES ||--o{ CHAPAS : "possui"
@@ -140,6 +148,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | `votos` sem FK para eleitor/terminal/sessão       | Sigilo do voto                                                          | `ConstraintsTest` |
 | `votos.chapa_id` nullable                         | Voto em branco/nulo possível sem chapa                                  | `ConstraintsTest` |
 | `votos (eleicao_id, chapa_id)` → `chapas (eleicao_id, id)` | O voto só vai para uma chapa **da mesma eleição** (sem isso, um voto da eleição A poderia contar para uma chapa da eleição B) | `ConstraintsTest` |
+| `auditoria.sequencia UNIQUE` e a linha única `auditoria_cabeca` (travada a cada evento) | Dois eventos nunca ocupam a mesma posição da corrente de hashes; apagar o fim da corrente é detectado pela cabeça (D27) | `CorrenteDeHashesTest` |
 | `votos.eleicao_id` e `votos.chapa_id ON DELETE RESTRICT` | Eleição ou chapa que **já recebeu votos não pode ser apagada**: o resultado é histórico (D5) | `ConstraintsTest` |
 | `ON DELETE CASCADE` de `eleicoes` para `chapas` e `sessoes_votacao` | Apagar eleição **sem votos** (ex.: cadastrada errada) apaga chapas e sessões dela | `ConstraintsTest` |
 | `sessoes_votacao.terminal_id ON DELETE RESTRICT`  | Terminal com histórico de sessão não pode ser apagado                   | `ConstraintsTest` |
@@ -159,7 +168,7 @@ Repare: **nenhuma linha liga `VOTOS` a `ELEITORES`, `TERMINAIS`, `USERS` ou `SES
 | ~~`terminais`~~   | **Respondido na H5 (D16):** `local` (opcional), `token_hash` (SHA-256 do token de pareamento, nullable, único) e `ativado_em` (o pareamento vale 24 horas a partir daqui) | H5       |
 | ~~`sessoes_votacao`~~ | **Respondido na H6 (D21):** `situacao` (`aberta` → `votou` \| `cancelada`, `App\Enums\SituacaoSessao`), `liberada_em`, `expira_em`, `votou_em`, `cancelada_em`; **H7:** `exibida_em` (a cédula apareceu na urna: terminal "votando"). "Expirada" não é gravada: é `aberta` com `expira_em` no passado. A H8 marca `votou` (ver "Registro de um voto") | H6, H8 |
 | ~~`votos`~~       | **Respondido na H8 (D24):** `tipo` (`chapa` com `chapa_id`, `branco` ou `nulo` sem chapa; CHECK no MySQL/MariaDB). **Sem horário**: quem votou e quando fica na sessão (`votou_em`), nunca no voto | H8, H10 |
-| ~~`auditoria`~~ | **Fases 1 e 2 implementadas (D22):** `ocorrido_em`, `acao`, `user_id` e `ator`, `ip`, `eleicao_id`, `alvo_tipo` e `alvo_id`, `dados` (json), `hash` (opcional). Só acrescenta; nunca em quem votou. Detalhes em [`AUDITORIA.md`](AUDITORIA.md) | H11      |
+| ~~`auditoria`~~ | **Fases 1 a 4 implementadas (D22, D27):** `ocorrido_em`, `acao`, `user_id` e `ator`, `ip`, `eleicao_id`, `alvo_tipo` e `alvo_id`, `dados` (json), `sequencia` e `hash` (corrente de hashes, fase 4, com a linha única `auditoria_cabeca`). Só acrescenta; nunca em quem votou. Detalhes em [`AUDITORIA.md`](AUDITORIA.md) | H11      |
 
 ### Formato do CSV de eleitores (H4)
 

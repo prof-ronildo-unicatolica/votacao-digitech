@@ -38,7 +38,8 @@ class Auditoria
 
         $usuario ??= auth()->user();
 
-        return EventoAuditoria::create([
+        // Fase 4 (D27): cada evento entra na corrente de hashes, travando a cabeça.
+        return CorrenteDeHashes::gravar(new EventoAuditoria([
             'ocorrido_em' => now(),
             'acao' => $acao,
             'user_id' => $usuario?->getKey(),
@@ -48,7 +49,7 @@ class Auditoria
             'alvo_tipo' => $alvo ? self::tipo($alvo) : null,
             'alvo_id' => $alvo ? (string) $alvo->getKey() : null,
             'dados' => $dados,
-        ]);
+        ]));
     }
 
     /** Mesmo registro, para deixar claro no código que a ação foi recusada e desfeita. */

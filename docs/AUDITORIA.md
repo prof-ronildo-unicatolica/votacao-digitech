@@ -8,7 +8,7 @@ Este é o plano do registro de auditoria: **quem fez o quê, quando e de onde**,
 > - **Fase 2 implementada:** cadastros (eleição, cargo, eleitor, terminal, usuário) e importações, com o nome e o SHA-256 do arquivo. Testes em `AuditoriaCadastrosTest`.
 > - **A H10** emite `resultado.consultado` e `ata.exportada`.
 > - **Fase 3 implementada:** tela `/admin/auditoria` (`Admin\AuditoriaController`, filtros em `App\Support\FiltroAuditoria`), exportação CSV e o atalho "Histórico" nas chapas. Testes em `AuditoriaTelaTest`.
-> - **Fase 4** segue planejada (opcional).
+> - **Fase 4 implementada (D27):** corrente de hashes (`App\Support\CorrenteDeHashes`, linha `auditoria_cabeca`), comando `php artisan digitech:auditoria:verificar` e o último hash impresso na ata e no CSV do resultado (H10). Testes em `CorrenteDeHashesTest`. O usuário do banco sem `UPDATE`/`DELETE` fica no roteiro de deploy (`DEPLOY_HOSTINGER.md`).
 > - **Antes da fase 1** não havia auditoria: o que aconteceu até ali não foi registrado, salvo a última decisão de cada chapa (D20).
 
 ## 1. Princípios
@@ -168,13 +168,16 @@ A ordem segue o risco. Quanto antes um evento for registrado, menos histórico s
 | **3. Tela** | `/admin/auditoria` com filtros, detalhes, exportação CSV e o atalho "Histórico" nas chapas; menu habilitado | Sprint 4, com a H10 |
 | **4. Integridade (opcional)** | Corrente de hashes e comando `php artisan digitech:auditoria:verificar`; em produção, usuário do banco sem `UPDATE`/`DELETE` na tabela | Antes da eleição real (H12) |
 
-## 7. Integridade (fase 4, opcional)
+## 7. Integridade (fase 4, implementada)
 
 Cada evento guarda `hash = SHA-256(hash do evento anterior + conteúdo canônico deste)`. Alterar ou apagar uma linha no banco, por fora da aplicação, quebra a corrente a partir dela. O comando de verificação recalcula tudo e aponta o primeiro evento adulterado.
 
 - **Ordem:** gravar o próximo hash exige ler o último, e duas gravações ao mesmo tempo podem ler o mesmo. A gravação trava uma linha "cabeça" (`SELECT ... FOR UPDATE`) e atualiza o último hash nela. Com centenas de eventos por eleição, a espera é desprezível.
 - **Âncora:** no fim da votação, o hash do último evento vai impresso na ata (H10). Assim, mesmo quem tem acesso ao banco não reescreve a corrente inteira sem que a ata denuncie.
 - **Limite:** a corrente detecta adulteração, não a impede. A proteção de verdade é o acesso restrito ao banco em produção.
+- **Conteúdo do hash:** posição, id, hora (microssegundos), ação, ator, IP, alvo e `dados` com as chaves em ordem alfabética (o MySQL pode reordenar o JSON). **Ficam de fora `user_id` e `eleicao_id`**, que o próprio banco anula quando o usuário ou a eleição são excluídos (`nullOnDelete`). Quem fez continua protegido pelo `ator`.
+- **O que o comando aponta:** evento alterado (o hash não confere), evento apagado do meio (falta uma posição), eventos apagados do fim (a cabeça não bate) e evento inserido por fora (sem posição, mais novo que o início da corrente). Eventos anteriores à fase 4 ficam sem posição e são aceitos.
+- **Ação desfeita** (rollback) desfaz também o avanço da cabeça: a corrente não fica com buraco.
 
 ## 8. Retenção e privacidade
 

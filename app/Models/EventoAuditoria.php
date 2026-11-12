@@ -23,7 +23,8 @@ class EventoAuditoria extends Model
     /** Microssegundos: eventos do mesmo segundo (login e logout, liberar e recusar) ficam em ordem. */
     protected $dateFormat = 'Y-m-d H:i:s.u';
 
-    protected $guarded = ['hash'];
+    /** Posição e hash da corrente (fase 4) só pela CorrenteDeHashes, nunca por create(). */
+    protected $guarded = ['hash', 'sequencia'];
 
     protected function casts(): array
     {
