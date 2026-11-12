@@ -13,10 +13,23 @@ Os passos abaixo valem para os dois: repita com o subdomínio, a pasta e o banco
 
 ## Antes do primeiro deploy
 
+### No GitHub: ter código na branch do ambiente
+
+`staging` e `main` nasceram vazias (só o commit "raiz vazia", ver `GIT_FLOW.md`). Antes do primeiro deploy de cada ambiente, mescle o código nela:
+
+1. Homologação: abrir e mesclar o PR `staging` ← `develop`.
+2. Produção: depois que a homologação aprovar, abrir e mesclar o PR `main` ← `staging`.
+
+Clonar uma branch vazia gera um site sem nada; clonar sem `-b` traz a `develop` (a branch padrão), que não é release.
+
+### No hPanel
+
 1. hPanel → **Avançado → Configuração PHP**: escolher PHP **8.2** ou superior e habilitar `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `zip`.
 2. hPanel → **Bancos de dados → Gerenciamento**: criar banco e usuário. Anotar `nome_do_banco`, `usuario`, `senha`, `host` (na Hostinger o host costuma ser `localhost`).
 3. hPanel → **Segurança → SSL**: ativar o certificado gratuito e forçar HTTPS.
 4. hPanel → **Avançado → SSH**: ativar e anotar host, porta e usuário.
+5. Homologação: hPanel → **Domínios → Subdomínios**: criar `homolog.SEU_DOMINIO` (e ativar o SSL dele também).
+6. Se o repositório for **privado**: configurar a deploy key (seção "Repositório privado" abaixo) antes do `git clone`.
 
 ## Deploy pela primeira vez (via SSH)
 
@@ -24,7 +37,8 @@ Os passos abaixo valem para os dois: repita com o subdomínio, a pasta e o banco
 ssh -p PORTA usuario@host
 
 cd ~/domains/SEU_DOMINIO         # ajuste ao caminho mostrado no hPanel
-git clone https://github.com/prof-ronildo-unicatolica/votacao-digitech.git app
+# -b staging em homologação, -b main em produção
+git clone -b main https://github.com/prof-ronildo-unicatolica/votacao-digitech.git app
 cd app
 composer install --no-dev --optimize-autoloader
 cp .env.production.example .env
@@ -62,11 +76,23 @@ Teste: `https://SEU_DOMINIO/api/health` deve responder `"banco":"ok"`.
 
 Se o painel não permitir o link simbólico, alternativa: copiar o conteúdo de `app/public/` para `public_html/` e editar `public_html/index.php` trocando `__DIR__.'/../vendor/autoload.php'` por `__DIR__.'/../app/vendor/autoload.php'` (e o mesmo para `bootstrap/app.php`).
 
-## Criar o primeiro admin em produção
+O primeiro admin é criado só com `php artisan digitech:admin` (passo acima): ele pergunta a senha sem ecoar. Não crie usuário com `tinker` passando a senha no comando, porque ela fica no histórico do shell do servidor.
 
-```bash
-php artisan tinker --execute="App\Models\User::create(['name'=>'Admin','email'=>'admin@SEU_DOMINIO','password'=>'TROQUE-ESTA-SENHA']);"
-```
+## Repositório privado: deploy key
+
+Com o repositório público, o `git clone` por HTTPS funciona sem senha. Se ele for privado, o servidor precisa de uma chave só de leitura:
+
+1. hPanel → **Avançado → Git** (ou via SSH: `ssh-keygen -t ed25519 -C hostinger-votacao` e `cat ~/.ssh/id_ed25519.pub`): copiar a chave pública.
+2. GitHub → repositório → **Settings → Deploy keys → Add deploy key**: colar a chave, título `Hostinger`, **sem** marcar "Allow write access".
+3. Clonar pelo endereço SSH em vez do HTTPS:
+
+   ```bash
+   git clone -b main git@github.com:prof-ronildo-unicatolica/votacao-digitech.git app
+   ```
+
+   Se o clone já existir por HTTPS: `git remote set-url origin git@github.com:prof-ronildo-unicatolica/votacao-digitech.git`.
+
+A chave fica só no servidor: não copie a chave privada para o projeto nem para o `.env`.
 
 ## Deploys seguintes (a cada merge em `staging` ou `main`)
 
