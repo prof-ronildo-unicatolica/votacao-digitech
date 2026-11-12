@@ -158,7 +158,9 @@ Para criar um admin com outro e-mail (e o **primeiro admin em produção**, onde
 php artisan test
 ```
 
-Esperado: `104 passed`. Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+Os testes usam SQLite em memória (ver `phpunit.xml`), então não tocam no seu banco MySQL.
+
+Há também um teste **de ponta a ponta** que faz uma eleição inteira no navegador (Playwright): `cd e2e && npm ci && npx playwright install chromium && npm test`. Detalhes dos dois em [docs/TESTES.md](docs/TESTES.md).
 
 ## Documentação
 

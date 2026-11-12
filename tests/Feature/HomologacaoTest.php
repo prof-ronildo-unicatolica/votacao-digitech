@@ -93,6 +93,18 @@ class HomologacaoTest extends TestCase
         $this->get('/admin/chapas')->assertSee('Homologada em')->assertSee('por Comissão Teste');
     }
 
+    public function test_lista_escolhida_pela_url_continua_editavel(): void
+    {
+        // Depois de homologar, a volta é para ?eleicao=<id>. A eleição precisa vir com as datas:
+        // sem elas a tela ficava "somente leitura" e escondia os botões (achado pelo teste E2E).
+        $this->chapa(1, ['2024101', '2024102']);
+        $this->emHomologacao();
+
+        $this->get(route('admin.chapas.index', ['eleicao' => $this->eleicao->id]))->assertOk()
+            ->assertDontSee('Somente leitura')
+            ->assertSee('Confirmar homologação');
+    }
+
     public function test_indeferir_sem_motivo_e_rejeitado(): void
     {
         $chapa = $this->chapa(1, ['2024101', '2024102']);
