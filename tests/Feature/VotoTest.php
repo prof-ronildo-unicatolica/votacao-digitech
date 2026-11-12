@@ -85,7 +85,8 @@ class VotoTest extends TestCase
         $this->assertSame('livre', $this->terminal[1]->fresh()->estado());
 
         $this->withCookie(Terminal::COOKIE, $this->token[1])->get('/urna/registrado')
-            ->assertOk()->assertSee('Voto registrado')->assertSee('http-equiv="refresh" content="5;', false)->assertDontSee('Movimento');
+            ->assertOk()->assertSee('Voto registrado')->assertSee('http-equiv="refresh" content="5;', false)->assertDontSee('Movimento')
+            ->assertSee('data-contagem="5"', false); // contagem regressiva na tela
     }
 
     public function test_voto_em_branco_e_nulo(): void
