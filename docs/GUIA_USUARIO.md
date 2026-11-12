@@ -28,7 +28,11 @@ Como usar o Votação DigiTech numa eleição de verdade, do cadastro ao resulta
 | **Mesário** (perfil *Mesário*) | e-mail e senha | `/mesario` | Ativa os computadores das urnas, confere o documento do eleitor e libera a urna para ele. |
 | **Eleitor** | sem login | a urna (`/urna`) | Vota no terminal que o mesário liberou. |
 
-Para entrar, abra `/login` e use o e-mail e a senha que a comissão cadastrou. Depois de entrar, cada perfil cai direto na sua tela: a comissão no painel (`/admin`), o mesário na mesa (`/mesario`).
+Todo mundo começa pela **página inicial** (`/`). Ela mostra a eleição em andamento, a fase atual, o calendário e o que fazer agora: durante as inscrições, o botão **Inscrever uma chapa**. Da homologação em diante, aparecem as instruções de como votar e as chapas homologadas.
+
+![Página inicial](guia/inicio.png)
+
+Para entrar, abra `/login` (ou clique em **Entrar** no topo) e use o e-mail e a senha que a comissão cadastrou. Depois de entrar, cada perfil cai direto na sua tela: a comissão no painel (`/admin`), o mesário na mesa (`/mesario`).
 
 ![Tela de login](guia/login.png)
 

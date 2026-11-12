@@ -80,6 +80,9 @@ test('uma eleição do começo ao fim', async ({ browser }) => {
   });
 
   await test.step('os alunos inscrevem três chapas pelo formulário público', async () => {
+    await aluno.goto('/');
+    await expect(aluno.getByRole('heading', { name: 'Inscrições de chapas abertas' })).toBeVisible();
+    await t.foto(aluno, 'inicio', { inteira: true });
     for (const chapa of CHAPAS) {
       await aluno.goto('/inscricao');
       await aluno.getByLabel('Nome da chapa').fill(chapa.nome);
@@ -222,6 +225,8 @@ test('uma eleição do começo ao fim', async ({ browser }) => {
     await mesa.goto('/mesario');
     await expect(mesa.getByText('Liberação indisponível')).toBeVisible();
     await expect(mesa.locator('#campo-matricula')).toHaveCount(0);
+    await aluno.goto('/');
+    await expect(aluno.getByRole('heading', { name: 'Votação encerrada' })).toBeVisible();
     await t.foto(mesa, 'mesa-encerrada');
     await urna1.reload();
     await expect(urna1.getByRole('heading', { name: 'Aguardando liberação' })).toBeVisible();
