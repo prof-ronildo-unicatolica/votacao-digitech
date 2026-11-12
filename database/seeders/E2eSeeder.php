@@ -20,6 +20,6 @@ class E2eSeeder extends Seeder
             return;
         }
 
-        User::create(['name' => 'Comissão E2E', 'email' => 'admin@e2e.local', 'password' => 'admin-e2e-123', 'perfil' => Perfil::Admin, 'ativo' => true]);
+        User::create(['name' => 'Comissão Eleitoral', 'email' => 'admin@e2e.local', 'password' => 'admin-e2e-123', 'perfil' => Perfil::Admin, 'ativo' => true]);
     }
 }

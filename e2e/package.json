@@ -5,7 +5,8 @@
   "scripts": {
     "test": "playwright test",
     "test:ver": "playwright test --headed",
-    "relatorio": "playwright show-report"
+    "relatorio": "playwright show-report",
+    "guia": "GUIA=1 playwright test"
   },
   "devDependencies": {
     "@playwright/test": "1.65.0"

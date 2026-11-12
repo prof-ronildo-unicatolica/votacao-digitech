@@ -197,6 +197,7 @@ Há também um teste **de ponta a ponta** que faz uma eleição inteira no naveg
 
 | Documento                                              | Conteúdo                                              |
 | ------------------------------------------------------ | ----------------------------------------------------- |
+| [docs/GUIA_USUARIO.md](docs/GUIA_USUARIO.md)           | Guia do usuário: comissão, alunos, mesário e eleitor, com as telas |
 | [docs/DECISOES.md](docs/DECISOES.md)                   | Decisões de arquitetura e respostas às dúvidas iniciais |
 | [docs/MODELO_DADOS.md](docs/MODELO_DADOS.md)           | Diagrama ER e regras do banco (sigilo do voto)        |
 | [docs/DIAGRAMAS.md](docs/DIAGRAMAS.md)                 | Casos de uso e diagramas de sequência (UML)           |

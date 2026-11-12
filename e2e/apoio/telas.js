@@ -1,15 +1,27 @@
 // O que cada pessoa faz nas telas, escrito uma vez só: login, liberar, votar, cancelar.
+const path = require('node:path');
 const { expect } = require('@playwright/test');
+
+// Com GUIA=1 (`npm run guia`), o teste também fotografa as telas para o guia do usuário.
+const PASTA_FOTOS = path.resolve(__dirname, '..', '..', 'docs', 'guia');
+
+/** Foto da tela para docs/guia/<nome>.png. Sem GUIA=1, não faz nada. */
+async function foto(page, nome, { inteira = false } = {}) {
+  if (!process.env.GUIA) return;
+  await page.waitForLoadState('networkidle');
+  await page.screenshot({ path: path.join(PASTA_FOTOS, `${nome}.png`), fullPage: inteira, animations: 'disabled' });
+}
 
 /** "YYYY-MM-DDTHH:mm" no fuso da aplicação (America/Fortaleza, UTC-3 o ano todo), para campo datetime-local. */
 function dataHora(base, minutos) {
   return new Date(base.getTime() + minutos * 60_000 - 3 * 3_600_000).toISOString().slice(0, 16);
 }
 
-async function entrar(page, { email, senha }) {
+async function entrar(page, { email, senha }, nomeFoto) {
   await page.goto('/login');
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha', { exact: true }).fill(senha);
+  if (nomeFoto) await foto(page, nomeFoto);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page).not.toHaveURL(/\/login/);
 }
@@ -25,12 +37,14 @@ function terminalNaMesa(mesa, numero) {
 }
 
 /** No computador da urna: alguém da mesa entra, escolhe o terminal, e o navegador vira urna. */
-async function ativarUrna(urna, mesario, numero) {
+async function ativarUrna(urna, mesario, numero, { fotos = false } = {}) {
   await entrar(urna, mesario);
   await urna.goto('/terminal/ativar');
   await urna.locator(`#terminal-${numero}`).check();
+  if (fotos) await foto(urna, 'terminal-ativar', { inteira: true });
   await urna.getByRole('button', { name: 'Ativar e abrir a urna' }).click();
   await expect(urna.getByRole('heading', { name: 'Aguardando liberação' })).toBeVisible();
+  if (fotos) await foto(urna, 'urna-espera');
 }
 
 /** Mesário: confere a matrícula e devolve o alerta com o nome (e o motivo, se não puder votar). */
@@ -40,19 +54,21 @@ async function conferir(mesa, matricula) {
   await mesa.getByRole('button', { name: 'Conferir' }).click();
 }
 
-async function liberar(mesa, matricula, terminal) {
+async function liberar(mesa, matricula, terminal, { fotos = false } = {}) {
   await conferir(mesa, matricula);
   const opcao = mesa.locator('#campo-terminal option', { hasText: new RegExp(`^\\s*Terminal ${terminal} `) });
   await mesa.locator('#campo-terminal').selectOption(await opcao.getAttribute('value'));
+  if (fotos) await foto(mesa, 'mesa-conferir', { inteira: true });
   await mesa.getByRole('button', { name: /^Liberar / }).click();
   await expect(mesa.getByText(`Terminal ${terminal} liberado para`)).toBeVisible();
 }
 
 /** O mesário cancela a sessão de um terminal pelo painel. */
-async function cancelarSessao(mesa, terminal) {
+async function cancelarSessao(mesa, terminal, { fotos = false } = {}) {
   await mesa.goto('/mesario');
   const cartao = terminalNaMesa(mesa, terminal);
   await cartao.getByText('Cancelar sessão').click();
+  if (fotos) await foto(mesa, 'mesa-cancelar', { inteira: true });
   await cartao.getByRole('button', { name: 'Confirmar cancelamento' }).click();
   await expect(mesa.getByText(/cancelada\. A liberação pode ser feita de novo/)).toBeVisible();
 }
@@ -72,17 +88,20 @@ async function esperarEspera(urna) {
 }
 
 /** O eleitor escolhe, confere e confirma. A urna diz "Voto registrado" e volta para a espera. */
-async function votar(urna, nome, escolha) {
+async function votar(urna, nome, escolha, { fotos = false } = {}) {
   await esperarCedula(urna, nome);
   await opcao(urna, escolha).click();
+  if (fotos) await foto(urna, 'urna-cedula', { inteira: true });
   await urna.getByRole('button', { name: 'Continuar' }).click();
   await expect(urna.getByRole('heading', { name: 'Confirme seu voto' })).toBeVisible();
   await expect(urna.locator('.dt-opcao--escolhida .dt-opcao-nome')).toHaveText(escolha);
+  if (fotos) await foto(urna, 'urna-confirmacao');
   await urna.getByRole('button', { name: 'Confirmar voto' }).click();
   await expect(urna.getByRole('heading', { name: 'Voto registrado' })).toBeVisible();
+  if (fotos) await foto(urna, 'urna-registrado');
   await expect(urna.getByText(escolha)).toHaveCount(0); // a tela final não diz em quem votou
   await expect(urna.locator('[data-contagem]')).toHaveText(/^[1-4]$/); // a contagem regressiva anda
   await esperarEspera(urna);
 }
 
-module.exports = { dataHora, entrar, indicador, terminalNaMesa, ativarUrna, conferir, liberar, cancelarSessao, opcao, esperarCedula, esperarEspera, votar };
+module.exports = { foto, dataHora, entrar, indicador, terminalNaMesa, ativarUrna, conferir, liberar, cancelarSessao, opcao, esperarCedula, esperarEspera, votar };

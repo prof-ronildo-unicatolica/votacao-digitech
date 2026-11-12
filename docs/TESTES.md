@@ -92,11 +92,14 @@ npx playwright install chromium  # uma vez
 npm test                         # sobe o servidor na porta 8766, roda e derruba (cerca de 2 min)
 npm run test:ver                 # o mesmo, com os navegadores abertos na tela
 npm run relatorio                # relatório HTML do último resultado
+npm run guia                     # roda o teste e atualiza as fotos do guia do usuário (docs/guia/)
 ```
 
 O servidor de teste usa um banco SQLite próprio (`e2e/banco.sqlite`), recriado a cada execução: **não toca no seu MySQL**. Se falhar, `e2e/test-results/` guarda foto, vídeo e trace (`npx playwright show-trace <arquivo>`).
 
 **Quando mexer:** mudou um texto de botão, um rótulo ou um fluxo que o teste percorre? Ajuste `e2e/apoio/telas.js` (as ações de cada pessoa ficam escritas uma vez só ali).
+
+Mudou o visual de uma tela que aparece em [GUIA_USUARIO.md](GUIA_USUARIO.md)? Rode `npm run guia` e faça commit das fotos novas.
 
 ## Convenções
 
