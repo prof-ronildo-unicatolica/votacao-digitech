@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\CargoController;
 use App\Http\Controllers\Admin\ChapaController;
 use App\Http\Controllers\Admin\EleicaoController;
@@ -96,6 +97,10 @@ Route::middleware(['auth', 'ativo'])->group(function () {
         Route::get('resultado', [ResultadoController::class, 'index'])->name('resultado');
         Route::get('resultado/{eleicao}/ata.csv', [ResultadoController::class, 'csv'])->name('resultado.csv');
         Route::get('resultado/{eleicao}/ata', [ResultadoController::class, 'ata'])->name('resultado.ata');
+
+        // H11 fase 3 · Auditoria: só leitura, só admin (o mesário não vê o registro do próprio trabalho).
+        Route::get('auditoria', [AuditoriaController::class, 'index'])->name('auditoria');
+        Route::get('auditoria/exportar.csv', [AuditoriaController::class, 'csv'])->name('auditoria.csv');
 
         // H1 · Usuários (admin e mesário)
         Route::resource('usuarios', UsuarioController::class)->except('show');

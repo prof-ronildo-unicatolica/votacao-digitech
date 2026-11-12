@@ -176,6 +176,13 @@
                         </details>
                     </div>
                 @endunless
+
+                {{-- H11 fase 3: tudo o que aconteceu com a chapa (inscrição, decisões, trocas). --}}
+                <div class="mt-3 small">
+                    <a href="{{ route('admin.auditoria', ['eleicao' => 'todas', 'alvo_tipo' => 'chapa', 'alvo_id' => $chapa->id]) }}">
+                        <i class="bi bi-clock-history" aria-hidden="true"></i> Histórico da chapa {{ $chapa->numero }}
+                    </a>
+                </div>
             </x-cartao>
         @empty
             <x-cartao>

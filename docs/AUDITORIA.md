@@ -7,7 +7,8 @@ Este é o plano do registro de auditoria: **quem fez o quê, quando e de onde**,
 > - **A H8** emite `sessao.votou`, só com o terminal: nunca a chapa (D24).
 > - **Fase 2 implementada:** cadastros (eleição, cargo, eleitor, terminal, usuário) e importações, com o nome e o SHA-256 do arquivo. Testes em `AuditoriaCadastrosTest`.
 > - **A H10** emite `resultado.consultado` e `ata.exportada`.
-> - **Fases 3 e 4** seguem planejadas.
+> - **Fase 3 implementada:** tela `/admin/auditoria` (`Admin\AuditoriaController`, filtros em `App\Support\FiltroAuditoria`), exportação CSV e o atalho "Histórico" nas chapas. Testes em `AuditoriaTelaTest`.
+> - **Fase 4** segue planejada (opcional).
 > - **Antes da fase 1** não havia auditoria: o que aconteceu até ali não foi registrado, salvo a última decisão de cada chapa (D20).
 
 ## 1. Princípios
@@ -148,13 +149,13 @@ sequenceDiagram
     end
 ```
 
-## 5. Tela `/admin/auditoria`
+## 5. Tela `/admin/auditoria` (implementada)
 
 - **Só admin.** O mesário não vê, porque a auditoria inclui o trabalho dele.
-- **Filtros:** eleição (a ativa por padrão), categoria (acesso, mesa, chapas, cadastros, importações), ação, usuário, período (de/até) e busca por matrícula ou número de chapa (`dados`).
-- **Lista:** mais recentes primeiro, 50 por página. Cada linha mostra a hora (com segundos), a ação em português (`AcaoAuditoria::rotulo()`), o ator, o IP, o alvo (com link para a chapa, o terminal...) e um resumo dos `dados`. "Ver detalhes" abre o JSON formatado.
-- **Exportar CSV** do filtro atual, para anexar à ata. A exportação também vira evento (`auditoria.exportada`).
-- **Atalhos:** na lista de chapas (H3), "Histórico" abre a auditoria filtrada pela chapa. No painel do mesário, o admin vê as últimas recusas.
+- **Filtros:** eleição (a ativa por padrão; "Todas" inclui acessos e usuários, que não têm eleição), categoria (`AcaoAuditoria::GRUPOS`: acesso, mesa e terminais, chapas, cadastros, importações, resultado e exportações), ação, usuário, período (de/até, dia inteiro) e busca no texto de `dados` e no nome de quem fez (matrícula, número de chapa, e-mail). Ficam na URL (GET): o link pode ser guardado, e o CSV exporta o mesmo filtro. Valor fora do catálogo é ignorado.
+- **Lista:** mais recentes primeiro, 50 por página. Cada linha mostra a hora (com segundos), a ação em português (`AcaoAuditoria::rotulo()`) e o código, o ator, o IP e um resumo dos `dados` (`EventoAuditoria::resumo()`). "Ver detalhes" (`<details>`, sem JavaScript) mostra o id do evento, o alvo com o link para o histórico dele e o JSON formatado.
+- **Exportar CSV** do filtro atual (todas as páginas, `;` e BOM), para anexar à ata. A exportação também vira evento (`auditoria.exportada`, com os filtros e o SHA-256), gravado depois de montar o arquivo, para não entrar nele.
+- **Atalhos:** na lista de chapas (H3), "Histórico da chapa N" abre a auditoria filtrada pela chapa (`alvo_tipo` e `alvo_id`, em todas as eleições). *As últimas recusas no painel do mesário ficaram para depois: a tela já filtra por "Liberação recusada".*
 
 ## 6. Fases
 
@@ -204,4 +205,4 @@ Cada evento guarda `hash = SHA-256(hash do evento anterior + conteúdo canônico
 | `HomologacaoDeChapa` | `chapa.homologada`, `.indeferida`, `.reaberta`, `.candidato_trocado` e `.excluida` |
 | `ImportadorChapas`, `ImportadorEleitores`, controllers de importação | Eventos de importação (fase 2, feito) |
 | `CargosDaEleicao`, controllers de eleição, eleitor, terminal e usuário | Eventos de cadastro (fase 2, feito) |
-| `layouts/painel.blade.php` | Menu "Auditoria" habilitado (fase 3) |
+| `layouts/painel.blade.php` | Menu "Auditoria" habilitado (fase 3, feito) |
