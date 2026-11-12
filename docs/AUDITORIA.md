@@ -5,7 +5,9 @@ Este é o plano do registro de auditoria: **quem fez o quê, quando e de onde**,
 > **Situação:**
 > - **Fase 1 implementada:** acesso, terminais, sessões e chapas pelo formulário e pela homologação. Código em `App\Support\Auditoria`, `App\Enums\AcaoAuditoria`, `App\Models\EventoAuditoria` e `App\Listeners\AuditarAcesso`; testes em `AuditoriaTest`.
 > - **A H8** emite `sessao.votou`, só com o terminal: nunca a chapa (D24).
-> - **Fases 2, 3 e 4** seguem planejadas.
+> - **Fase 2 implementada:** cadastros (eleição, cargo, eleitor, terminal, usuário) e importações, com o nome e o SHA-256 do arquivo. Testes em `AuditoriaCadastrosTest`.
+> - **A H10** emite `resultado.consultado` e `ata.exportada`.
+> - **Fases 3 e 4** seguem planejadas.
 > - **Antes da fase 1** não havia auditoria: o que aconteceu até ali não foi registrado, salvo a última decisão de cada chapa (D20).
 
 ## 1. Princípios
@@ -77,19 +79,25 @@ Fases explicadas na seção 6. "Ator" é quem aparece em `user_id` e `ator`.
 | `chapa.candidato_trocado`  | H3: correção da composição                        | chapa | `cargo`, `matricula_anterior`, `matricula_nova`, `voltou_para_pendente` |
 | `chapa.excluida`           | H3                                               | chapa | `numero`, `nome`, `matriculas`                             |
 
-### Cadastros e importações (fase 2)
+### Cadastros e importações (fase 2, implementada)
+
+Alterações guardam só os campos que mudaram, como `campo: {antes, depois}` (`Auditoria::alteracoes`). Salvar sem mudar nada não gera evento. A importação é **um** evento (não um por aluno ou chapa), gravado na transação da confirmação: se a confirmação é desfeita, o evento some.
 
 | Ação                                   | Quando                     | `dados`                                                          |
 | -------------------------------------- | -------------------------- | ---------------------------------------------------------------- |
-| `eleicao.criada` / `.alterada` / `.excluida` | H2                 | campos alterados, antes → depois (datas em ISO 8601)             |
-| `eleicao.ativada` / `.desativada`      | H2                         | `titulo`                                                         |
-| `cargo.criado` / `.renomeado` / `.movido` / `.removido` / `.copiados` | H13 | `titulo`, `ordem`; na cópia, `de_eleicao` e `quantidade` |
-| `eleitor.criado` / `.alterado` / `.excluido` | H4                   | `matricula`, campos alterados (antes → depois)                   |
-| `eleitores.importados`                 | H4, confirmação (D19)      | `arquivo` (nome), `sha256`, `criados`, `atualizados`, `iguais`, `ignoradas` |
-| `chapas.importadas`                    | H15, confirmação (D19)     | `arquivo`, `sha256`, `numeros` importados, `ignoradas`, `cargos_criados` |
-| `importacao.cancelada`                 | H4/H15, rollback na conferência | `tipo`, `arquivo`, `sha256`                                 |
-| `terminal.criado` / `.alterado` / `.excluido` | H5                  | `numero`, `local`                                                |
-| `usuario.criado` / `.alterado` / `.desativado` / `.reativado` / `.excluido` | H1 | `email`, `perfil`, campos alterados. **Sem senha** (só `senha_trocada: true`) |
+| `eleicao.criada` / `.excluida`         | H2                         | `titulo` e as quatro datas (ISO 8601). A excluída perde o vínculo `eleicao_id` (o banco anula), o `alvo_id` fica |
+| `eleicao.alterada`                     | H2                         | só os campos que mudaram, `{antes, depois}`                      |
+| `eleicao.ativada` / `.desativada`      | H2                         | `titulo`. Ativar outra registra também a desativação da anterior (`motivo`) |
+| `cargo.criado` / `.renomeado` / `.movido` / `.removido` / `.copiados` | H13 | `titulo`, `ordem` (`{antes, depois}` ao renomear e mover); na cópia, `de_eleicao`, `quantidade` e `titulos` |
+| `eleitor.criado` / `.excluido`         | H4                         | `matricula`                                                      |
+| `eleitor.alterado`                     | H4                         | `matricula`, `campos` que mudaram `{antes, depois}`              |
+| `importacao.eleitores`                 | H4, confirmação (D19)      | `arquivo` (nome), `sha256`, `criados`, `atualizados`, `iguais`, `ignoradas` |
+| `importacao.chapas`                    | H15, confirmação (D19)     | `arquivo`, `sha256`, `numeros` importados, `ignoradas`, `cargos_criados`. Não gera `chapa.inscrita` |
+| `importacao.cancelada`                 | H4/H15, cancelar na conferência | `tipo` (`eleitores` ou `chapas`), `arquivo`, `sha256`       |
+| `terminal.criado` / `.excluido`        | H5                         | `numero`, `local`. **Nunca o token** do pareamento               |
+| `terminal.alterado`                    | H5                         | `numero`, `campos` que mudaram                                   |
+| `usuario.criado` / `.desativado` / `.reativado` / `.excluido` | H1  | `email`, `perfil`                                                |
+| `usuario.alterado`                     | H1                         | `email`, `perfil`, `campos` que mudaram. **Sem senha** (só `senha_trocada: true`) |
 
 ### Resultado (H10, implementado)
 
@@ -194,6 +202,6 @@ Cada evento guarda `hash = SHA-256(hash do evento anterior + conteúdo canônico
 | `LiberacaoDeEleitor`, `MesaController` | `sessao.liberada`, `.reliberada`, `.cancelada` e `.liberacao_recusada` |
 | `InscricaoDeChapa` | `chapa.inscrita` (formulário, com IP) |
 | `HomologacaoDeChapa` | `chapa.homologada`, `.indeferida`, `.reaberta`, `.candidato_trocado` e `.excluida` |
-| `ImportadorChapas`, `ImportadorEleitores`, controllers de importação | Eventos de importação (fase 2) |
-| `CargosDaEleicao`, controllers de eleição, eleitor e usuário | Eventos de cadastro (fase 2) |
+| `ImportadorChapas`, `ImportadorEleitores`, controllers de importação | Eventos de importação (fase 2, feito) |
+| `CargosDaEleicao`, controllers de eleição, eleitor, terminal e usuário | Eventos de cadastro (fase 2, feito) |
 | `layouts/painel.blade.php` | Menu "Auditoria" habilitado (fase 3) |

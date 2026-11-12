@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\AcaoAuditoria;
 use App\Models\Cargo;
 use App\Models\Eleicao;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
  * Cada operação trava a linha da eleição (lockForUpdate) e confere, DENTRO da transação, se
  * já há chapa inscrita: depois da primeira inscrição os cargos congelam (D14). A inscrição
  * (H14, H15) deve travar a mesma linha, para as duas coisas não acontecerem ao mesmo tempo.
+ * Cada operação registra a auditoria na mesma transação (H11 fase 2).
  */
 class CargosDaEleicao
 {
@@ -20,16 +22,25 @@ class CargosDaEleicao
     public function adicionar(string $titulo): Cargo
     {
         return $this->alterando(function (Eleicao $eleicao) use ($titulo) {
-            return $eleicao->cargos()->create([
+            $cargo = $eleicao->cargos()->create([
                 'titulo' => $titulo,
                 'ordem' => ($eleicao->cargos()->max('ordem') ?? 0) + 1,
             ]);
+            Auditoria::registrar(AcaoAuditoria::CargoCriado, $cargo, ['titulo' => $cargo->titulo, 'ordem' => $cargo->ordem]);
+
+            return $cargo;
         });
     }
 
     public function renomear(Cargo $cargo, string $titulo): void
     {
-        $this->alterando(fn () => $cargo->update(['titulo' => $titulo]));
+        $this->alterando(function () use ($cargo, $titulo) {
+            $anterior = $cargo->titulo;
+            $cargo->update(['titulo' => $titulo]);
+            if ($cargo->wasChanged('titulo')) {
+                Auditoria::registrar(AcaoAuditoria::CargoRenomeado, $cargo, ['titulo' => ['antes' => $anterior, 'depois' => $cargo->titulo], 'ordem' => $cargo->ordem]);
+            }
+        });
     }
 
     /** Troca o cargo de lugar com o vizinho de cima (-1) ou de baixo (+1). Nas pontas, não faz nada. */
@@ -46,6 +57,7 @@ class CargosDaEleicao
             $cargo->update(['ordem' => 0]);
             $vizinho->update(['ordem' => $ordem]);
             $cargo->update(['ordem' => $ordem + $passo]);
+            Auditoria::registrar(AcaoAuditoria::CargoMovido, $cargo, ['titulo' => $cargo->titulo, 'ordem' => ['antes' => $ordem, 'depois' => $ordem + $passo]]);
         });
     }
 
@@ -55,6 +67,7 @@ class CargosDaEleicao
         $this->alterando(function (Eleicao $eleicao) use ($cargo) {
             $ordem = $cargo->ordem;
             $cargo->delete();
+            Auditoria::registrar(AcaoAuditoria::CargoRemovido, $cargo, ['titulo' => $cargo->titulo, 'ordem' => $ordem]);
 
             // Um por um, em ordem crescente: cada um ocupa a posição que acabou de vagar.
             $eleicao->cargos()->where('ordem', '>', $ordem)->get()
@@ -79,6 +92,13 @@ class CargosDaEleicao
                 'titulo' => $cargo->titulo,
                 'ordem' => $cargo->ordem,
             ]));
+
+            Auditoria::registrar(AcaoAuditoria::CargosCopiados, $eleicao, [
+                'de_eleicao' => $origem->titulo,
+                'de_eleicao_id' => $origem->id,
+                'quantidade' => $origem->cargos->count(),
+                'titulos' => $origem->cargos->pluck('titulo')->all(),
+            ]);
 
             return $origem->cargos->count();
         });

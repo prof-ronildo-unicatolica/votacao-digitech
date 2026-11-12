@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AcaoAuditoria;
 use App\Http\Controllers\Controller;
 use App\Support\ArquivoEmConferencia;
 use App\Support\ArquivoInvalido;
+use App\Support\Auditoria;
 use App\Support\ImportacaoDesatualizada;
 use App\Support\ImportacaoRecusada;
 use App\Support\ImportadorEleitores;
@@ -65,6 +67,7 @@ class ImportacaoEleitoresController extends Controller
     public function confirmar(Request $request, ImportadorEleitores $importador): RedirectResponse
     {
         if ($request->input('acao') === 'cancelar') {
+            $this->auditarCancelamento();
             $this->arquivo()->descartar();
 
             return redirect()->route('admin.eleitores.importar')->with('status', 'Importação cancelada. O arquivo foi descartado e nenhum aluno foi gravado.');
@@ -81,7 +84,7 @@ class ImportacaoEleitoresController extends Controller
         }
 
         try {
-            $resultado = $importador->importar($conteudo, $request->input('assinatura'), $request->input('acao') === 'ignorar');
+            $resultado = $importador->importar($conteudo, $request->input('assinatura'), $request->input('acao') === 'ignorar', $this->arquivo()->dados()['nome']);
         } catch (ImportacaoDesatualizada $e) {
             return redirect()->route('admin.eleitores.importar.conferir')->with('aviso', $e->getMessage());
         } catch (ImportacaoRecusada $e) {
@@ -96,6 +99,15 @@ class ImportacaoEleitoresController extends Controller
     public function modelo(): BinaryFileResponse
     {
         return response()->download(base_path('docs/exemplos/eleitores.csv'), 'eleitores-modelo.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /** Cancelar na conferência é um rollback que a comissão quer ver (H11 fase 2). */
+    private function auditarCancelamento(): void
+    {
+        $dados = $this->arquivo()->dados();
+        if ($dados) {
+            Auditoria::registrar(AcaoAuditoria::ImportacaoCancelada, dados: ['tipo' => 'eleitores', 'arquivo' => $dados['nome'], 'sha256' => hash('sha256', (string) $this->arquivo()->conteudo())]);
+        }
     }
 
     private function arquivo(): ArquivoEmConferencia
