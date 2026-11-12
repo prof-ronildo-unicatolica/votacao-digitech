@@ -73,7 +73,17 @@ Um teste só, `e2e/testes/eleicao-completa.spec.js`, faz uma eleição inteira p
 
 **Relógio:** em vez de esperar horas entre as fases, o teste adianta o relógio da aplicação. Ele grava os segundos em `storage/framework/e2e-relogio`, e o `AppServiceProvider` aplica (só com `APP_ENV=e2e`).
 
-**Rodando** (precisa de Node 20+; a aplicação continua sem Node):
+**O que precisa instalado** (só para este teste; a aplicação continua sem Node):
+
+| O quê | Como conferir | Se faltar |
+| ----- | ------------- | --------- |
+| **Node 20 ou mais novo** | `node --version` | Baixe a versão LTS em [nodejs.org](https://nodejs.org). No Linux, também dá pelo [nvm](https://github.com/nvm-sh/nvm). |
+| **PHP com `pdo_sqlite`** (o teste usa um banco SQLite próprio) | `php -m` deve listar `pdo_sqlite` e `sqlite3` | **XAMPP (Windows):** em `C:\xampp\php\php.ini`, tire o `;` do começo das linhas `extension=pdo_sqlite` e `extension=sqlite3`, e reinicie o terminal. **Linux:** `sudo apt install php-sqlite3` (ou `php8.2-sqlite3`, na versão do seu PHP). |
+| **Composer já rodado** na raiz (`vendor/` existe) | `ls vendor` | `composer install` na raiz do projeto |
+
+O `npx playwright install chromium` baixa um Chromium só para os testes (cerca de 150 MB, uma vez). No Linux, se ele reclamar de bibliotecas do sistema, rode `npx playwright install --with-deps chromium`.
+
+**Rodando:**
 
 ```bash
 cd e2e

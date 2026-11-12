@@ -117,38 +117,69 @@ Abra <http://localhost:8000>. Com `APP_ENV=local`, a página **recarrega sozinha
 
 Já tinha o banco de uma versão anterior? Rode `php artisan migrate`. Se der erro de chave estrangeira (`errno: 150`), seu banco foi criado com migrations antigas: em desenvolvimento, `php artisan migrate:fresh --seed` recria tudo (apaga os dados locais).
 
-## O que o scaffold entrega
+## Telas da aplicação
 
-| Item                           | Onde                                          |
-| ------------------------------ | --------------------------------------------- |
-| Modelo de dados: só chaves e constraints (8 migrations, incluindo cargos e candidatos) | `database/migrations/2026_*` |
-| Modelo de CSV de chapas (uma linha por chapa, uma coluna por cargo, H15) | `docs/exemplos/chapas.csv` |
-| Skills do Claude Code: roteiro de história e padrão de importação CSV | `.claude/skills/` |
+Com `php artisan serve` rodando, a aplicação fica em <http://localhost:8000>. Usuários do seed (só em desenvolvimento): **admin** `admin@digitech.local` / `admin123` e **mesário** `mesario@digitech.local` / `mesario123`.
+
+| Tela | Endereço | Quem usa | Login |
+| ---- | -------- | -------- | ----- |
+| Início (eleição ativa e chapas homologadas) | <http://localhost:8000> | qualquer pessoa | — |
+| Inscrição de chapa | <http://localhost:8000/inscricao> | alunos, com as inscrições abertas | — |
+| Entrar | <http://localhost:8000/login> | comissão e mesários | — |
+| Painel da comissão | <http://localhost:8000/admin> | comissão eleitoral | admin |
+| Eleições e cargos | <http://localhost:8000/admin/eleicoes> | comissão | admin |
+| Chapas (homologar, indeferir, corrigir, importar CSV) | <http://localhost:8000/admin/chapas> | comissão | admin |
+| Eleitores (cadastro e importação CSV) | <http://localhost:8000/admin/eleitores> | comissão | admin |
+| Terminais | <http://localhost:8000/admin/terminais> | comissão | admin |
+| Usuários | <http://localhost:8000/admin/usuarios> | comissão | admin |
+| Resultado, ata e CSV | <http://localhost:8000/admin/resultado> | comissão, depois do fim da votação | admin |
+| Auditoria | <http://localhost:8000/admin/auditoria> | comissão | admin |
+| Mesa receptora (liberar eleitor, painel dos terminais) | <http://localhost:8000/mesario> | mesários | mesário ou admin |
+| Ativar este computador como urna | <http://localhost:8000/terminal/ativar> | mesário, no computador da urna | mesário ou admin (sai sozinho depois) |
+| Urna | <http://localhost:8000/urna> | eleitor, no computador ativado | — (só no computador ativado) |
+| Vitrine de componentes | <http://localhost:8000/estilo> | equipe de desenvolvimento | — |
+| Saúde (banco ok?) | <http://localhost:8000/api/health> | quem publica | — |
+
+**Ordem de uma eleição:** a comissão cadastra a eleição, os cargos, os eleitores e os terminais. Os alunos inscrevem as chapas e a comissão homologa. Na votação, cada computador de urna é ativado uma vez, e a mesa libera um eleitor por vez. Quando a votação acaba, o resultado sai em `/admin/resultado`. O teste de ponta a ponta (`e2e/`, ver [docs/TESTES.md](docs/TESTES.md)) percorre exatamente esse caminho.
+
+## O que já está pronto
+
+Histórias implementadas (detalhes e critérios em [docs/HISTORIAS_USUARIO.md](docs/HISTORIAS_USUARIO.md)):
+
+| História | O quê |
+| -------- | ----- |
+| H1 | Login, perfis (admin e mesário) e usuários |
+| H2 | Eleições com período de inscrição e de votação, uma ativa por vez |
+| H3 | Homologar, indeferir (com motivo) e reabrir chapas |
+| H4 | Eleitores: cadastro e importação CSV com conferência |
+| H5 | Terminais e ativação do computador da urna por cookie |
+| H6 | Mesa receptora: conferir a matrícula, liberar, cancelar |
+| H7 | Urna: espera, cédula com as chapas homologadas |
+| H8 | Votar: escolher, confirmar, voto secreto |
+| H9 | Painel da mesa que se atualiza sozinho |
+| H10 | Resultado, eleitos por cargo, ata para imprimir e CSV |
+| H11 | Auditoria de todas as ações, tela com filtros e corrente de hashes |
+| H13 | Cargos da eleição |
+| H14 | Inscrição de chapa pelo formulário público |
+| H15 | Importação de chapas por CSV |
+
+Falta a **H12** (publicar na Hostinger), com o roteiro em [docs/DEPLOY_HOSTINGER.md](docs/DEPLOY_HOSTINGER.md).
+
+Onde fica cada coisa no código:
+
+| O quê | Onde |
+| ----- | ---- |
+| Regras de negócio (inscrição, homologação, liberação, voto, apuração, auditoria) | `app/Support/` |
+| Controllers (só traduzem HTTP) | `app/Http/Controllers/` |
+| Telas e componentes Blade | `resources/views/`, `resources/views/components/` |
+| CSS e identidade visual | `public/css/digitech.css`, `public/css/tokens.css`, `design/` |
+| Migrations e dados de desenvolvimento | `database/migrations/`, `database/seeders/DatabaseSeeder.php` |
+| Modelos de CSV | `docs/exemplos/`, e o link "Baixar o modelo" em cada importação |
+| Testes unitários e de integração | `tests/Unit/`, `tests/Feature/` |
+| Teste de ponta a ponta (Playwright) | `e2e/` |
+| CI (roda tudo em cada PR) | `.github/workflows/tests.yml` |
+| Skills do Claude Code (roteiro de história, importação CSV) | `.claude/skills/` |
 | Modelos de `.env` (local e produção) | `.env.example`, `.env.production.example` |
-| Models Eloquent com relações   | `app/Models/`                                 |
-| Dados de desenvolvimento       | `database/seeders/DatabaseSeeder.php`         |
-| Página inicial funcional       | `app/Http/Controllers/HomeController.php`     |
-| API de saúde                   | `routes/api.php`                              |
-| Login, perfis e usuários (H1) | `/login`, `/admin/usuarios`, `app/Http/Controllers/Auth/` |
-| Eleições com os dois períodos e a fase atual (H2) | `/admin`, `/admin/eleicoes`, `app/Enums/FaseEleicao.php` |
-| Terminais e pareamento por cookie (H5, D16) | `/admin/terminais`, `/terminal/ativar`, `app/Http/Middleware/TerminalPareado.php` |
-| Tela da urna com a identidade (sem lógica ainda) | `/urna` e `/urna/status`, só no computador pareado (H7) |
-| Tela placeholder               | `/mesario` (H6, H9)                           |
-| Componentes Blade, layouts e vitrine `/estilo` | `resources/views/components/`, `public/css/digitech.css` |
-| Classe pura de exemplo (alvo de teste unitário) | `app/Support/Apuracao.php`   |
-| 2 testes unitários de exemplo  | `tests/Unit/ApuracaoTest.php`                 |
-| Identidade visual: tokens, marca e testes de contraste | `design/`, `public/css/tokens.css`, `tests/Unit/TokensTest.php` |
-| 6 testes de integração de exemplo + 24 testes das constraints | `tests/Feature/`  |
-| CI (roda os testes em cada PR) | `.github/workflows/tests.yml`                 |
-
-As tabelas do domínio têm **apenas chaves e constraints**; os atributos são definidos pela equipe, história a história (ver `docs/MODELO_DADOS.md`). Já implementados: **H1** (login, perfis, usuários) e **H2** (eleições com período de inscrição e de votação).
-
-Usuários do seed (só desenvolvimento):
-
-| Perfil  | E-mail                   | Senha        | Entra em   |
-| ------- | ------------------------ | ------------ | ---------- |
-| Admin   | `admin@digitech.local`   | `admin123`   | `/admin`   |
-| Mesário | `mesario@digitech.local` | `mesario123` | `/mesario` |
 
 Para criar um admin com outro e-mail (e o **primeiro admin em produção**, onde o seed não roda): `php artisan digitech:admin`. O comando pergunta e-mail, nome e senha; se o e-mail já existe, promove o usuário a admin.
 

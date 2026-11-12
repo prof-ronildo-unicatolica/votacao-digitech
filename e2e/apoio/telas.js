@@ -100,6 +100,7 @@ async function votar(urna, nome, escolha, { fotos = false } = {}) {
   await expect(urna.getByRole('heading', { name: 'Voto registrado' })).toBeVisible();
   if (fotos) await foto(urna, 'urna-registrado');
   await expect(urna.getByText(escolha)).toHaveCount(0); // a tela final não diz em quem votou
+  await expect(urna.locator('[data-contagem]')).toHaveText(/^[1-4]$/); // a contagem regressiva anda
   await esperarEspera(urna);
 }
 
