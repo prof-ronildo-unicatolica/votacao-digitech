@@ -1,0 +1,67 @@
+name: Testes
+
+on:
+  push:
+    branches: [develop, staging, main]
+  pull_request:
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, curl, zip, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Instalar dependências
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Preparar ambiente
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Rodar testes
+        run: php artisan test
+
+  # Uma eleição inteira pelo navegador (D28): e2e/testes/eleicao-completa.spec.js.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, curl, zip, pdo_sqlite, sqlite3
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Instalar dependências
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          cp .env.example .env
+          cd e2e && npm ci && npx playwright install --with-deps chromium
+
+      - name: Rodar a eleição de ponta a ponta
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Guardar relatório, vídeo e trace se falhar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7

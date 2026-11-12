@@ -1,0 +1,150 @@
+<?php
+
+use App\Http\Controllers\Admin\AuditoriaController;
+use App\Http\Controllers\Admin\CargoController;
+use App\Http\Controllers\Admin\ChapaController;
+use App\Http\Controllers\Admin\EleicaoController;
+use App\Http\Controllers\Admin\EleitorController;
+use App\Http\Controllers\Admin\ImportacaoChapasController;
+use App\Http\Controllers\Admin\ImportacaoEleitoresController;
+use App\Http\Controllers\Admin\PainelController;
+use App\Http\Controllers\Admin\ResultadoController;
+use App\Http\Controllers\Admin\TerminalController;
+use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Dev\RecarregarController;
+use App\Http\Controllers\EstiloController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InscricaoController;
+use App\Http\Controllers\MesaController;
+use App\Http\Controllers\TerminalAtivacaoController;
+use App\Http\Controllers\UrnaController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', HomeController::class)->name('home');
+
+// H1 · Login e logout. O limite de tentativas erradas fica em App\Http\Requests\LoginRequest.
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+});
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+// H14 · Inscrição pública de chapa (sem login), só no período de inscrição da eleição ativa.
+Route::get('/inscricao', [InscricaoController::class, 'create'])->name('inscricao');
+Route::post('/inscricao', [InscricaoController::class, 'store'])->middleware('throttle:inscricao')->name('inscricao.store');
+Route::get('/inscricao/comprovante', [InscricaoController::class, 'comprovante'])->name('inscricao.comprovante');
+Route::get('/inscricao/aluno', [InscricaoController::class, 'aluno'])->middleware('throttle:inscricao-consulta')->name('inscricao.aluno');
+
+// Urna (H7/H8): o eleitor não faz login. Sem ID na URL: o terminal vem do cookie de
+// pareamento, conferido pelo middleware `terminal` (D16). Grupo `web`, que lê cookies.
+Route::middleware('terminal')->group(function () {
+    Route::get('/urna', UrnaController::class)->name('urna');
+    Route::get('/urna/status', [UrnaController::class, 'status'])->name('urna.status');
+    // H8 · Votar: confirmar (só mostra a escolha) → votar (grava) → registrado. POST, para a
+    // escolha não ir parar em URL nem em log de acesso.
+    Route::post('/urna/confirmar', [UrnaController::class, 'confirmar'])->name('urna.confirmar');
+    Route::post('/urna/votar', [UrnaController::class, 'votar'])->name('urna.votar');
+    Route::get('/urna/registrado', [UrnaController::class, 'registrado'])->name('urna.registrado');
+});
+
+// Área logada: `ativo` derruba quem foi desativado; `perfil` devolve 403 a quem não pode.
+Route::middleware(['auth', 'ativo'])->group(function () {
+    // H6 · Mesa receptora (H9 acompanha). O admin também entra, para acompanhar a mesa.
+    Route::middleware('perfil:mesario,admin')->group(function () {
+        Route::get('/mesario', [MesaController::class, 'index'])->name('mesario');
+        Route::get('/mesario/painel', [MesaController::class, 'painel'])->name('mesario.painel'); // H9: polling
+        Route::post('/mesario/liberar', [MesaController::class, 'liberar'])->name('mesario.liberar');
+        Route::post('/mesario/sessoes/{sessao}/cancelar', [MesaController::class, 'cancelar'])->name('mesario.cancelar');
+    });
+
+    // H5 · Pareamento: aberto NO COMPUTADOR DA URNA. Ativar desloga este navegador (D16).
+    Route::middleware('perfil:mesario,admin')->group(function () {
+        Route::get('/terminal/ativar', [TerminalAtivacaoController::class, 'create'])->name('terminal.ativar');
+        Route::post('/terminal/ativar', [TerminalAtivacaoController::class, 'store'])->name('terminal.ativar.store');
+    });
+
+    Route::middleware('perfil:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', PainelController::class)->name('painel');
+
+        // H2 · Eleições
+        Route::resource('eleicoes', EleicaoController::class)
+            ->except('show')
+            ->parameters(['eleicoes' => 'eleicao']);
+        Route::post('eleicoes/{eleicao}/ativar', [EleicaoController::class, 'ativar'])->name('eleicoes.ativar');
+        Route::post('eleicoes/{eleicao}/desativar', [EleicaoController::class, 'desativar'])->name('eleicoes.desativar');
+
+        // H4 · Eleitores (um a um ou CSV). As rotas de importar vêm antes do resource.
+        // CSV: enviar → conferir → confirmar ou cancelar (D19), como as chapas (H15).
+        Route::prefix('eleitores/importar')->name('eleitores.importar')->controller(ImportacaoEleitoresController::class)->group(function () {
+            Route::get('/', 'create');
+            Route::post('/', 'store')->name('.store');
+            Route::get('conferir', 'conferir')->name('.conferir');
+            Route::post('confirmar', 'confirmar')->name('.confirmar');
+        });
+        Route::get('eleitores/modelo.csv', [ImportacaoEleitoresController::class, 'modelo'])->name('eleitores.modelo');
+        Route::resource('eleitores', EleitorController::class)
+            ->except('show')
+            ->parameters(['eleitores' => 'eleitor']);
+
+        // H5 · Terminais. Ativar é em /terminal/ativar; aqui o admin só desativa.
+        Route::resource('terminais', TerminalController::class)
+            ->except('show')
+            ->parameters(['terminais' => 'terminal']);
+        Route::post('terminais/{terminal}/desativar', [TerminalController::class, 'desativar'])->name('terminais.desativar');
+
+        // H10 · Resultado: antes do fim da votação, só o comparecimento (D26).
+        Route::get('resultado', [ResultadoController::class, 'index'])->name('resultado');
+        Route::get('resultado/{eleicao}/ata.csv', [ResultadoController::class, 'csv'])->name('resultado.csv');
+        Route::get('resultado/{eleicao}/ata', [ResultadoController::class, 'ata'])->name('resultado.ata');
+
+        // H11 fase 3 · Auditoria: só leitura, só admin (o mesário não vê o registro do próprio trabalho).
+        Route::get('auditoria', [AuditoriaController::class, 'index'])->name('auditoria');
+        Route::get('auditoria/exportar.csv', [AuditoriaController::class, 'csv'])->name('auditoria.csv');
+
+        // H1 · Usuários (admin e mesário)
+        Route::resource('usuarios', UsuarioController::class)->except('show');
+        Route::post('usuarios/{usuario}/ativo', [UsuarioController::class, 'alternarAtivo'])->name('usuarios.ativo');
+
+        // H13 · Cargos de cada eleição. O cargo precisa ser DA eleição da URL (scopeBindings).
+        Route::get('cargos', [CargoController::class, 'atalho'])->name('cargos');
+        Route::scopeBindings()->prefix('eleicoes/{eleicao}/cargos')->name('eleicoes.cargos.')->group(function () {
+            Route::get('/', [CargoController::class, 'index'])->name('index');
+            Route::post('/', [CargoController::class, 'store'])->name('store');
+            Route::post('copiar', [CargoController::class, 'copiar'])->name('copiar');
+            Route::put('{cargo}', [CargoController::class, 'update'])->name('update');
+            Route::post('{cargo}/mover', [CargoController::class, 'mover'])->name('mover');
+            Route::delete('{cargo}', [CargoController::class, 'destroy'])->name('destroy');
+        });
+
+        // H15 · Importar chapas por CSV: enviar → conferir → confirmar ou cancelar (D19).
+        Route::prefix('chapas/importar')->name('chapas.importar')->controller(ImportacaoChapasController::class)->group(function () {
+            Route::get('/', 'create');
+            Route::post('/', 'store')->name('.store');
+            Route::get('conferir', 'conferir')->name('.conferir');
+            Route::post('confirmar', 'confirmar')->name('.confirmar');
+        });
+        Route::get('chapas/modelo.csv', [ImportacaoChapasController::class, 'modelo'])->name('chapas.modelo');
+
+        // H3 · Homologação. Depois das rotas de importar: "chapas/importar" não é uma chapa.
+        Route::get('chapas', [ChapaController::class, 'index'])->name('chapas.index');
+        Route::post('chapas/{chapa}/homologar', [ChapaController::class, 'homologar'])->name('chapas.homologar');
+        Route::post('chapas/{chapa}/indeferir', [ChapaController::class, 'indeferir'])->name('chapas.indeferir');
+        Route::post('chapas/{chapa}/reabrir', [ChapaController::class, 'reabrir'])->name('chapas.reabrir');
+        Route::put('chapas/{chapa}/candidatos/{cargo}', [ChapaController::class, 'trocarCandidato'])->name('chapas.candidatos.update');
+        Route::delete('chapas/{chapa}', [ChapaController::class, 'destroy'])->name('chapas.destroy');
+    });
+});
+
+// Vitrine da identidade visual (docs/IDENTIDADE_VISUAL.md), com dados fictícios. Fora de produção.
+if (! app()->isProduction()) {
+    Route::get('/estilo', [EstiloController::class, 'index'])->name('estilo');
+    Route::get('/estilo/telas/{tela}', [EstiloController::class, 'tela'])
+        ->whereIn('tela', array_keys(EstiloController::TELAS))
+        ->name('estilo.tela');
+}
+
+// Auto-refresh do navegador ao salvar arquivos (só em desenvolvimento local, sem Node).
+if (app()->isLocal()) {
+    Route::get('/_dev/recarregar', RecarregarController::class)->name('dev.recarregar');
+}

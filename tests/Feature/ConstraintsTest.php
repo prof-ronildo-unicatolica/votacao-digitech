@@ -1,0 +1,300 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Candidato;
+use App\Models\Cargo;
+use App\Models\Chapa;
+use App\Models\Eleicao;
+use App\Models\Eleitor;
+use App\Models\SessaoVotacao;
+use App\Models\Terminal;
+use App\Models\User;
+use App\Models\Voto;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * Regras que o BANCO garante (constraints), testadas contra o schema real.
+ * Se uma migration nova quebrar uma delas, este arquivo avisa no CI.
+ */
+class ConstraintsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_sigilo_do_voto_tabela_votos_nao_liga_ao_eleitor(): void
+    {
+        $colunas = Schema::getColumnListing('votos');
+
+        foreach (['eleitor_id', 'terminal_id', 'sessao_id', 'sessao_votacao_id', 'mesario_id', 'user_id'] as $proibida) {
+            $this->assertNotContains($proibida, $colunas, "votos.$proibida quebraria o sigilo do voto");
+        }
+    }
+
+    public function test_sigilo_do_voto_tabela_votos_nao_guarda_horario(): void
+    {
+        $colunas = Schema::getColumnListing('votos');
+
+        foreach (['created_at', 'updated_at'] as $proibida) {
+            $this->assertNotContains($proibida, $colunas, "votos.$proibida permitiria cruzar o horário com sessoes_votacao");
+        }
+    }
+
+    public function test_sigilo_do_voto_id_e_uuid_v4_aleatorio(): void
+    {
+        $voto = Voto::factory()->create();
+
+        $this->assertTrue(Str::isUuid($voto->id), 'votos.id deve ser UUID');
+        $this->assertSame('4', $voto->id[14], 'votos.id deve ser UUID v4 (aleatório), não ordenado por tempo');
+    }
+
+    public function test_eleitor_tem_uma_unica_sessao_por_eleicao(): void
+    {
+        $sessao = SessaoVotacao::factory()->create();
+
+        $this->expectException(QueryException::class);
+
+        SessaoVotacao::factory()->create([
+            'eleicao_id' => $sessao->eleicao_id,
+            'eleitor_id' => $sessao->eleitor_id,
+        ]);
+    }
+
+    public function test_numero_de_chapa_e_unico_por_eleicao(): void
+    {
+        $chapa = Chapa::factory()->create(['numero' => 5]);
+
+        Chapa::factory()->create(['numero' => 5]); // outra eleição: permitido
+
+        $this->expectException(QueryException::class);
+        Chapa::factory()->for($chapa->eleicao)->create(['numero' => 5]);
+    }
+
+    public function test_voto_so_pode_ir_para_chapa_da_mesma_eleicao(): void
+    {
+        $chapaDeOutraEleicao = Chapa::factory()->create();
+        $eleicao = Eleicao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Voto::create(['eleicao_id' => $eleicao->id, 'chapa_id' => $chapaDeOutraEleicao->id]);
+    }
+
+    public function test_voto_sem_chapa_e_aceito(): void
+    {
+        $voto = Voto::factory()->semChapa()->create();
+
+        $this->assertNull($voto->chapa_id);
+        $this->assertDatabaseCount('votos', 1);
+    }
+
+    public function test_chapa_com_votos_nao_pode_ser_apagada(): void
+    {
+        $voto = Voto::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $voto->chapa->delete();
+    }
+
+    public function test_eleicao_com_votos_nao_pode_ser_apagada(): void
+    {
+        $voto = Voto::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $voto->eleicao->delete();
+    }
+
+    public function test_apagar_eleicao_sem_votos_apaga_chapas_e_sessoes_em_cascata(): void
+    {
+        $chapa = Chapa::factory()->create();
+        SessaoVotacao::factory()->create(['eleicao_id' => $chapa->eleicao_id]);
+
+        $chapa->eleicao->delete();
+
+        $this->assertDatabaseCount('chapas', 0);
+        $this->assertDatabaseCount('sessoes_votacao', 0);
+    }
+
+    public function test_eleitor_com_sessao_nao_pode_ser_apagado(): void
+    {
+        $sessao = SessaoVotacao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $sessao->eleitor->delete();
+    }
+
+    public function test_mesario_com_sessao_nao_pode_ser_apagado(): void
+    {
+        $sessao = SessaoVotacao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $sessao->mesario->delete();
+    }
+
+    public function test_sessao_exige_mesario(): void
+    {
+        $this->expectException(QueryException::class);
+        SessaoVotacao::factory()->create(['mesario_id' => null]);
+    }
+
+    public function test_terminal_com_sessao_nao_pode_ser_apagado(): void
+    {
+        $sessao = SessaoVotacao::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Terminal::findOrFail($sessao->terminal_id)->delete();
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Cargos e candidatos (composição das chapas, D13)
+    // ---------------------------------------------------------------------------------
+
+    public function test_ordem_do_cargo_e_unica_por_eleicao(): void
+    {
+        $cargo = Cargo::factory()->create(['ordem' => 1]);
+
+        Cargo::factory()->create(['ordem' => 1]); // outra eleição: permitido
+
+        $this->expectException(QueryException::class);
+        Cargo::factory()->for($cargo->eleicao)->create(['ordem' => 1]);
+    }
+
+    public function test_nome_da_chapa_e_unico_por_eleicao(): void
+    {
+        $chapa = Chapa::factory()->create(['nome' => 'Movimento']);
+
+        Chapa::factory()->create(['nome' => 'Movimento']); // outra eleição: permitido
+
+        $this->expectException(QueryException::class);
+        Chapa::factory()->for($chapa->eleicao)->create(['nome' => 'Movimento']);
+    }
+
+    public function test_titulo_do_cargo_e_unico_por_eleicao(): void
+    {
+        $cargo = Cargo::factory()->create(['titulo' => 'Presidente']);
+
+        Cargo::factory()->create(['titulo' => 'Presidente']); // outra eleição: permitido
+
+        $this->expectException(QueryException::class);
+        Cargo::factory()->for($cargo->eleicao)->create(['titulo' => 'Presidente']);
+    }
+
+    public function test_chapa_tem_um_unico_candidato_por_cargo(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->create([
+            'chapa_id' => $candidato->chapa_id,
+            'cargo_id' => $candidato->cargo_id,
+        ]);
+    }
+
+    public function test_aluno_concorre_em_uma_unica_chapa_por_eleicao(): void
+    {
+        $candidato = Candidato::factory()->create();
+        $outraChapa = Chapa::factory()->create(['eleicao_id' => $candidato->eleicao_id]);
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->for($outraChapa)->create(['eleitor_id' => $candidato->eleitor_id]);
+    }
+
+    public function test_aluno_pode_concorrer_de_novo_em_outra_eleicao(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        Candidato::factory()->create(['eleitor_id' => $candidato->eleitor_id]);
+
+        $this->assertSame(2, Eleitor::findOrFail($candidato->eleitor_id)->candidaturas()->count());
+    }
+
+    public function test_candidato_so_ocupa_cargo_da_mesma_eleicao_da_chapa(): void
+    {
+        $chapa = Chapa::factory()->create();
+        $cargoDeOutraEleicao = Cargo::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->for($chapa)->create(['cargo_id' => $cargoDeOutraEleicao->id]);
+    }
+
+    public function test_candidato_so_entra_em_chapa_da_mesma_eleicao(): void
+    {
+        $cargo = Cargo::factory()->create();
+        $chapaDeOutraEleicao = Chapa::factory()->create();
+
+        $this->expectException(QueryException::class);
+        Candidato::factory()->create([
+            'eleicao_id' => $cargo->eleicao_id,
+            'cargo_id' => $cargo->id,
+            'chapa_id' => $chapaDeOutraEleicao->id,
+        ]);
+    }
+
+    public function test_candidato_precisa_ser_aluno_cadastrado(): void
+    {
+        $this->expectException(QueryException::class);
+        Candidato::factory()->create(['eleitor_id' => (string) Str::uuid()]);
+    }
+
+    public function test_aluno_candidato_nao_pode_ser_apagado(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $this->expectException(QueryException::class);
+        $candidato->eleitor->delete();
+    }
+
+    public function test_apagar_chapa_sem_votos_apaga_a_composicao(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $candidato->chapa->delete();
+
+        $this->assertDatabaseCount('candidatos', 0);
+        $this->assertDatabaseCount('cargos', 1);
+        $this->assertDatabaseCount('eleitores', 1);
+    }
+
+    public function test_apagar_eleicao_sem_votos_apaga_cargos_e_candidatos(): void
+    {
+        $candidato = Candidato::factory()->create();
+
+        $candidato->eleicao->delete();
+
+        $this->assertDatabaseCount('cargos', 0);
+        $this->assertDatabaseCount('candidatos', 0);
+        $this->assertDatabaseCount('eleitores', 1);
+    }
+
+    // ---------------------------------------------------------------------------------
+    // Eleição ativa (H2, D15)
+    // ---------------------------------------------------------------------------------
+
+    public function test_banco_aceita_uma_unica_eleicao_ativa(): void
+    {
+        Eleicao::factory()->ativa()->create();
+        Eleicao::factory()->count(2)->create(); // várias inativas (NULL): permitido
+
+        $this->expectException(QueryException::class);
+        Eleicao::factory()->ativa()->create();
+    }
+
+    public function test_eleicao_inativa_e_gravada_como_null_e_nao_false(): void
+    {
+        $eleicao = Eleicao::factory()->create(['ativa' => false]);
+
+        $this->assertNull($eleicao->getRawOriginal('ativa'));
+        $this->assertFalse($eleicao->ativa);
+    }
+
+    public function test_matricula_de_usuario_e_unica(): void
+    {
+        User::factory()->create(['matricula' => '2024101']);
+
+        $this->expectException(UniqueConstraintViolationException::class);
+        User::factory()->create(['matricula' => '2024101']);
+    }
+}
