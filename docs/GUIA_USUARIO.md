@@ -192,7 +192,7 @@ O painel de terminais se atualiza sozinho a cada 5 segundos. Um terminal **Votan
 
    ![Confirmação](guia/urna-confirmacao.png)
 
-3. Pronto: aparece "Voto registrado". A tela não diz em quem a pessoa votou e volta sozinha para "Aguardando liberação" em alguns segundos, pronta para o próximo eleitor.
+3. Pronto: aparece "Voto registrado". A tela não diz em quem a pessoa votou. Uma contagem regressiva de 5 segundos mostra quando ela volta sozinha para "Aguardando liberação", pronta para o próximo eleitor.
 
    ![Voto registrado](guia/urna-registrado.png)
 
