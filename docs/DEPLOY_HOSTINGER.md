@@ -24,12 +24,24 @@ Clonar uma branch vazia gera um site sem nada; clonar sem `-b` traz a `develop` 
 
 ### No hPanel
 
-1. hPanel → **Avançado → Configuração PHP**: escolher PHP **8.2** ou superior e habilitar `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `zip`.
-2. hPanel → **Bancos de dados → Gerenciamento**: criar banco e usuário. Anotar `nome_do_banco`, `usuario`, `senha`, `host` (na Hostinger o host costuma ser `localhost`).
-3. hPanel → **Segurança → SSL**: ativar o certificado gratuito e forçar HTTPS.
-4. hPanel → **Avançado → SSH**: ativar e anotar host, porta e usuário.
-5. Homologação: hPanel → **Domínios → Subdomínios**: criar `homolog.SEU_DOMINIO` (e ativar o SSL dele também).
-6. Se o repositório for **privado**: configurar a deploy key (seção "Repositório privado" abaixo) antes do `git clone`.
+Nesta ordem (o subdomínio vem primeiro porque PHP e SSL são configurados por site):
+
+1. Homologação: **Domínios → Subdomínios**: criar `homolog.SEU_DOMINIO`. Anote a **pasta** que o hPanel mostra para ele (ex.: `~/domains/SEU_DOMINIO/public_html/homolog` ou `~/domains/homolog.SEU_DOMINIO/public_html`): é ela que vira o link simbólico em "Apontar o domínio para `public/`".
+2. **Avançado → Configuração PHP** (do domínio ou do subdomínio): PHP **8.2** ou superior, com `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `zip` habilitados.
+3. **Bancos de dados → Gerenciamento**: criar banco e usuário (`votacao_homolog` ou `votacao_producao`). A Hostinger acrescenta um prefixo da conta (ex.: `u123456789_votacao_homolog`): copie o nome **completo** do banco e do usuário para o `.env`. O host costuma ser `localhost`.
+4. **Segurança → SSL**: ativar o certificado gratuito e forçar HTTPS, para o domínio **e** para o subdomínio.
+5. **Avançado → SSH**: ativar e anotar host, porta e usuário. A senha vai para o gerenciador de senhas, não para o projeto.
+6. Se o repositório for **privado**: configurar a deploy key (seção "Repositório privado" abaixo) antes do `git clone`. Hoje ele é público e não precisa.
+
+### Checklist da primeira homologação
+
+- [x] PR `staging` ← `develop` mesclado (#79).
+- [ ] hPanel: subdomínio, PHP, banco, SSL e SSH (lista acima).
+- [ ] SSH: `git clone -b staging`, `composer install`, `.env` preenchido no servidor.
+- [ ] `key:generate`, `migrate --force`, `digitech:admin`, `storage:link`, caches.
+- [ ] Pasta do subdomínio trocada pelo link para `app/public`.
+- [ ] Smoke test (final deste guia).
+- [ ] Equipe testa; aprovado, PR `main` ← `staging` e repetir para produção.
 
 ## Deploy pela primeira vez (via SSH)
 
@@ -37,7 +49,7 @@ Clonar uma branch vazia gera um site sem nada; clonar sem `-b` traz a `develop` 
 ssh -p PORTA usuario@host
 
 cd ~/domains/SEU_DOMINIO         # ajuste ao caminho mostrado no hPanel
-# -b staging em homologação, -b main em produção
+# produção: -b main, pasta app | homologação: -b staging, pasta homolog-app (troque "app" abaixo)
 git clone -b main https://github.com/prof-ronildo-unicatolica/votacao-digitech.git app
 cd app
 composer install --no-dev --optimize-autoloader
@@ -71,6 +83,16 @@ cd ~/domains/SEU_DOMINIO
 mv public_html public_html_antigo      # ou rm -rf, se estiver vazio
 ln -s "$PWD/app/public" public_html
 ```
+
+No subdomínio de homologação, troque do mesmo jeito a pasta anotada no passo 1 do hPanel. Exemplo, se ela for `public_html/homolog` e o clone estiver em `~/domains/SEU_DOMINIO/homolog-app`:
+
+```bash
+cd ~/domains/SEU_DOMINIO/public_html
+mv homolog homolog_antigo
+ln -s ~/domains/SEU_DOMINIO/homolog-app/public homolog
+```
+
+Homologação e produção ficam em clones separados (`app` e `homolog-app`, cada um com seu `.env`), nunca no mesmo.
 
 Teste: `https://SEU_DOMINIO/api/health` deve responder `"banco":"ok"`.
 
