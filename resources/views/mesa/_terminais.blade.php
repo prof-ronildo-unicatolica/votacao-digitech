@@ -30,5 +30,4 @@
             </div>
         @endforeach
     </div>
-    <p class="small text-secondary mt-3">Atualize a página para ver o estado mais recente. A atualização automática é a H9.</p>
 @endif

@@ -22,7 +22,10 @@ class ChapaController extends Controller
     public function index(Request $request): View
     {
         $eleicoes = Eleicao::orderByDesc('inscricao_abre_em')->get(['id', 'titulo', 'ativa', 'inscricao_abre_em']);
+        // A lista só tem o necessário para o seletor: a escolhida é recarregada inteira, com as
+        // datas, senão a fase sai vazia e a tela vira "somente leitura" (achado pelo teste E2E).
         $eleicao = $eleicoes->firstWhere('id', $request->query('eleicao')) ?? Eleicao::atual() ?? $eleicoes->first();
+        $eleicao = $eleicao ? Eleicao::find($eleicao->id) : null;
         $filtro = SituacaoChapa::tryFrom((string) $request->query('situacao'));
 
         $chapas = $eleicao
@@ -30,7 +33,7 @@ class ChapaController extends Controller
             : collect();
 
         return view('admin.chapas.index', [
-            'eleicao' => $eleicao?->fresh(),
+            'eleicao' => $eleicao,
             'eleicoes' => $eleicoes,
             'chapas' => $chapas,
             'filtro' => $filtro,

@@ -1,0 +1,13 @@
+{
+  "name": "votacao-digitech-e2e",
+  "private": true,
+  "description": "Teste de ponta a ponta: uma eleição inteira pelo navegador (D28). Só para teste; a aplicação não usa Node.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ver": "playwright test --headed",
+    "relatorio": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
+  }
+}

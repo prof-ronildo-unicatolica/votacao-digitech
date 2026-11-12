@@ -10,6 +10,7 @@ use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -21,7 +22,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Teste de ponta a ponta (e2e/, D28): o Playwright adianta o relógio da aplicação para
+        // passar de inscrições a homologação, votação e encerramento sem esperar horas. Ele grava
+        // os segundos a adiantar neste arquivo. Só com APP_ENV=e2e: em qualquer outro ambiente,
+        // o arquivo é ignorado.
+        if ($this->app->environment('e2e') && is_file($relogio = storage_path('framework/e2e-relogio'))) {
+            Carbon::setTestNow(Carbon::now()->addSeconds((int) file_get_contents($relogio)));
+        }
     }
 
     /**

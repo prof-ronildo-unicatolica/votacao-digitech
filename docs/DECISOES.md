@@ -375,3 +375,20 @@ Registrada em 11/11/2026, na fase 4 da H11 (plano em `AUDITORIA.md`, seção 7).
 - *A corrente detecta, não impede.* Em produção, o ideal é o usuário do banco da aplicação não ter `UPDATE`/`DELETE` na tabela `auditoria`. Na hospedagem compartilhada isso depende do painel. Fica como passo opcional do deploy (H12).
 - *Assinatura digital por evento (chave privada no servidor):* descartada, porque quem tem o servidor tem a chave. A âncora impressa na ata resolve melhor o mesmo problema.
 
+## D28 — Teste de ponta a ponta com Playwright, fora da aplicação
+
+Registrada em 11/11/2026.
+
+**Decisão:**
+- Um teste com **Playwright** (`e2e/`) faz uma eleição inteira pelas telas: cadastro, inscrição, homologação, liberação, voto em dois terminais, cancelamento, expiração, encerramento, resultado e auditoria. Roda no CI (job `e2e`) a cada PR.
+- **Node só dentro de `e2e/`**, com o próprio `package.json`. A aplicação continua sem Node (D2): nada de `e2e/` vai para a Hostinger.
+- **Banco SQLite próprio** (`e2e/banco.sqlite`), recriado a cada execução, com só o admin (`E2eSeeder`). Todo o resto o teste cadastra pelas telas.
+- **Relógio adiantado:** com `APP_ENV=e2e`, o `AppServiceProvider` soma ao relógio os segundos gravados em `storage/framework/e2e-relogio`. É assim que o teste passa de inscrições a homologação, votação e encerramento, e faz uma liberação expirar, em cerca de 2 minutos. Em qualquer outro ambiente o arquivo é ignorado.
+- **Um processo no servidor de teste** (`php -S` sem workers): as requisições entram em fila. Com vários processos, o SQLite recusaria gravações simultâneas no PHP < 8.4, e a falha seria do ambiente de teste, não da aplicação. A concorrência de verdade (MySQL, `lockForUpdate`) continua coberta pelos testes de integração.
+
+**Por quê:**
+- Os testes de integração chamam uma rota de cada vez. O E2E pega o que só aparece com a tela de verdade: o redirecionamento depois de uma ação, o polling da urna e da mesa, os cookies do terminal, vários computadores ao mesmo tempo. No primeiro run ele achou um bug: depois de homologar uma chapa, a tela de chapas ficava "somente leitura", porque a eleição vinha sem as datas quando a URL tinha `?eleicao=`.
+- **Playwright e não Laravel Dusk:** vários navegadores isolados no mesmo teste, espera automática pelos elementos, e vídeo e trace quando falha. O Dusk exige ChromeDriver na versão do Chrome.
+
+**Limites:** um caminho feliz com os desvios principais, não todas as regras. As regras continuam nos testes de integração (`php artisan test`), que são mais rápidos e apontam o erro com mais precisão.
+
