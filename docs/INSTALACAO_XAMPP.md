@@ -93,7 +93,7 @@ Confira no phpMyAdmin: o banco deve ter as tabelas `eleicoes`, `chapas`, `eleito
 php artisan serve
 ```
 
-Abra <http://localhost:8000>. Você deve ver "Scaffold funcionando", o nome do banco, a contagem das tabelas e as chapas 1, 2 e 3 do seed.
+Abra <http://localhost:8000>. Você deve ver a página inicial com a eleição de teste do seed e as chapas homologadas (se houver).
 Teste também <http://localhost:8000/api/health> (deve responder `"banco":"ok"`).
 
 Para parar: `Ctrl + C` no terminal.

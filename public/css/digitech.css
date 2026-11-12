@@ -539,3 +539,53 @@ h1, h2, h3, h4, h5, h6,
     color: var(--dt-cor-perigo-texto);
     font-size: var(--dt-fonte-tamanho-xl);
 }
+
+/* Página inicial pública: a eleição ativa, o calendário e as chapas homologadas. */
+.dt-inicio { max-width: 880px; }
+.dt-inicio-secao { font-size: var(--dt-fonte-tamanho-xl); margin-bottom: var(--dt-espaco-4); }
+.dt-inicio-agora { border-left: 4px solid var(--dt-tema-acao-acento); }
+.dt-inicio-agora h2 { font-size: var(--dt-fonte-tamanho-2xl); margin-bottom: var(--dt-espaco-2); }
+.dt-inicio-agora p { color: var(--dt-tema-texto-secundario); font-size: var(--dt-fonte-tamanho-lg); }
+.dt-inicio-agora p:last-child { margin-bottom: 0; }
+.dt-inicio-passo-icone { font-size: var(--dt-fonte-tamanho-2xl); color: var(--dt-tema-texto-marca); }
+
+.dt-etapas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--dt-espaco-3); }
+.dt-etapa {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--dt-espaco-1);
+    padding: var(--dt-espaco-4);
+    border: 1px solid var(--dt-tema-borda-padrao);
+    border-radius: var(--dt-raio-md);
+    background: var(--dt-tema-superficie-cartao);
+}
+.dt-etapa-icone {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--dt-tema-superficie-rebaixada); color: var(--dt-tema-texto-secundario);
+    margin-bottom: var(--dt-espaco-2);
+}
+.dt-etapa-rotulo { font-weight: var(--dt-fonte-peso-semibold); }
+.dt-etapa-detalhe { font-size: var(--dt-fonte-tamanho-sm); color: var(--dt-tema-texto-secundario); }
+.dt-etapa--feita .dt-etapa-icone { background: var(--dt-cor-sucesso-fundo); color: var(--dt-cor-sucesso-texto); }
+.dt-etapa--atual { border-color: var(--dt-tema-acao-primaria); box-shadow: 0 0 0 1px var(--dt-tema-acao-primaria); background: var(--dt-tema-superficie-destaque); }
+.dt-etapa--atual .dt-etapa-icone { background: var(--dt-tema-acao-primaria); color: var(--dt-tema-acao-primaria-texto); }
+.dt-etapa--futura { opacity: 0.75; }
+
+.dt-inicio-chapa { display: flex; gap: var(--dt-espaco-5); align-items: flex-start; padding: var(--dt-espaco-5); }
+.dt-inicio-chapa-numero {
+    flex: none; min-width: 56px;
+    font-family: var(--dt-fonte-familia-titulo); font-size: var(--dt-fonte-tamanho-4xl); font-weight: var(--dt-fonte-peso-bold);
+    line-height: 1; text-align: center;
+}
+.dt-inicio-composicao { display: flex; flex-wrap: wrap; gap: var(--dt-espaco-1) var(--dt-espaco-5); font-size: var(--dt-fonte-tamanho-sm); }
+.dt-inicio-composicao dt { display: inline; font-weight: var(--dt-fonte-peso-regular); color: var(--dt-tema-texto-secundario); }
+.dt-inicio-composicao dt::after { content: ": "; }
+.dt-inicio-composicao dd { display: inline; margin: 0; }
+.dt-inicio-acesso { padding-top: var(--dt-espaco-5); border-top: 1px solid var(--dt-tema-borda-padrao); }
+
+@media (max-width: 767.98px) {
+    .dt-etapas { grid-template-columns: 1fr 1fr; }
+    .dt-inicio-chapa { gap: var(--dt-espaco-4); }
+}

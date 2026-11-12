@@ -2,35 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Candidato;
-use App\Models\Cargo;
-use App\Models\Chapa;
 use App\Models\Eleicao;
-use App\Models\Eleitor;
-use App\Models\SessaoVotacao;
-use App\Models\Terminal;
-use App\Models\Voto;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
+/**
+ * Página inicial pública: a eleição ativa, em que fase ela está, o que cada pessoa pode fazer
+ * agora e as chapas homologadas. Sem login. Não mostra chapa pendente ou indeferida (H14),
+ * nem comparecimento ou resultado (esses ficam com a comissão, H10).
+ */
 class HomeController extends Controller
 {
     public function __invoke(): View
     {
+        $eleicao = Eleicao::atual();
+
         return view('home', [
-            'banco' => DB::connection()->getDriverName().' — '.DB::connection()->getDatabaseName(),
-            'contagens' => [
-                'eleicoes' => Eleicao::count(),
-                'cargos' => Cargo::count(),
-                'chapas' => Chapa::count(),
-                'candidatos' => Candidato::count(),
-                'eleitores' => Eleitor::count(),
-                'terminais' => Terminal::count(),
-                'sessoes_votacao' => SessaoVotacao::count(),
-                'votos' => Voto::count(),
-            ],
-            // Página pública: só chapas homologadas (H3). Pendentes e indeferidas não aparecem (H14).
-            'eleicoes' => Eleicao::withCount('cargos')->with(['chapas' => fn ($q) => $q->homologadas()->withCount('candidatos')])->get(),
+            'eleicao' => $eleicao,
+            'fase' => $eleicao?->fase(),
+            'chapas' => $eleicao ? $eleicao->chapasNaUrna()->with('composicao')->get() : collect(),
         ]);
     }
 }

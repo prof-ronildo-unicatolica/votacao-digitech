@@ -123,7 +123,7 @@ Com `php artisan serve` rodando, a aplicação fica em <http://localhost:8000>. 
 
 | Tela | Endereço | Quem usa | Login |
 | ---- | -------- | -------- | ----- |
-| Início (eleição ativa e chapas homologadas) | <http://localhost:8000> | qualquer pessoa | — |
+| Início (eleição ativa, fase, calendário e chapas homologadas) | <http://localhost:8000> | qualquer pessoa | — |
 | Inscrição de chapa | <http://localhost:8000/inscricao> | alunos, com as inscrições abertas | — |
 | Entrar | <http://localhost:8000/login> | comissão e mesários | — |
 | Painel da comissão | <http://localhost:8000/admin> | comissão eleitoral | admin |
